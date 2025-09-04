@@ -44,6 +44,13 @@ export default function RootLayout() {
                                 animationDuration: 800,
                             }}
                         />
+                        <Stack.Screen
+                            name="onboarding"
+                            options={{
+                                headerShown: false,
+                                animation: 'slide_from_left',
+                            }}
+                        />
                     </Stack>
                 </GlobalProvider>
             </GestureHandlerRootView>

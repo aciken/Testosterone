@@ -1,0 +1,32 @@
+import { Stack } from 'expo-router';
+
+export default function OnboardingLayout() {
+  return (
+    <Stack
+    screenOptions={{
+      headerShown: false,
+      contentStyle: { backgroundColor: 'transparent' },
+      animation: 'slide_from_right',
+      animationDuration: 300,
+    }}
+    >
+      <Stack.Screen name="question1" options={{ headerShown: false }} />
+      <Stack.Screen name="question2" options={{ headerShown: false }} />
+      <Stack.Screen name="question3" options={{ headerShown: false }} />
+      <Stack.Screen name="question4" options={{ headerShown: false }} />
+      <Stack.Screen name="question5" options={{ headerShown: false }} />
+      <Stack.Screen name="question6" options={{ headerShown: false }} />
+      <Stack.Screen name="question7" options={{ headerShown: false }} />
+      <Stack.Screen name="question8" options={{ headerShown: false }} />
+      <Stack.Screen name="question9" options={{ headerShown: false }} />
+      <Stack.Screen name="question10" options={{ headerShown: false }} />
+      <Stack.Screen name="question11" options={{ headerShown: false }} />
+      <Stack.Screen name="question12" options={{ headerShown: false }} />
+      <Stack.Screen name="calculating" options={{ headerShown: false }} />
+      <Stack.Screen name="results" options={{ headerShown: false }} />
+      <Stack.Screen name="declineInfo" options={{ headerShown: false }} />
+      <Stack.Screen name="lessOfMan" options={{ headerShown: false }} />
+      <Stack.Screen name="weaknessInfo" options={{ headerShown: false }} />
+    </Stack>
+  );
+}

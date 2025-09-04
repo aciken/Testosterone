@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Lore",
-    "slug": "Lore",
+    "name": "Testosterone",
+    "slug": "Testosterone",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "scheme": "lore",
+    "userInterfaceStyle": "light",  
+    "scheme": "testosterone",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",

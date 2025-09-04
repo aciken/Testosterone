@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv').config();
 
-mongoose.connect('mongodb://localhost:27017/Lore')
-    .then(() => console.log('mongodb://localhost:27017/Lore'))
+mongoose.connect('mongodb://localhost:27017/Testosterone')
+    .then(() => console.log('mongodb://localhost:27017/Testosterone'))
     .catch(err => console.log(err));
 
 const UserSchema = new mongoose.Schema({
