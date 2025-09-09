@@ -48,9 +48,6 @@ const OnboardingQuestion = ({ questionNumber, question, answers, nextPage, isLas
                 ]}
                 onPress={() => handleAnswerSelect(answer)}
               >
-                <View style={styles.answerNumberContainer}>
-                  <Text style={styles.answerNumber}>{index + 1}</Text>
-                </View>
                 <Text style={styles.answerText}>{answer}</Text>
               </TouchableOpacity>
             ))}
@@ -124,31 +121,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E2747',
     borderRadius: 15,
     padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 15,
     borderWidth: 2,
     borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   selectedAnswer: {
     borderColor: '#FFFFFF',
-  },
-  answerNumberContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  answerNumber: {
-    color: '#121529',
-    fontWeight: 'bold',
-    fontSize: 16,
+    backgroundColor: '#2A3A5C',
+    shadowColor: '#FFFFFF',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   answerText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
 });
