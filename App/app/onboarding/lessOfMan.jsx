@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 export default function LessOfMan() {
   const router = useRouter();
@@ -23,7 +24,10 @@ export default function LessOfMan() {
         <View style={styles.dot} />
       </View>
       
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/onboarding/weaknessInfo')}>
+      <TouchableOpacity style={styles.button} onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        router.push('/onboarding/weaknessInfo');
+      }}>
         <Text style={styles.buttonText}>Next</Text>
         <Ionicons name="chevron-forward-outline" size={24} color="#000" />
       </TouchableOpacity>

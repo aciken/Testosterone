@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 export default function IncreaseInfo() {
   const router = useRouter();
@@ -28,7 +29,10 @@ export default function IncreaseInfo() {
           <View style={styles.dot} />
         </View>
         
-        <TouchableOpacity style={styles.button} onPress={() => router.push('/onboarding/dietExerciseInfo')}>
+        <TouchableOpacity style={styles.button} onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push('/onboarding/dietExerciseInfo');
+        }}>
           <Text style={styles.buttonText}>Next</Text>
           <Ionicons name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
