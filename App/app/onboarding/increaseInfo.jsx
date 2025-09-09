@@ -11,11 +11,11 @@ export default function IncreaseInfo() {
 
   return (
     <LinearGradient
-      colors={['#004e92', '#000428']}
+      colors={['#4A90E2', '#7BB3F0']}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
-        <Image source={require('../../assets/Cartoon6.png')} style={styles.image} />
+        <Image source={require('../../assets/Cartoon6.1.png')} style={styles.image} />
         
         <Text style={styles.title}>It's possible</Text>
         

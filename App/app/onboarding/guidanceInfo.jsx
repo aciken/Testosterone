@@ -10,7 +10,7 @@ export default function GuidanceInfo() {
 
   return (
     <LinearGradient
-      colors={['#004e92', '#000428']}
+      colors={['#4A90E2', '#7BB3F0']}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
@@ -28,7 +28,7 @@ export default function GuidanceInfo() {
           <View style={[styles.dot, styles.activeDot]} />
         </View>
         
-        <TouchableOpacity style={styles.button} onPress={() => router.replace('/home')}>
+        <TouchableOpacity style={styles.button} onPress={() => router.push('/onboarding/expertTestimonials')}>
           <Text style={styles.buttonText}>Next</Text>
           <Ionicons name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>

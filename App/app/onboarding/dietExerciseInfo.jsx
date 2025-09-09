@@ -11,11 +11,11 @@ export default function DietExerciseInfo() {
 
   return (
     <LinearGradient
-      colors={['#004e92', '#000428']}
+      colors={['#4A90E2', '#7BB3F0']}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
-        <Image source={require('../../assets/Cartoon7.png')} style={styles.image} />
+        <Image source={require('../../assets/Cartoon7.2.png')} style={styles.image} />
         
         <Text style={styles.title}>In just 90 days</Text>
         
