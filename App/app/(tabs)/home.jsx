@@ -4,22 +4,26 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import TaskDetailModal from '../../components/TaskDetailModal';
 
 export default function HomeScreen() {
   const programDay = 4;
 
   const [todos, setTodos] = useState([
-    { id: '1', task: 'Morning sunlight', frequency: 'Everyday', difficulty: 'Easy', streak: 10, image: require('../../assets/ForestImage.png'), completed: false },
-    { id: '2', task: 'High-intensity workout', frequency: '3x/week', difficulty: 'Hard', streak: 5, image: require('../../assets/MountainImage.png'), completed: false },
-    { id: '3', task: 'Eat a protein-rich meal', frequency: 'Everyday', difficulty: 'Easy', streak: 3, image: require('../../assets/FireImage.png'), completed: false },
-    { id: '4', task: 'Cold shower', frequency: 'Everyday', difficulty: 'Medium', streak: 12, image: require('../../assets/CarImage.png'), completed: false },
-    { id: '5', task: '8 hours of quality sleep', frequency: 'Everyday', difficulty: 'Easy', streak: 2, image: require('../../assets/GraphitImage.png'), completed: false },
+    { id: '1', task: 'Morning sunlight', type: 'simple', frequency: 'Everyday', difficulty: 'Easy', streak: 10, image: require('../../assets/Sunrise.png'), progress: 0 },
+    { id: '2', task: 'High-intensity workout', type: 'simple', frequency: '3x/week', difficulty: 'Hard', streak: 5, image: require('../../assets/Workout.png'), progress: 0 },
+    { id: '3', task: 'Eat a protein-rich meal', type: 'simple', frequency: 'Everyday', difficulty: 'Easy', streak: 3, image: require('../../assets/FireImage.png'), progress: 0 },
+    { id: '4', task: 'Cold shower', type: 'simple', frequency: 'Everyday', difficulty: 'Medium', streak: 12, image: require('../../assets/CarImage.png'), progress: 0 },
+    { id: '5', task: '8 hours of quality sleep', type: 'sleep', goal: 8, unit: 'hours', frequency: 'Everyday', difficulty: 'Easy', streak: 2, image: require('../../assets/GraphitImage.png'), progress: 0 },
   ]);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   const widthAnim = useRef(new Animated.Value(0)).current;
 
-  const completedCount = todos.filter(t => t.completed).length;
-  const progress = todos.length > 0 ? (completedCount / todos.length) * 100 : 0;
+  const totalProgress = todos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+  const progress = todos.length > 0 ? totalProgress / (todos.length * 100) * 100 : 0;
 
   useEffect(() => {
     Animated.timing(widthAnim, {
@@ -30,13 +34,20 @@ export default function HomeScreen() {
     }).start();
   }, [progress]);
 
-  const handleToggleTodo = (id) => {
+  const handleTaskPress = (task) => {
+    setSelectedTask(task);
+    setModalVisible(true);
+  };
+
+  const handleSaveProgress = (taskId, newProgress) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setTodos(prevTodos =>
       prevTodos.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        todo.id === taskId ? { ...todo, progress: newProgress } : todo
       )
     );
+    setModalVisible(false);
+    setSelectedTask(null);
   };
 
   const animatedWidth = widthAnim.interpolate({
@@ -52,51 +63,61 @@ export default function HomeScreen() {
             <Text style={styles.dayLabel}>DAY</Text>
             <Text style={styles.dayNumber}>{programDay}</Text>
             <View style={styles.progressContainer}>
-              <Animated.View style={[styles.progressBar, { width: animatedWidth }]}>
-                {progress > 15 && (
-                  <Text style={styles.progressText}>{`${Math.round(progress)}%`}</Text>
-                )}
-              </Animated.View>
+              <Animated.View style={[styles.progressBar, { width: animatedWidth }]} />
+              <Text style={[styles.progressText, { color: progress >= 45 ? '#101010' : '#FFFFFF' }]}>
+                {`${Math.round(progress)}%`}
+              </Text>
             </View>
           </View>
           
           <View>
-            {todos.map(todo => (
-              <TouchableOpacity 
-                key={todo.id} 
-                style={[styles.todoCard, todo.completed && styles.todoCardCompleted]}
-                onPress={() => handleToggleTodo(todo.id)}
-              >
-                <ImageBackground source={todo.image} style={styles.imageBackground} imageStyle={styles.imageStyle}>
-                  <LinearGradient
-                    colors={todo.completed ? ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)'] : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
-                    style={styles.gradient}
-                  >
-                    <View style={styles.streakContainer}>
-                      <Ionicons name="flame" size={14} color="#FFA500" />
-                      <Text style={styles.streakText}>{todo.streak}d</Text>
-                    </View>
-                    <View style={styles.cardContent}>
-                      <Text style={[styles.todoTitle, todo.completed && styles.todoTitleCompleted]}>{todo.task}</Text>
-                      <View style={styles.detailsContainer}>
-                        <Ionicons name="repeat" size={14} color="rgba(255, 255, 255, 0.8)" />
-                        <Text style={styles.detailText}>{todo.frequency}</Text>
-                        <Ionicons name="stats-chart" size={14} color="rgba(255, 255, 255, 0.8)" />
-                        <Text style={styles.detailText}>{todo.difficulty}</Text>
+            {todos.map(todo => {
+              const isCompleted = todo.progress === 100;
+              return (
+                <TouchableOpacity 
+                  key={todo.id} 
+                  style={[styles.todoCard, isCompleted && styles.todoCardCompleted]}
+                  onPress={() => handleTaskPress(todo)}
+                >
+                  <ImageBackground source={todo.image} style={styles.imageBackground} imageStyle={styles.imageStyle}>
+                    <LinearGradient
+                      colors={isCompleted ? ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)'] : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
+                      style={styles.gradient}
+                    >
+                      <View style={styles.streakContainer}>
+                        <Ionicons name="flame" size={14} color="#FFA500" />
+                        <Text style={styles.streakText}>{todo.streak}d</Text>
                       </View>
+                      <View style={styles.cardContent}>
+                        <Text style={[styles.todoTitle, isCompleted && styles.todoTitleCompleted]}>{todo.task}</Text>
+                        <View style={styles.detailsContainer}>
+                          <Ionicons name="repeat" size={14} color="rgba(255, 255, 255, 0.8)" />
+                          <Text style={styles.detailText}>{todo.frequency}</Text>
+                          <Ionicons name="stats-chart" size={14} color="rgba(255, 255, 255, 0.8)" />
+                          <Text style={styles.detailText}>{todo.difficulty}</Text>
+                        </View>
+                      </View>
+                    </LinearGradient>
+                  </ImageBackground>
+                  {isCompleted && (
+                    <View style={styles.completionOverlay}>
+                      <Ionicons name="checkmark-circle" size={60} color="rgba(255, 255, 255, 0.9)" />
                     </View>
-                  </LinearGradient>
-                </ImageBackground>
-                {todo.completed && (
-                  <View style={styles.completionOverlay}>
-                    <Ionicons name="checkmark-circle" size={60} color="rgba(255, 255, 255, 0.9)" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
+                  )}
+                </TouchableOpacity>
+              )
+            })}
           </View>
         </ScrollView>
       </SafeAreaView>
+      {selectedTask && (
+        <TaskDetailModal
+          isVisible={modalVisible}
+          task={selectedTask}
+          onClose={() => setModalVisible(false)}
+          onSave={handleSaveProgress}
+        />
+      )}
     </LinearGradient>
   );
 }
@@ -127,14 +148,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     marginTop: 15,
-    justifyContent: 'center',
   },
   progressBar: {
     height: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
@@ -142,7 +160,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   progressText: {
-    color: '#101010',
+    position: 'absolute',
+    width: '100%',
+    textAlign: 'center',
+    lineHeight: 24,
     fontSize: 14,
     fontWeight: 'bold',
   },
