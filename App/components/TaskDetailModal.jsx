@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import SleepSlider from './SleepSlider';
 
-const TaskDetailModal = ({ isVisible, task, onClose, onSave }) => {
+const TaskDetailModal = ({ isVisible, task, onClose }) => {
   const [currentValue, setCurrentValue] = useState(0);
   const slideAnim = useRef(new Animated.Value(500)).current;
   const blurAnim = useRef(new Animated.Value(0)).current;
@@ -48,7 +48,7 @@ const TaskDetailModal = ({ isVisible, task, onClose, onSave }) => {
     }
   }, [isVisible]);
 
-  const handleClose = () => {
+  const handleClose = (saveData = null) => {
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: 500,
@@ -62,13 +62,7 @@ const TaskDetailModal = ({ isVisible, task, onClose, onSave }) => {
         easing: Easing.in(Easing.ease),
         useNativeDriver: false,
       }),
-    ]).start(() => onClose());
-  };
-
-  const handleSave = () => {
-    const newProgress = task.type === 'simple' ? 100 : Math.min(Math.round((currentValue / task.goal) * 100), 100);
-    onSave(task.id, newProgress);
-    handleClose();
+    ]).start(() => onClose(saveData));
   };
   
   const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
@@ -98,20 +92,23 @@ const TaskDetailModal = ({ isVisible, task, onClose, onSave }) => {
       animationType="none"
       transparent={true}
       visible={isVisible}
-      onRequestClose={handleClose}
+      onRequestClose={() => handleClose()}
     >
-      <TouchableWithoutFeedback onPress={handleClose}>
+      <TouchableWithoutFeedback onPress={() => handleClose()}>
         <AnimatedBlurView intensity={blurAnim} tint="dark" style={styles.modalOverlay}>
           <TouchableWithoutFeedback>
             <Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
               <LinearGradient colors={['#181818', '#0A0A0A']} style={styles.gradientContainer}>
-                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                <TouchableOpacity style={styles.closeButton} onPress={() => handleClose()}>
                   <Ionicons name="close-circle" size={30} color="#555555" />
                 </TouchableOpacity>
                 
                 {task.type === 'sleep' ? renderSleepTask() : renderSimpleTask()}
                 
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <TouchableOpacity style={styles.saveButton} onPress={() => {
+                  const newProgress = task.type === 'simple' ? 100 : Math.min(Math.round((currentValue / task.goal) * 100), 100);
+                  handleClose({ id: task.id, progress: newProgress });
+                }}>
                   <Text style={styles.saveButtonText}>{task.type === 'simple' ? 'Mark as Complete' : 'Save Progress'}</Text>
                 </TouchableOpacity>
               </LinearGradient>

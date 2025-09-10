@@ -1,14 +1,22 @@
-import React, { useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 
 const SleepSlider = ({ min, max, initialValue, onValueChange }) => {
+  const [localValue, setLocalValue] = useState(initialValue);
   const lastHapticValue = useRef(initialValue);
+  const isSliding = useRef(false);
+
+  useEffect(() => {
+    if (!isSliding.current) {
+      setLocalValue(initialValue);
+    }
+  }, [initialValue]);
 
   const handleValueChange = (value) => {
     const roundedValue = Math.round(value);
-    onValueChange(roundedValue);
+    setLocalValue(roundedValue);
     
     if (roundedValue !== lastHapticValue.current) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -16,32 +24,46 @@ const SleepSlider = ({ min, max, initialValue, onValueChange }) => {
     }
   };
 
+  const handleSlidingStart = () => {
+    isSliding.current = true;
+  };
+
+  const handleSlidingComplete = (value) => {
+    isSliding.current = false;
+    const roundedValue = Math.round(value);
+    onValueChange(roundedValue);
+  };
+
   const ticks = Array.from({ length: (max - min) + 1 }, (_, i) => i);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.currentValueText}>{initialValue} hours</Text>
+      <Text style={styles.currentValueText}>{localValue} hours</Text>
       <View style={styles.sliderContainer}>
-        <View style={styles.ticksContainer}>
-          {ticks.map(tick => (
-            <View 
-              key={tick} 
-              style={[
-                styles.tick,
-                tick % 2 === 0 ? styles.largeTick : styles.smallTick,
-              ]} 
-            />
-          ))}
+        <View style={styles.trackBackground}>
+          <View style={styles.ticksContainer}>
+            {ticks.map(tick => (
+              <View 
+                key={tick} 
+                style={[
+                  styles.tick,
+                  tick % 2 === 0 ? styles.largeTick : styles.smallTick,
+                ]} 
+              />
+            ))}
+          </View>
         </View>
         <Slider
           style={styles.slider}
           minimumValue={min}
           maximumValue={max}
           step={1}
-          value={initialValue}
+          value={localValue}
           onValueChange={handleValueChange}
+          onSlidingStart={handleSlidingStart}
+          onSlidingComplete={handleSlidingComplete}
           minimumTrackTintColor="#FFFFFF"
-          maximumTrackTintColor="#2C2C2E"
+          maximumTrackTintColor="transparent"
           thumbTintColor="transparent" 
         />
       </View>
@@ -66,10 +88,17 @@ const styles = StyleSheet.create({
     height: 60,
     justifyContent: 'center',
   },
+  trackBackground: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#2C2C2E',
+    borderRadius: 30,
+    justifyContent: 'center',
+    position: 'absolute',
+  },
   slider: {
     width: '100%',
     height: '100%',
-    position: 'absolute',
   },
   ticksContainer: {
     width: '100%',

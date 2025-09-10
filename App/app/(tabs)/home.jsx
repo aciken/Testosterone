@@ -12,9 +12,9 @@ export default function HomeScreen() {
   const [todos, setTodos] = useState([
     { id: '1', task: 'Morning sunlight', type: 'simple', frequency: 'Everyday', difficulty: 'Easy', streak: 10, image: require('../../assets/Sunrise.png'), progress: 0 },
     { id: '2', task: 'High-intensity workout', type: 'simple', frequency: '3x/week', difficulty: 'Hard', streak: 5, image: require('../../assets/Workout.png'), progress: 0 },
-    { id: '3', task: 'Eat a protein-rich meal', type: 'simple', frequency: 'Everyday', difficulty: 'Easy', streak: 3, image: require('../../assets/FireImage.png'), progress: 0 },
+    { id: '3', task: 'Eat a protein-rich meal', type: 'simple', frequency: 'Everyday', difficulty: 'Easy', streak: 3, image: require('../../assets/Meal.png'), progress: 0 },
     { id: '4', task: 'Cold shower', type: 'simple', frequency: 'Everyday', difficulty: 'Medium', streak: 12, image: require('../../assets/CarImage.png'), progress: 0 },
-    { id: '5', task: '8 hours of quality sleep', type: 'sleep', goal: 8, unit: 'hours', frequency: 'Everyday', difficulty: 'Easy', streak: 2, image: require('../../assets/GraphitImage.png'), progress: 0 },
+    { id: '5', task: '8 hours of quality sleep', type: 'sleep', goal: 8, unit: 'hours', frequency: 'Everyday', difficulty: 'Easy', streak: 2, image: require('../../assets/Sleep.png'), progress: 0 },
   ]);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -39,15 +39,18 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
-  const handleSaveProgress = (taskId, newProgress) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setTodos(prevTodos =>
-      prevTodos.map(todo =>
-        todo.id === taskId ? { ...todo, progress: newProgress } : todo
-      )
-    );
+  const handleModalClose = (saveData) => {
     setModalVisible(false);
     setSelectedTask(null);
+
+    if (saveData) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setTodos(prevTodos =>
+        prevTodos.map(todo =>
+          todo.id === saveData.id ? { ...todo, progress: saveData.progress } : todo
+        )
+      );
+    }
   };
 
   const animatedWidth = widthAnim.interpolate({
@@ -96,6 +99,16 @@ export default function HomeScreen() {
                           <Ionicons name="stats-chart" size={14} color="rgba(255, 255, 255, 0.8)" />
                           <Text style={styles.detailText}>{todo.difficulty}</Text>
                         </View>
+                        {todo.type === 'sleep' && todo.progress > 0 && (
+                          <View style={styles.sleepProgressContainer}>
+                            <Text style={styles.sleepProgressText}>
+                              Progress: {(todo.progress / 100 * todo.goal).toFixed(1)} / {todo.goal}h
+                            </Text>
+                            <View style={styles.progressBarBackground}>
+                              <View style={[styles.progressBarFill, { width: `${todo.progress}%` }]} />
+                            </View>
+                          </View>
+                        )}
                       </View>
                     </LinearGradient>
                   </ImageBackground>
@@ -114,8 +127,7 @@ export default function HomeScreen() {
         <TaskDetailModal
           isVisible={modalVisible}
           task={selectedTask}
-          onClose={() => setModalVisible(false)}
-          onSave={handleSaveProgress}
+          onClose={handleModalClose}
         />
       )}
     </LinearGradient>
@@ -235,5 +247,25 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sleepProgressContainer: {
+    marginTop: 10,
+  },
+  sleepProgressText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 3,
   },
 }); 
