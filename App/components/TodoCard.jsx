@@ -1,0 +1,163 @@
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Animated, Easing } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
+const TodoCard = ({ todo, onPress, isEditable }) => {
+  const isCompleted = todo.progress === 100;
+  const animation = useRef(new Animated.Value(isCompleted ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: isCompleted ? 1 : 0,
+      duration: 500,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [isCompleted]);
+
+  const animatedCardStyle = {
+    borderWidth: animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 2],
+    }),
+    borderColor: animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.9)'],
+    }),
+  };
+
+  const animatedTitleStyle = {
+    opacity: animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 0.6],
+    }),
+  };
+
+  const streakOpacity = animation.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+  const doneOpacity = animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+  const blurOpacity = animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+
+  return (
+    <AnimatedTouchableOpacity
+      style={[styles.todoCard, animatedCardStyle, !isEditable && styles.disabledCard]}
+      onPress={isEditable ? onPress : null}
+      activeOpacity={isEditable ? 0.7 : 1}
+    >
+      <ImageBackground source={todo.image} style={styles.imageBackground} imageStyle={styles.imageStyle}>
+        <Animated.View style={{...StyleSheet.absoluteFillObject, opacity: blurOpacity }}>
+          {isCompleted && <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />}
+        </Animated.View>
+        <LinearGradient
+          colors={isCompleted ? ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)'] : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
+          style={styles.gradient}
+        >
+          <View>
+            <Animated.View style={{ opacity: streakOpacity, position: 'absolute' }}>
+              <View style={styles.streakContainer}>
+                <Ionicons name="flame" size={14} color="#FFA500" />
+                <Text style={styles.streakText}>{todo.streak}d</Text>
+              </View>
+            </Animated.View>
+            <Animated.View style={{ opacity: doneOpacity }}>
+              <View style={[styles.streakContainer, styles.completedBadge]}>
+                <Ionicons name="checkmark-sharp" size={16} color="#FFFFFF" />
+                <Text style={styles.completedText}>DONE</Text>
+              </View>
+            </Animated.View>
+          </View>
+
+          <View style={styles.cardContent}>
+            <Animated.Text style={[styles.todoTitle, animatedTitleStyle]}>{todo.task}</Animated.Text>
+            <View style={styles.cardProgressContainer}>
+              <View style={styles.cardProgressBarBackground}>
+                <View style={[styles.cardProgressBarFill, { width: `${todo.progress}%` }]} />
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    </AnimatedTouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  todoCard: {
+    height: 160,
+    borderRadius: 20,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  disabledCard: {
+    opacity: 0.6,
+  },
+  imageBackground: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  imageStyle: {
+    borderRadius: 20,
+  },
+  gradient: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'space-between',
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 15,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+  },
+  streakText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginLeft: 4,
+    fontSize: 12,
+  },
+  completedBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 10,
+  },
+  completedText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginLeft: 6,
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+  cardContent: {
+    alignItems: 'flex-start',
+  },
+  todoTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  cardProgressContainer: {
+    marginTop: 10,
+    width: '100%',
+  },
+  cardProgressBarBackground: {
+    height: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  cardProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
+  },
+});
+
+export default TodoCard;

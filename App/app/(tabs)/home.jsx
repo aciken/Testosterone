@@ -4,37 +4,61 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
 import TaskDetailModal from '../../components/TaskDetailModal';
+import TodoCard from '../../components/TodoCard';
+
+const programData = {
+  4: [ // Today's data
+    { id: '1', task: 'Morning sunlight', type: 'simple', streak: 10, image: require('../../assets/Sunrise.png'), progress: 20 },
+    { id: '2', task: 'High-intensity workout', type: 'simple', streak: 5, image: require('../../assets/Workout.png'), progress: 0 },
+    { id: '3', task: 'Eat a protein-rich meal', type: 'meals', streak: 3, image: require('../../assets/Meal.png'), progress: 0, meals: [{ id: 'm1', name: 'Breakfast', food: '' }, { id: 'm2', name: 'Lunch', food: '' }, { id: 'm3', name: 'Dinner', food: '' }] },
+    { id: '4', task: '8 hours of quality sleep', type: 'sleep', goal: 8, unit: 'hours', streak: 2, image: require('../../assets/Sleep.png'), progress: 0 },
+    { id: '5', task: 'Take your supplements', type: 'checklist', streak: 0, image: require('../../assets/Suplements.png'), progress: 0, checklist: [{ id: 'c1', name: 'Zinc', done: false }, { id: 'c2', name: 'Magnesium', done: false }, { id: 'c3', name: 'Ashwagandha', done: false }, { id: 'c4', name: 'Creatine', done: false }] },
+  ],
+  3: [ // Yesterday's data
+    { id: '1', task: 'Morning sunlight', type: 'simple', streak: 9, image: require('../../assets/Sunrise.png'), progress: 100 },
+    { id: '2', task: 'Eat a protein-rich meal', type: 'meals', streak: 2, image: require('../../assets/Meal.png'), progress: 100, meals: [{ id: 'm1', name: 'Breakfast', food: 'Eggs & Bacon' }, { id: 'm2', name: 'Lunch', food: 'Steak Salad' }, { id: 'm3', name: 'Dinner', food: 'Chicken & Veg' }] },
+    { id: '3', task: 'Active recovery', type: 'simple', streak: 1, image: require('../../assets/ForestImage.png'), progress: 100 },
+    { id: '4', task: '8 hours of quality sleep', type: 'sleep', goal: 8, unit: 'hours', streak: 1, image: require('../../assets/Sleep.png'), progress: 88 },
+  ],
+  5: [ // Tomorrow's data
+    { id: '1', task: 'Morning sunlight', type: 'simple', streak: 10, image: require('../../assets/Sunrise.png'), progress: 0 },
+    { id: '2', task: 'Eat a protein-rich meal', type: 'meals', streak: 3, image: require('../../assets/Meal.png'), progress: 0, meals: [{ id: 'm1', name: 'Breakfast', food: '' }, { id: 'm2', name: 'Lunch', food: '' }, { id: 'm3', name: 'Dinner', food: '' }] },
+    { id: '3', task: 'Cold shower', type: 'simple', streak: 12, image: require('../../assets/CarImage.png'), progress: 0 },
+    { id: '4', task: '8 hours of quality sleep', type: 'sleep', goal: 8, unit: 'hours', streak: 2, image: require('../../assets/Sleep.png'), progress: 0 },
+  ],
+};
 
 export default function HomeScreen() {
-  const programDay = 4;
-
-  const [todos, setTodos] = useState([
-    { id: '1', task: 'Morning sunlight', type: 'simple', frequency: 'Everyday', difficulty: 'Easy', streak: 10, image: require('../../assets/Sunrise.png'), progress: 0 },
-    { id: '2', task: 'High-intensity workout', type: 'simple', frequency: '3x/week', difficulty: 'Hard', streak: 5, image: require('../../assets/Workout.png'), progress: 0 },
-    { id: '3', task: 'Eat a protein-rich meal', type: 'simple', frequency: 'Everyday', difficulty: 'Easy', streak: 3, image: require('../../assets/Meal.png'), progress: 0 },
-    { id: '4', task: 'Cold shower', type: 'simple', frequency: 'Everyday', difficulty: 'Medium', streak: 12, image: require('../../assets/CarImage.png'), progress: 0 },
-    { id: '5', task: '8 hours of quality sleep', type: 'sleep', goal: 8, unit: 'hours', frequency: 'Everyday', difficulty: 'Easy', streak: 2, image: require('../../assets/Sleep.png'), progress: 0 },
-  ]);
+  const programDay = 4; // The actual current day
+  const [currentDay, setCurrentDay] = useState(programDay);
+  const [todosByDay, setTodosByDay] = useState(programData);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
   const widthAnim = useRef(new Animated.Value(0)).current;
 
-  const totalProgress = todos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
-  const progress = todos.length > 0 ? totalProgress / (todos.length * 100) * 100 : 0;
+  const currentTodos = todosByDay[currentDay] || [];
+  const totalProgress = currentTodos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+  const progress = currentTodos.length > 0 ? totalProgress / (currentTodos.length * 100) * 100 : 0;
 
   useEffect(() => {
+    const todosForDay = todosByDay[currentDay] || [];
+    const total = todosForDay.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+    const newProgress = todosForDay.length > 0 ? total / (todosForDay.length * 100) * 100 : 0;
+
     Animated.timing(widthAnim, {
-      toValue: progress,
+      toValue: newProgress,
       duration: 800,
       easing: Easing.out(Easing.ease),
       useNativeDriver: false,
     }).start();
-  }, [progress]);
+  }, [currentDay, todosByDay]);
 
   const handleTaskPress = (task) => {
+    if (currentDay !== programDay) return; // Prevent opening modal for other days
     setSelectedTask(task);
     setModalVisible(true);
   };
@@ -45,11 +69,22 @@ export default function HomeScreen() {
 
     if (saveData) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setTodos(prevTodos =>
-        prevTodos.map(todo =>
-          todo.id === saveData.id ? { ...todo, progress: saveData.progress } : todo
-        )
+      
+      const newTodosForDay = (todosByDay[currentDay] || []).map(todo =>
+        todo.id === saveData.id ? { ...todo, ...saveData } : todo
       );
+
+      setTodosByDay(prevData => ({
+        ...prevData,
+        [currentDay]: newTodosForDay,
+      }));
+    }
+  };
+
+  const handleDayChange = (direction) => {
+    const newDay = currentDay + direction;
+    if (todosByDay[newDay]) { // Only change if data exists for the day
+      setCurrentDay(newDay);
     }
   };
 
@@ -63,8 +98,25 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollView}>
           <View style={styles.header}>
-            <Text style={styles.dayLabel}>DAY</Text>
-            <Text style={styles.dayNumber}>{programDay}</Text>
+            <View style={styles.dayNavigator}>
+              <TouchableOpacity onPress={() => handleDayChange(-1)} style={styles.arrowButton}>
+                <Ionicons name="chevron-back" size={32} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={styles.dayDisplay}>
+                <Text style={styles.dayLabel}>DAY</Text>
+                <Text style={styles.dayNumber}>{currentDay}</Text>
+                <View style={styles.todayButtonContainer}>
+                  {currentDay !== programDay && (
+                    <TouchableOpacity onPress={() => setCurrentDay(programDay)} style={styles.todayButton}>
+                      <Text style={styles.todayText}>RETURN TO TODAY</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => handleDayChange(1)} style={styles.arrowButton}>
+                <Ionicons name="chevron-forward" size={32} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
             <View style={styles.progressContainer}>
               <Animated.View style={[styles.progressBar, { width: animatedWidth }]} />
               <Text style={[styles.progressText, { color: progress >= 45 ? '#101010' : '#FFFFFF' }]}>
@@ -74,52 +126,14 @@ export default function HomeScreen() {
           </View>
           
           <View>
-            {todos.map(todo => {
-              const isCompleted = todo.progress === 100;
-              return (
-                <TouchableOpacity 
-                  key={todo.id} 
-                  style={[styles.todoCard, isCompleted && styles.todoCardCompleted]}
-                  onPress={() => handleTaskPress(todo)}
-                >
-                  <ImageBackground source={todo.image} style={styles.imageBackground} imageStyle={styles.imageStyle}>
-                    <LinearGradient
-                      colors={isCompleted ? ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)'] : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
-                      style={styles.gradient}
-                    >
-                      <View style={styles.streakContainer}>
-                        <Ionicons name="flame" size={14} color="#FFA500" />
-                        <Text style={styles.streakText}>{todo.streak}d</Text>
-                      </View>
-                      <View style={styles.cardContent}>
-                        <Text style={[styles.todoTitle, isCompleted && styles.todoTitleCompleted]}>{todo.task}</Text>
-                        <View style={styles.detailsContainer}>
-                          <Ionicons name="repeat" size={14} color="rgba(255, 255, 255, 0.8)" />
-                          <Text style={styles.detailText}>{todo.frequency}</Text>
-                          <Ionicons name="stats-chart" size={14} color="rgba(255, 255, 255, 0.8)" />
-                          <Text style={styles.detailText}>{todo.difficulty}</Text>
-                        </View>
-                        {todo.type === 'sleep' && todo.progress > 0 && (
-                          <View style={styles.sleepProgressContainer}>
-                            <Text style={styles.sleepProgressText}>
-                              Progress: {(todo.progress / 100 * todo.goal).toFixed(1)} / {todo.goal}h
-                            </Text>
-                            <View style={styles.progressBarBackground}>
-                              <View style={[styles.progressBarFill, { width: `${todo.progress}%` }]} />
-                            </View>
-                          </View>
-                        )}
-                      </View>
-                    </LinearGradient>
-                  </ImageBackground>
-                  {isCompleted && (
-                    <View style={styles.completionOverlay}>
-                      <Ionicons name="checkmark-circle" size={60} color="rgba(255, 255, 255, 0.9)" />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )
-            })}
+            {currentTodos.map(todo => (
+              <TodoCard 
+                key={todo.id}
+                todo={todo}
+                onPress={() => handleTaskPress(todo)}
+                isEditable={currentDay === programDay}
+              />
+            ))}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -142,6 +156,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
+  dayNavigator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  arrowButton: {
+    padding: 10,
+  },
+  dayDisplay: {
+    alignItems: 'center',
+  },
   dayLabel: {
     color: '#8A95B6',
     fontSize: 16,
@@ -154,8 +181,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     lineHeight: 80,
   },
+  todayButtonContainer: {
+    height: 26,
+    marginTop: 4,
+    justifyContent: 'center',
+  },
+  todayButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderRadius: 13,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+  },
+  todayText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
   progressContainer: {
-    width: '80%',
+    width: '100%',
     height: 24,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
@@ -167,9 +213,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 5,
+    shadowOpacity: 0.6,
+    shadowRadius: 5,
+    elevation: 8,
   },
   progressText: {
     position: 'absolute',
@@ -178,94 +224,5 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontSize: 14,
     fontWeight: 'bold',
-  },
-  todoCard: {
-    height: 160,
-    borderRadius: 20,
-    marginBottom: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  todoCardCompleted: {
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  imageBackground: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  imageStyle: {
-    borderRadius: 20,
-  },
-  gradient: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'space-between',
-  },
-  streakContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 15,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    alignSelf: 'flex-start',
-  },
-  streakText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginLeft: 4,
-    fontSize: 12,
-  },
-  cardContent: {
-    alignItems: 'flex-start',
-  },
-  todoTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  todoTitleCompleted: {
-    textDecorationLine: 'line-through',
-  },
-  detailsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  detailText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginLeft: 5,
-    marginRight: 16,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  completionOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sleepProgressContainer: {
-    marginTop: 10,
-  },
-  sleepProgressText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 12,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  progressBarBackground: {
-    height: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 3,
   },
 }); 
