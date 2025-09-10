@@ -10,6 +10,21 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
   const isCompleted = todo.progress === 100;
   const animation = useRef(new Animated.Value(isCompleted ? 1 : 0)).current;
 
+  const getGoalText = () => {
+    switch (todo.type) {
+      case 'slider':
+        return `Goal: ${todo.goal} ${todo.unit}`;
+      case 'checklist':
+        return `Goal: ${todo.checklist.length} items`;
+      case 'meals':
+        return `Goal: ${todo.meals.length} meals`;
+      case 'simple':
+        return 'Goal: Complete';
+      default:
+        return '';
+    }
+  };
+
   useEffect(() => {
     Animated.timing(animation, {
       toValue: isCompleted ? 1 : 0,
@@ -72,10 +87,13 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
 
           <View style={styles.cardContent}>
             <Animated.Text style={[styles.todoTitle, animatedTitleStyle]}>{todo.task}</Animated.Text>
-            <View style={styles.cardProgressContainer}>
-              <View style={styles.cardProgressBarBackground}>
-                <View style={[styles.cardProgressBarFill, { width: `${todo.progress}%` }]} />
+            <View style={styles.bottomContainer}>
+              <View style={styles.cardProgressContainer}>
+                <View style={styles.cardProgressBarBackground}>
+                  <View style={[styles.cardProgressBarFill, { width: `${todo.progress}%` }]} />
+                </View>
               </View>
+              <Text style={styles.goalText}>{getGoalText()}</Text>
             </View>
           </View>
         </LinearGradient>
@@ -143,20 +161,32 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
-  cardProgressContainer: {
-    marginTop: 10,
+  bottomContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
+    marginTop: 10,
+  },
+  cardProgressContainer: {
+    flex: 1,
+    height: 6,
+    marginRight: 12,
   },
   cardProgressBarBackground: {
-    height: 4,
+    height: '100%',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 2,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   cardProgressBarFill: {
     height: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 2,
+    borderRadius: 3,
+  },
+  goalText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
 });
 

@@ -3,7 +3,7 @@ import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Touc
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import SleepSlider from './SleepSlider';
+import CustomSlider from './CustomSlider';
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -74,7 +74,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
     if (isVisible && task) {
       // Reset state based on task type
       switch (task.type) {
-        case 'sleep':
+        case 'slider':
           const initialValue = (task.progress / 100) * (task.goal || 1);
           setCurrentValue(initialValue);
           setChecklistItems([]);
@@ -154,14 +154,16 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
     </View>
   );
 
-  const renderSleepTask = () => (
+  const renderSliderTask = () => (
     <View style={styles.contentContainer}>
-      <Text style={styles.taskTitle}>How much did you sleep?</Text>
-      <SleepSlider 
+      <Text style={styles.taskTitle}>How much {task.task.toLowerCase()}?</Text>
+      <CustomSlider 
         min={0}
-        max={12}
+        max={task.maxValue || task.goal * 1.5}
         initialValue={currentValue}
         onValueChange={setCurrentValue}
+        unit={task.unit}
+        step={task.step || 1}
       />
     </View>
   );
@@ -223,8 +225,8 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
 
   const renderContent = () => {
     switch (task.type) {
-      case 'sleep':
-        return renderSleepTask();
+      case 'slider':
+        return renderSliderTask();
       case 'checklist':
         return renderChecklistTask();
       case 'meals':
@@ -258,7 +260,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                   let saveData = { id: task.id };
                   if (task.type === 'simple') {
                     saveData.progress = 100;
-                  } else if (task.type === 'sleep') {
+                  } else if (task.type === 'slider') {
                     saveData.progress = Math.min(Math.round((currentValue / task.goal) * 100), 100);
                   } else if (task.type === 'checklist') {
                     const doneCount = checklistItems.filter(item => item.done).length;
