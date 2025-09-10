@@ -124,9 +124,8 @@ export default function WelcomePage() {
                 }}
               >
                 <Text style={{ color: '#000000', textAlign: 'center', fontSize: 18, fontWeight: 'bold', marginRight: 10 }}>
-                  Start Quiz
+                  Continue
                 </Text>
-                <Ionicons name="arrow-forward-circle" size={24} color="black" />
               </TouchableOpacity>
             </Link>
             

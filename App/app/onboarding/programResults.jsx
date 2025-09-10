@@ -66,7 +66,7 @@ export default function ProgramResults() {
           style={styles.continueButton} 
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.replace('/home');
+            router.push('/onboarding/createAccount');
           }}
         >
           <Text style={styles.continueButtonText}>Start My Journey</Text>

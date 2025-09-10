@@ -1,28 +1,25 @@
-import { View, TouchableOpacity, Text, Image } from 'react-native';
+import { View, TouchableOpacity, Text } from 'react-native';
 import { usePathname, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function CustomTabBar() {
   const pathname = usePathname();
 
-  // Define the tabs with both the custom icons and fallback Ionicons
+  // Define the tabs with normal Ionicons
   const tabs = [
     { 
       name: 'Home', 
       path: '/home', 
-      iconPath: require('../assets/HomeIcon2.png'),
       ionIcon: 'home'
     },
     { 
       name: 'Friends', 
       path: '/friends', 
-      iconPath: require('../assets/FriendsIcon2.png'),
       ionIcon: 'people'
     },
     { 
       name: 'Profile', 
       path: '/profile', 
-      iconPath: require('../assets/ProfileIcon2.png'),
       ionIcon: 'person'
     },
   ];
@@ -32,54 +29,48 @@ export default function CustomTabBar() {
   };
 
   return (
-    <View style={{ 
-      flexDirection: 'row', 
-      justifyContent: 'space-around', 
-      alignItems: 'center', 
-      backgroundColor: '#1E2747', 
-      paddingVertical: 12,
-      borderTopWidth: 1,
-      borderTopColor: '#2A3455',
-    }}>
+    <View style={styles.tabBarContainer}>
       {tabs.map((tab) => {
         const isActive = pathname === tab.path;
+        const iconColor = isActive ? '#FFFFFF' : '#8A95B6';
+        
         return (
           <TouchableOpacity
             key={tab.path}
-            style={{ 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              backgroundColor: 'transparent',
-              padding: 8,
-              width: 70,
-              height: 70
-            }}
+            style={styles.tabButton}
             onPress={() => handleTabPress(tab.path)}
           >
-            <View
-              style={{
-                borderWidth: isActive ? 2 : 0,
-                borderColor: '#00DDFF',
-                borderRadius: 12,
-                padding: 2,
-                width: 50,
-                height: 50,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Image 
-                source={tab.iconPath}
-                style={{
-                  width: 46,
-                  height: 46
-                }}
-                resizeMode="contain"
-              />
-            </View>
+            <Ionicons
+              name={isActive ? tab.ionIcon : `${tab.ionIcon}-outline`}
+              size={24}
+              color={iconColor}
+            />
+            <Text style={[styles.tabLabel, { color: iconColor }]}>
+              {tab.name}
+            </Text>
           </TouchableOpacity>
         );
       })}
     </View>
   );
 }
+
+const styles = {
+  tabBarContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#000000',
+    height: 60,
+    paddingBottom: 10,
+  },
+  tabButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabLabel: {
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '600',
+  },
+};

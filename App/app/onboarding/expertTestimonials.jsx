@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,21 +11,24 @@ export default function ExpertTestimonials() {
   const testimonials = [
     {
       id: 1,
-      text: "Testosterone optimization is one of the most impactful interventions for men's health, affecting everything from energy and mood to muscle mass and cognitive function.",
-      author: "Dr. Andrew Huberman",
-      title: "Neuroscientist & Health Expert"
+      text: "The major effect of testosterone on the brain (of both males and females) is to make effort feel good.",
+      author: "Andrew D. Huberman, Ph.D.",
+      title: "Neuroscientist & Health Expert",
+      image: require('../../assets/Huberman.jpg')
     },
     {
       id: 2,
-      text: "The decline in testosterone levels we're seeing in modern men is largely due to lifestyle factors - poor sleep, chronic stress, and sedentary behavior. These are all addressable.",
-      author: "Dr. Andrew Huberman",
-      title: "Neuroscientist & Health Expert"
+      text: "Testosterone to me is so important for a sense of well-being when you get older.",
+      author: "Sylvester Stallone",
+      title: "Actor & Fitness Icon",
+      image: require('../../assets/Rambo.jpg')
     },
     {
       id: 3,
-      text: "When testosterone levels are optimized naturally, men report significant improvements in confidence, focus, and overall life satisfaction. It's not just about physical changes.",
-      author: "Dr. Andrew Huberman",
-      title: "Neuroscientist & Health Expert"
+      text: "Testosterone makes us more willing to do what it takes to attain and maintain status. And the key point is what it takes.",
+      author: "Robert M. Sapolsky",
+      title: "Neuroscientist & Author",
+      image: require('../../assets/Sapolsky.jpeg')
     }
   ];
 
@@ -48,7 +51,7 @@ export default function ExpertTestimonials() {
               <View key={testimonial.id} style={styles.testimonialContainer}>
                 <View style={styles.profileContainer}>
                   <View style={styles.profileIcon}>
-                    <Text style={styles.profileText}>AH</Text>
+                    <Image source={testimonial.image} style={styles.profileImage} />
                   </View>
                   <View style={styles.profileInfo}>
                     <Text style={styles.authorName}>{testimonial.author}</Text>
@@ -130,18 +133,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   profileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#1E2747',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
   },
-  profileText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   profileInfo: {
     flex: 1,
@@ -157,7 +161,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bubbleContainer: {
-    marginLeft: 52,
+    marginLeft: 62,
   },
   chatBubble: {
     backgroundColor: '#1E2747',
