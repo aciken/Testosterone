@@ -9,6 +9,7 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 const TodoCard = ({ todo, onPress, isEditable }) => {
   const isCompleted = todo.progress === 100;
   const animation = useRef(new Animated.Value(isCompleted ? 1 : 0)).current;
+  const progressAnim = useRef(new Animated.Value(todo.progress || 0)).current;
 
   const getGoalText = () => {
     switch (todo.type) {
@@ -34,6 +35,15 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
     }).start();
   }, [isCompleted]);
 
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: todo.progress || 0,
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [todo.progress]);
+
   const animatedCardStyle = {
     borderWidth: animation.interpolate({
       inputRange: [0, 1],
@@ -52,9 +62,13 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
     }),
   };
 
-  const streakOpacity = animation.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
   const doneOpacity = animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
   const blurOpacity = animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+
+  const animatedProgressWidth = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
 
   return (
     <AnimatedTouchableOpacity
@@ -70,15 +84,9 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
           colors={isCompleted ? ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)'] : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
           style={styles.gradient}
         >
-          <View>
-            <Animated.View style={{ opacity: streakOpacity, position: 'absolute' }}>
-              <View style={styles.streakContainer}>
-                <Ionicons name="flame" size={14} color="#FFA500" />
-                <Text style={styles.streakText}>{todo.streak}d</Text>
-              </View>
-            </Animated.View>
-            <Animated.View style={{ opacity: doneOpacity }}>
-              <View style={[styles.streakContainer, styles.completedBadge]}>
+          <View style={{ height: 28 }}>
+            <Animated.View style={{ opacity: doneOpacity, position: 'absolute' }}>
+              <View style={[styles.badgeContainer, styles.completedBadge]}>
                 <Ionicons name="checkmark-sharp" size={16} color="#FFFFFF" />
                 <Text style={styles.completedText}>DONE</Text>
               </View>
@@ -90,7 +98,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
             <View style={styles.bottomContainer}>
               <View style={styles.cardProgressContainer}>
                 <View style={styles.cardProgressBarBackground}>
-                  <View style={[styles.cardProgressBarFill, { width: `${todo.progress}%` }]} />
+                  <Animated.View style={[styles.cardProgressBarFill, { width: animatedProgressWidth }]} />
                 </View>
               </View>
               <Text style={styles.goalText}>{getGoalText()}</Text>
@@ -124,7 +132,7 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'space-between',
   },
-  streakContainer: {
+  badgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -132,12 +140,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     alignSelf: 'flex-start',
-  },
-  streakText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginLeft: 4,
-    fontSize: 12,
   },
   completedBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',

@@ -13,10 +13,10 @@ const TestosteroneGauge = ({ value, size = 300, strokeWidth = 3 }) => {
   const goalLevel = 900;
   
   const progress = Math.min(Math.max(value, minLevel), maxLevel);
-  const percentage = (progress - minLevel) / (maxLevel - minLevel);
+  const percentage = (progress - minLevel) / (goalLevel - minLevel);
 
-  const startAngle = -140;
-  const endAngle = 140;
+  const startAngle = -120;
+  const endAngle = 120;
   const totalAngle = endAngle - startAngle;
 
   const polarToCartesian = (angle, r) => {
@@ -55,14 +55,14 @@ const TestosteroneGauge = ({ value, size = 300, strokeWidth = 3 }) => {
 
   return (
     <View style={styles.container}>
-      <Svg width={size} height={size * 0.8}>
+      <Svg width={size} height={size * 0.7}>
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#4A90E2" stopOpacity="1" />
-            <Stop offset="1" stopColor="#7BB3F0" stopOpacity="1" />
+            <Stop offset="0" stopColor="#AECBFA" stopOpacity="1" />
+            <Stop offset="1" stopColor="#4A90E2" stopOpacity="1" />
           </SvgLinearGradient>
         </Defs>
-        <G>{renderTicks()}</G>
+        <G transform="translate(0, -15)">{renderTicks()}</G>
       </Svg>
       <View style={styles.textContainer}>
         <MaskedView
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 20,
+    paddingTop: 10,
   },
   maskedView: {
     height: 80,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 2,
-    marginTop: 15,
+    marginTop: 8,
   },
 });
 

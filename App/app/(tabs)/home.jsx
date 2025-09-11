@@ -7,28 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { Asset } from 'expo-asset';
 import TaskDetailModal from '../../components/TaskDetailModal';
 import TodoCard from '../../components/TodoCard';
-
-const programData = {
-  4: [ // Today's data
-    { id: '1', task: 'Time spent in the sun', type: 'slider', goal: 30, unit: 'minutes', maxValue: 480, step: 15, streak: 10, image: require('../../assets/Sunrise.png'), progress: 0 },
-    { id: '2', task: 'High-intensity workout', type: 'simple', streak: 5, image: require('../../assets/Workout.png'), progress: 0 },
-    { id: '3', task: 'Eat a protein-rich meal', type: 'meals', streak: 3, image: require('../../assets/Meal.png'), progress: 0, meals: [{ id: 'm1', name: 'Breakfast', food: '' }, { id: 'm2', name: 'Lunch', food: '' }, { id: 'm3', name: 'Dinner', food: '' }] },
-    { id: '4', task: '8 hours of quality sleep', type: 'slider', goal: 8, unit: 'hours', maxValue: 12, step: 1, streak: 2, image: require('../../assets/Sleep.png'), progress: 0 },
-    { id: '5', task: 'Take your supplements', type: 'checklist', streak: 0, image: require('../../assets/Suplements.png'), progress: 0, checklist: [{ id: 'c1', name: 'Zinc', done: false }, { id: 'c2', name: 'Magnesium', done: false }, { id: 'c3', name: 'Ashwagandha', done: false }, { id: 'c4', name: 'Creatine', done: false }] },
-  ],
-  3: [ // Yesterday's data
-    { id: '1', task: 'Time spent in the sun', type: 'slider', goal: 30, unit: 'minutes', maxValue: 480, step: 15, streak: 9, image: require('../../assets/Sunrise.png'), progress: 100 },
-    { id: '2', task: 'Eat a protein-rich meal', type: 'meals', streak: 2, image: require('../../assets/Meal.png'), progress: 100, meals: [{ id: 'm1', name: 'Breakfast', food: 'Eggs & Bacon' }, { id: 'm2', name: 'Lunch', food: 'Steak Salad' }, { id: 'm3', name: 'Dinner', food: 'Chicken & Veg' }] },
-    { id: '3', task: 'Active recovery', type: 'simple', streak: 1, image: require('../../assets/ForestImage.png'), progress: 100 },
-    { id: '4', task: '8 hours of quality sleep', type: 'slider', goal: 8, unit: 'hours', maxValue: 12, step: 1, streak: 1, image: require('../../assets/Sleep.png'), progress: 88 },
-  ],
-  5: [ // Tomorrow's data
-    { id: '1', task: 'Time spent in the sun', type: 'slider', goal: 30, unit: 'minutes', maxValue: 480, step: 15, streak: 10, image: require('../../assets/Sunrise.png'), progress: 0 },
-    { id: '2', task: 'Eat a protein-rich meal', type: 'meals', streak: 3, image: require('../../assets/Meal.png'), progress: 0, meals: [{ id: 'm1', name: 'Breakfast', food: '' }, { id: 'm2', name: 'Lunch', food: '' }, { id: 'm3', name: 'Dinner', food: '' }] },
-    { id: '3', task: 'Cold shower', type: 'simple', streak: 12, image: require('../../assets/CarImage.png'), progress: 0 },
-    { id: '4', task: '8 hours of quality sleep', type: 'slider', goal: 8, unit: 'hours', maxValue: 12, step: 1, streak: 2, image: require('../../assets/Sleep.png'), progress: 0 },
-  ],
-};
+import programData from '../../data/programData';
 
 export default function HomeScreen() {
   const programDay = 4; // The actual current day
@@ -163,8 +142,12 @@ export default function HomeScreen() {
                   )}
                 </View>
               </View>
-              <TouchableOpacity onPress={() => handleDayChange(1)} style={styles.arrowButton}>
-                <Ionicons name="chevron-forward" size={32} color="#FFFFFF" />
+              <TouchableOpacity
+                onPress={() => handleDayChange(1)}
+                style={[styles.arrowButton, currentDay >= programDay && styles.arrowButtonDisabled]}
+                disabled={currentDay >= programDay}
+              >
+                <Ionicons name="chevron-forward" size={32} color={currentDay >= programDay ? '#555555' : '#FFFFFF'} />
               </TouchableOpacity>
             </View>
             <View style={styles.progressContainer}>
@@ -225,6 +208,9 @@ const styles = StyleSheet.create({
   },
   arrowButton: {
     padding: 10,
+  },
+  arrowButtonDisabled: {
+    opacity: 0.3,
   },
   dayDisplay: {
     alignItems: 'center',

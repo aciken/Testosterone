@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TestosteroneGauge from '../../components/TestosteroneGauge';
@@ -34,7 +34,7 @@ export default function StatisticsScreen() {
   return (
     <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.content}>
+        <ScrollView contentContainerStyle={styles.contentContainer}>
           <TestosteroneGauge value={testosteroneLevel} />
           
           <View style={styles.statsContainer}>
@@ -56,7 +56,7 @@ export default function StatisticsScreen() {
               text="Avoid large meals and processed foods 2-3 hours before bed to improve sleep quality."
             />
           </View>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -65,11 +65,11 @@ export default function StatisticsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  content: {
-    flex: 1,
+  contentContainer: {
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 30,
+    paddingBottom: 100,
   },
   statsContainer: {
     flexDirection: 'row',
