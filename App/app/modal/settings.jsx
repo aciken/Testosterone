@@ -1,35 +1,23 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  StatusBar,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
-// Reusable component for section headers
-const SectionHeader = ({ title }) => (
-  <Text className="text-xs font-semibold text-gray-500 uppercase mt-6 mb-2 px-1">
-    {title}
-  </Text>
-);
-
-// Reusable component for settings options
-const SettingOption = ({ icon, text, onPress }) => (
+const SettingOption = ({ icon, text, onPress, isDestructive }) => (
   <TouchableOpacity 
-    className="flex-row items-center bg-gray-900 p-4 rounded-lg"
-    onPress={onPress || (() => console.log(`${text} pressed`))}
+    style={styles.optionButton}
+    onPress={() => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onPress();
+    }}
   >
-    <Ionicons name={icon} size={22} color="#a5b4fc" />
-    <Text className="text-base text-gray-200 ml-4 flex-1">{text}</Text> 
-    <Ionicons name="chevron-forward-outline" size={20} color="#6b7280" />
+    <Ionicons name={icon} size={24} color={isDestructive ? '#FF453A' : '#8A95B6'} />
+    <Text style={[styles.optionText, isDestructive && styles.destructiveText]}>{text}</Text> 
+    {!isDestructive && <Ionicons name="chevron-forward" size={20} color="#555" />}
   </TouchableOpacity>
 );
 
@@ -38,31 +26,21 @@ export default function SettingsScreen() {
 
   const handleLogout = async () => {
     Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
+      "Log Out",
+      "Are you sure you want to log out?",
       [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
+        { text: "Cancel", style: "cancel" },
         { 
-          text: "Logout", 
+          text: "Log Out", 
           style: "destructive",
           onPress: async () => {
             try {
-              console.log("Logging out...");
               setIsAuthenticated(false);
               setUser(null);
-              
               await AsyncStorage.removeItem('user');
-              console.log("User removed from AsyncStorage.");
-
               router.replace('/'); 
-              console.log("Navigated to index.");
-
             } catch (e) {
-              console.error("Logout failed:", e);
-              Alert.alert("Error", "Failed to logout. Please try again.");
+              Alert.alert("Error", "Failed to log out. Please try again.");
             }
           } 
         }
@@ -71,55 +49,90 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-950">
-      <StatusBar barStyle="light-content" />
-
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 pt-5 pb-4 border-b border-gray-800">
-        <Text className="text-xl font-bold text-white">Settings</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="close-circle" size={28} color="#6b7280" /> 
-        </TouchableOpacity>
-      </View>
-
-      {/* Content with Sections */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
-        
-        <SectionHeader title="Account" />
-        <View className="space-y-2">
-          <SettingOption icon="person-circle-outline" text="Edit Profile" />
-          <SettingOption icon="key-outline" text="Change Password" />
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Settings</Text>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.doneButton}
+          >
+            <Text style={styles.doneButtonText}>Done</Text>
+          </TouchableOpacity>
         </View>
 
-        <SectionHeader title="Preferences" />
-        <View className="space-y-2">
-          <SettingOption icon="notifications-outline" text="Notifications" />
-          <SettingOption icon="color-palette-outline" text="Appearance" />
-          <SettingOption icon="lock-closed-outline" text="Privacy & Security" />
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.section}>
+            <SettingOption icon="person-outline" text="Account" onPress={() => {}} />
+            <SettingOption icon="notifications-outline" text="Notifications" onPress={() => {}} />
+            <SettingOption icon="shield-checkmark-outline" text="Privacy Policy" onPress={() => {}} />
+          </View>
 
-        <SectionHeader title="Support" />
-        <View className="space-y-2">
-          <SettingOption icon="help-circle-outline" text="Help Center" />
-          <SettingOption icon="document-text-outline" text="Terms of Service" />
-          <SettingOption icon="shield-checkmark-outline" text="Privacy Policy" />
-          <SettingOption icon="information-circle-outline" text="About" />
-        </View>
-
-        {/* Logout Button - Added Spacing and Styling */}
-        <TouchableOpacity 
-          className="bg-red-900/50 border border-red-700/60 p-4 rounded-lg flex-row items-center justify-center mt-10"
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out-outline" size={22} color="#fca5a5" /> 
-          <Text className="text-base text-red-400 ml-3 font-semibold">Logout</Text>
-        </TouchableOpacity>
-
-        {/* Version Info Footer */}
-        <Text className="text-center text-gray-600 mt-8 text-xs">
-           Version 1.0.0 (Build 1)
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+          <View style={styles.section}>
+            <SettingOption 
+              icon="log-out-outline" 
+              text="Log Out" 
+              onPress={handleLogout}
+              isDestructive 
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  doneButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  doneButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  scrollViewContent: {
+    padding: 20,
+  },
+  section: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 15,
+    marginBottom: 30,
+    overflow: 'hidden',
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  optionText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    marginLeft: 20,
+    flex: 1,
+  },
+  destructiveText: {
+    color: '#FF453A',
+  },
+}); 

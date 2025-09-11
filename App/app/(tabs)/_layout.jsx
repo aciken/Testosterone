@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
@@ -27,15 +27,21 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen 
-        name="friends"
+        name="statistics"
         options={{
-          tabBarIcon: ({ color }) => <Ionicons name="people" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="stats-chart" size={28} color={color} />,
         }}
       />
       <Tabs.Screen 
         name="profile"
         options={{
           tabBarIcon: ({ color }) => <Ionicons name="person" size={28} color={color} />,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push('/modal/settings');
+          },
         }}
       />
     </Tabs>

@@ -1,46 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
 
+// This component is never rendered, but it is required by Expo Router
+// for the tab to appear in the tab bar. The onPress event is handled
+// in the _layout.jsx file to open the settings modal.
 export default function ProfileScreen() {
-  return (
-    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
-        <View style={styles.content}>
-          <Ionicons name="person-outline" size={64} color="#555555" />
-          <Text style={styles.placeholderText}>Profile Page Content</Text>
-        </View>
-      </SafeAreaView>
-    </LinearGradient>
-  );
+  return <View />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1 },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    color: '#555555',
-    fontSize: 18,
-    marginTop: 20,
-  },
-});

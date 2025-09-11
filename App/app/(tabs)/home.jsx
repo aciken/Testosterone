@@ -154,10 +154,12 @@ export default function HomeScreen() {
                 <Text style={styles.dayLabel}>DAY</Text>
                 <Text style={styles.dayNumber}>{currentDay}</Text>
                 <View style={styles.todayButtonContainer}>
-                  {currentDay !== programDay && (
+                  {currentDay !== programDay ? (
                     <TouchableOpacity onPress={() => setCurrentDay(programDay)} style={styles.todayButton}>
                       <Text style={styles.todayText}>RETURN TO TODAY</Text>
                     </TouchableOpacity>
+                  ) : (
+                    <Text style={styles.isTodayText}>TODAY</Text>
                   )}
                 </View>
               </View>
@@ -243,6 +245,7 @@ const styles = StyleSheet.create({
     height: 26,
     marginTop: 4,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   todayButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -257,6 +260,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 1,
+  },
+  isTodayText: {
+    color: '#8A95B6',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 2,
   },
   progressContainer: {
     width: '100%',
