@@ -55,14 +55,14 @@ const TestosteroneGauge = ({ value, size = 300, strokeWidth = 3 }) => {
 
   return (
     <View style={styles.container}>
-      <Svg width={size} height={size * 0.7}>
+      <Svg width={size} height={size * 0.75}>
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor="#AECBFA" stopOpacity="1" />
             <Stop offset="1" stopColor="#4A90E2" stopOpacity="1" />
           </SvgLinearGradient>
         </Defs>
-        <G transform="translate(0, -15)">{renderTicks()}</G>
+        <G transform="translate(0, -5)">{renderTicks()}</G>
       </Svg>
       <View style={styles.textContainer}>
         <MaskedView
@@ -77,7 +77,7 @@ const TestosteroneGauge = ({ value, size = 300, strokeWidth = 3 }) => {
           />
         </MaskedView>
         <Text style={styles.unitText}>ng/dl</Text>
-        <Text style={styles.scoreLabel}>TESTOSTERONE SCORE</Text>
+        <Text style={styles.scoreLabel}>{"APPROXIMATE\nTESTOSTERONE SCORE"}</Text>
       </View>
     </View>
   );
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 10,
+    paddingTop: 70,
   },
   maskedView: {
     height: 80,
@@ -117,7 +117,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 2,
-    marginTop: 8,
+    marginTop: 35,
+    textAlign: 'center',
   },
 });
 

@@ -26,7 +26,7 @@ const FocusAreaCard = ({ icon, title, text }) => (
 );
 
 export default function StatisticsScreen() {
-  const testosteroneLevel = 650; // Example value
+  const testosteroneLevel = 300; // Example value
   const dietScore = 85; // Example score
   const exerciseScore = 92; // Example score
   const sleepScore = 78; // Example score
