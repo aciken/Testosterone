@@ -5,13 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Asset } from 'expo-asset';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import TaskDetailModal from '../../components/TaskDetailModal';
 import TodoCard from '../../components/TodoCard';
 import programData from '../../data/programData';
 
 export default function HomeScreen() {
-  const programDay = 4; // The actual current day
-  const [currentDay, setCurrentDay] = useState(programDay);
+  const [programDay, setProgramDay] = useState(1);
+  const [currentDay, setCurrentDay] = useState(1);
   const [todosByDay, setTodosByDay] = useState(programData);
   const [isDayChanging, setIsDayChanging] = useState(false);
 
@@ -20,6 +21,33 @@ export default function HomeScreen() {
 
   const widthAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const getProgramDay = async () => {
+      try {
+        const userString = await AsyncStorage.getItem('user');
+        if (userString) {
+          const user = JSON.parse(userString);
+          const dateCreated = new Date(user.dateCreated);
+          const today = new Date();
+          
+          // Set both dates to the start of the day for an accurate difference
+          dateCreated.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+
+          const diffTime = Math.abs(today - dateCreated);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          
+          setProgramDay(diffDays);
+          setCurrentDay(diffDays);
+        }
+      } catch (error) {
+        console.error("Failed to load user data:", error);
+      }
+    };
+
+    getProgramDay();
+  }, []);
 
   const currentDayData = todosByDay[currentDay] || { dos: [], donts: [] };
   const currentDos = currentDayData.dos || [];

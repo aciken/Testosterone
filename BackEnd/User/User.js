@@ -12,6 +12,7 @@ const UserSchema = new mongoose.Schema({
     googleId: String,
     isGoogle: {type: Boolean, default: false},
     verification: String,
+    dateCreated: {type: Date, default: Date.now},
 });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -98,7 +98,11 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
             <View style={styles.bottomContainer}>
               <View style={styles.cardProgressContainer}>
                 <View style={styles.cardProgressBarBackground}>
-                  <Animated.View style={[styles.cardProgressBarFill, { width: animatedProgressWidth }]} />
+                  <Animated.View style={[
+                    styles.cardProgressBarFill, 
+                    { width: animatedProgressWidth },
+                    todo.inverted && { backgroundColor: '#FF6B6B' }
+                  ]} />
                 </View>
               </View>
               <Text style={styles.goalText}>{getGoalText()}</Text>
