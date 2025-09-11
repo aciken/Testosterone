@@ -88,7 +88,12 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
           setAnalysis(null);
           break;
         case 'checklist':
-          setChecklistItems(task.checklist || []);
+          // If the task object already has a 'checked' property, use it to initialize the state
+          const initialChecklist = (task.checklist || []).map(item => ({
+            ...item,
+            done: task.checked ? task.checked.includes(item.id) : false,
+          }));
+          setChecklistItems(initialChecklist);
           setCurrentValue(0);
           setMealInput('');
           setIsAnalyzing(false);
@@ -320,7 +325,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                   } else if (task.type === 'checklist') {
                     const doneCount = checklistItems.filter(item => item.done).length;
                     saveData.progress = Math.round((doneCount / checklistItems.length) * 100);
-                    saveData.checklist = checklistItems;
+                    saveData.checked = checklistItems.filter(item => item.done).map(item => item.id);
                   } else if (task.type === 'meals') {
                     saveData.progress = analysis ? analysis.score : task.progress || 0;
                     saveData.meals = [{ id: 'm1', food: mealInput }];

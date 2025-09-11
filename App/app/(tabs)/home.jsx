@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Asset } from 'expo-asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import TaskDetailModal from '../../components/TaskDetailModal';
 import TodoCard from '../../components/TodoCard';
 import programData from '../../data/programData';
@@ -130,6 +131,34 @@ export default function HomeScreen() {
           [currentDay]: { ...prevData[currentDay], donts: newDonts },
         }));
       }
+      
+      sendTaskUpdate(saveData);
+    }
+  };
+
+  const sendTaskUpdate = async (taskData) => {
+    try {
+      const userString = await AsyncStorage.getItem('user');
+      if (userString) {
+        const user = JSON.parse(userString);
+        const updatePayload = {
+          userId: user._id,
+          date: new Date(),
+          task: taskData,
+        };
+
+        console.log("Sending task update:", updatePayload);
+        const response = await axios.post('https://81f3c953726d.ngrok-free.app/tasks/update', updatePayload);
+        console.log("Update response:", response.data);
+
+        if (response.data && response.data.tasks) {
+          const updatedUser = { ...user, tasks: response.data.tasks };
+          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+          console.log("User updated in AsyncStorage");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to send task update:", error);
     }
   };
 

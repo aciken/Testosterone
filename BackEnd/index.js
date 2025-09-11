@@ -8,6 +8,7 @@ app.use(cors());
 const Signup = require('./Auth/Signup');
 const Signin = require('./Auth/signin');
 const Verify = require('./Auth/verify');
+const updateTask = require('./Tasks/updateTask');
 
 
 app.get('/', (req, res) => {
@@ -18,7 +19,8 @@ app.get('/', (req, res) => {
   app.put('/signup', Signup);
   app.post('/signin', Signin);
   app.put('/verify', Verify);
-  
+  app.post('/tasks/update', updateTask);
+
   app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`);
   });
