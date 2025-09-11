@@ -21,14 +21,30 @@ export default function HomeScreen() {
   const widthAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
 
-  const currentTodos = todosByDay[currentDay] || [];
-  const totalProgress = currentTodos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
-  const progress = currentTodos.length > 0 ? totalProgress / (currentTodos.length * 100) * 100 : 0;
+  const currentDayData = todosByDay[currentDay] || { dos: [], donts: [] };
+  const currentDos = currentDayData.dos || [];
+  const currentDonts = currentDayData.donts || [];
+
+  const positiveProgress = currentDos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+  const negativeProgress = currentDonts.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+  const totalPossiblePositive = currentDos.length * 100;
+
+  const progress = totalPossiblePositive > 0 
+    ? ((positiveProgress - negativeProgress) / totalPossiblePositive) * 100
+    : -negativeProgress / (currentDonts.length * 100) * 100;
 
   useEffect(() => {
-    const todosForDay = todosByDay[currentDay] || [];
-    const total = todosForDay.reduce((sum, todo) => sum + (todo.progress || 0), 0);
-    const newProgress = todosForDay.length > 0 ? total / (todosForDay.length * 100) * 100 : 0;
+    const dayData = todosByDay[currentDay] || { dos: [], donts: [] };
+    const dos = dayData.dos || [];
+    const donts = dayData.donts || [];
+
+    const posProgress = dos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+    const negProgress = donts.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+    const totalPossible = dos.length * 100;
+    
+    const newProgress = totalPossible > 0 
+      ? ((posProgress - negProgress) / totalPossible) * 100
+      : -negProgress / (donts.length * 100) * 100;
 
     Animated.timing(widthAnim, {
       toValue: newProgress,
@@ -67,14 +83,25 @@ export default function HomeScreen() {
     if (saveData) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
-      const newTodosForDay = (todosByDay[currentDay] || []).map(todo =>
-        todo.id === saveData.id ? { ...todo, ...saveData } : todo
-      );
+      const isDo = (todosByDay[currentDay].dos || []).some(t => t.id === saveData.id);
 
-      setTodosByDay(prevData => ({
-        ...prevData,
-        [currentDay]: newTodosForDay,
-      }));
+      if (isDo) {
+        const newDos = (todosByDay[currentDay].dos || []).map(todo =>
+          todo.id === saveData.id ? { ...todo, ...saveData } : todo
+        );
+        setTodosByDay(prevData => ({
+          ...prevData,
+          [currentDay]: { ...prevData[currentDay], dos: newDos },
+        }));
+      } else {
+        const newDonts = (todosByDay[currentDay].donts || []).map(todo =>
+          todo.id === saveData.id ? { ...todo, ...saveData } : todo
+        );
+        setTodosByDay(prevData => ({
+          ...prevData,
+          [currentDay]: { ...prevData[currentDay], donts: newDonts },
+        }));
+      }
     }
   };
 
@@ -83,7 +110,7 @@ export default function HomeScreen() {
     if (todosByDay[newDay] && !isDayChanging) {
       setIsDayChanging(true); // Show loader immediately
 
-      const nextDayTasks = todosByDay[newDay];
+      const nextDayTasks = [...(todosByDay[newDay].dos || []), ...(todosByDay[newDay].donts || [])];
       const imagesToLoad = nextDayTasks.map(task => task.image);
 
       const assetPromises = imagesToLoad.map(image => {
@@ -120,6 +147,18 @@ export default function HomeScreen() {
     outputRange: [0.98, 1],
   });
 
+  const positiveWidth = widthAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+    extrapolate: 'clamp',
+  });
+
+  const negativeWidth = widthAnim.interpolate({
+    inputRange: [-100, 0],
+    outputRange: ['100%', '0%'],
+    extrapolate: 'clamp',
+  });
+
   return (
     <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -151,19 +190,24 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
             <View style={styles.progressContainer}>
-              <Animated.View style={[styles.progressBar, { width: animatedWidth }]} />
-              <Text style={[styles.progressText, { color: progress >= 45 ? '#101010' : '#FFFFFF' }]}>
+              <Animated.View style={[styles.negativeProgressBar, { width: negativeWidth }]} />
+              <Animated.View style={[styles.progressBar, { width: positiveWidth }]} />
+              <Text style={[styles.progressText, { color: progress >= 45 && progress > 0 ? '#101010' : '#FFFFFF' }]}>
                 {`${Math.round(progress)}%`}
               </Text>
             </View>
           </View>
           
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>DO'S</Text>
+          </View>
+
           <View style={styles.listContainer}>
             {isDayChanging ? (
               <ActivityIndicator size="large" color="#FFFFFF" />
             ) : (
               <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
-                {currentTodos.map(todo => (
+                {currentDos.map(todo => (
                   <TodoCard 
                     key={todo.id}
                     todo={todo}
@@ -174,6 +218,28 @@ export default function HomeScreen() {
               </Animated.View>
             )}
           </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>DON'TS</Text>
+          </View>
+
+          <View style={styles.listContainer}>
+             {isDayChanging ? (
+              <ActivityIndicator size="large" color="#FFFFFF" />
+            ) : (
+              <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
+                {currentDonts.map(todo => (
+                  <TodoCard 
+                    key={todo.id}
+                    todo={todo}
+                    onPress={() => handleTaskPress(todo)}
+                    isEditable={currentDay === programDay}
+                  />
+                ))}
+              </Animated.View>
+            )}
+          </View>
+
         </ScrollView>
       </SafeAreaView>
       {selectedTask && (
@@ -259,9 +325,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     marginTop: 15,
+    position: 'relative', // Added for positioning bars
+  },
+  sectionHeader: {
+    width: '100%',
+    marginBottom: 15,
+    marginTop: 10,
+  },
+  sectionTitle: {
+    color: '#8A95B6',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 2,
   },
   listContainer: {
-    minHeight: 400, // Ensure container has height for the spinner to be centered
+    minHeight: 100,
     justifyContent: 'center',
   },
   progressBar: {
@@ -273,6 +351,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 5,
     elevation: 8,
+    position: 'absolute',
+  },
+  negativeProgressBar: {
+    height: '100%',
+    backgroundColor: '#FF6B6B',
+    borderRadius: 12,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 5,
+    elevation: 8,
+    position: 'absolute',
   },
   progressText: {
     position: 'absolute',
@@ -281,5 +371,21 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  dontCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 107, 107, 0.05)',
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.2)',
+  },
+  dontCardText: {
+    color: '#FFD1D1',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 15,
   },
 }); 

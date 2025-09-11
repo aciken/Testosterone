@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, TouchableWithoutFeedback, TextInput } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, TouchableWithoutFeedback, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -50,7 +50,9 @@ const ChecklistItem = ({ item, onToggle }) => {
 const TaskDetailModal = ({ isVisible, task, onClose }) => {
   const [currentValue, setCurrentValue] = useState(0);
   const [checklistItems, setChecklistItems] = useState([]);
-  const [mealInputs, setMealInputs] = useState([]);
+  const [mealInput, setMealInput] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
   const slideAnim = useRef(new Animated.Value(500)).current;
   const blurAnim = useRef(new Animated.Value(0)).current;
 
@@ -58,13 +60,14 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
     if (!task) return '55%';
     switch (task.type) {
       case 'meals':
-        return '75%';
+        return '65%';
       case 'checklist':
         return '65%';
       case 'sleep':
         return '55%';
+      case 'simple_dont':
       case 'simple':
-        return '40%';
+        return '35%';
       default:
         return '55%';
     }
@@ -75,25 +78,35 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
       // Reset state based on task type
       switch (task.type) {
         case 'slider':
-          const initialValue = (task.progress / 100) * (task.goal || 1);
+          const initialValue = task.inverted
+            ? (task.progress / 100) * (task.maxValue || 10)
+            : (task.progress / 100) * (task.goal || 1);
           setCurrentValue(initialValue);
           setChecklistItems([]);
-          setMealInputs([]);
+          setMealInput('');
+          setIsAnalyzing(false);
+          setAnalysis(null);
           break;
         case 'checklist':
           setChecklistItems(task.checklist || []);
           setCurrentValue(0);
-          setMealInputs([]);
+          setMealInput('');
+          setIsAnalyzing(false);
+          setAnalysis(null);
           break;
         case 'meals':
-          setMealInputs(task.meals || []);
+          setMealInput('');
+          setIsAnalyzing(false);
+          setAnalysis(null);
           setCurrentValue(0);
           setChecklistItems([]);
           break;
         default:
           setCurrentValue(0);
           setChecklistItems([]);
-          setMealInputs([]);
+          setMealInput('');
+          setIsAnalyzing(false);
+          setAnalysis(null);
           break;
       }
 
@@ -150,13 +163,27 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   
   const renderSimpleTask = () => (
     <View style={styles.contentContainer}>
-      <Text style={styles.taskTitle}>{task.task}</Text>
+      <Ionicons name="barbell-outline" size={48} color="#8A95B6" style={{ marginBottom: 16 }}/>
+      <Text style={styles.taskTitle}>
+        {task.task === 'High-intensity workout'
+          ? 'Did you do an intensive weightlifting workout today?'
+          : task.task}
+      </Text>
+    </View>
+  );
+
+  const renderSimpleDontTask = () => (
+    <View style={styles.contentContainer}>
+      <Ionicons name="shield-checkmark-outline" size={48} color="#8A95B6" style={{ marginBottom: 16 }}/>
+      <Text style={styles.taskTitle}>Did you successfully {task.task.toLowerCase()}?</Text>
     </View>
   );
 
   const renderSliderTask = () => (
     <View style={styles.contentContainer}>
-      <Text style={styles.taskTitle}>How much {task.task.toLowerCase()}?</Text>
+      <Text style={styles.taskTitle}>
+        {task.inverted ? `Rate your ${task.task.toLowerCase()}` : `How much ${task.task.toLowerCase()}?`}
+      </Text>
       <CustomSlider 
         min={0}
         max={task.maxValue || task.goal * 1.5}
@@ -194,32 +221,56 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   };
 
   const renderMealsTask = () => {
-    const handleTextChange = (text, mealId) => {
-      setMealInputs(
-        mealInputs.map(meal =>
-          meal.id === mealId ? { ...meal, food: text } : meal
-        )
-      );
+    const handleAnalyze = () => {
+      setIsAnalyzing(true);
+      setAnalysis(null);
+      setTimeout(() => {
+        const score = Math.floor(Math.random() * 11) + 90; // 90-100
+        setAnalysis({
+          text: 'Excellent choice! Rich in protein and micronutrients to support hormone health.',
+          score: score,
+        });
+        setIsAnalyzing(false);
+      }, 1500);
     };
 
     return (
-      <View style={styles.contentContainer}>
-        <Text style={styles.taskTitle}>What did you eat today?</Text>
-        <View style={styles.mealsContainer}>
-          {mealInputs.map(meal => (
-            <View key={meal.id} style={styles.mealInputContainer}>
-              <Text style={styles.mealLabel}>{meal.name}</Text>
-              <TextInput
-                style={styles.mealTextInput}
-                placeholder="e.g., Chicken breast, quinoa..."
-                placeholderTextColor="#555"
-                value={meal.food}
-                onChangeText={(text) => handleTextChange(text, meal.id)}
-              />
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"} 
+        style={{ flex: 1, width: '100%' }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.contentContainer}>
+            <Text style={styles.taskTitle}>What did you eat today?</Text>
+            <TextInput
+              style={styles.mealTextInput}
+              placeholder="e.g., Steak, eggs, and spinach..."
+              placeholderTextColor="#555"
+              value={mealInput}
+              onChangeText={setMealInput}
+              multiline
+            />
+            <View style={styles.analysisContainer}>
+              {isAnalyzing ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : analysis ? (
+                <View style={styles.analysisResult}>
+                  <Text style={styles.analysisText}>{analysis.text}</Text>
+                  <Text style={styles.analysisScore}>{analysis.score}%</Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.analyzeButton, !mealInput && styles.disabledButton]}
+                  onPress={handleAnalyze}
+                  disabled={!mealInput}
+                >
+                  <Text style={styles.analyzeButtonText}>Analyze Meal</Text>
+                </TouchableOpacity>
+              )}
             </View>
-          ))}
-        </View>
-      </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     );
   };
 
@@ -231,6 +282,8 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         return renderChecklistTask();
       case 'meals':
         return renderMealsTask();
+      case 'simple_dont':
+        return renderSimpleDontTask();
       default:
         return renderSimpleTask();
     }
@@ -258,23 +311,24 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                 
                 <TouchableOpacity style={styles.saveButton} onPress={() => {
                   let saveData = { id: task.id };
-                  if (task.type === 'simple') {
+                  if (task.type === 'simple' || task.type === 'simple_dont') {
                     saveData.progress = 100;
                   } else if (task.type === 'slider') {
-                    saveData.progress = Math.min(Math.round((currentValue / task.goal) * 100), 100);
+                    saveData.progress = task.inverted
+                      ? Math.min(Math.round((currentValue / (task.maxValue / 2)) * 100), 100)
+                      : Math.min(Math.round((currentValue / task.goal) * 100), 100);
                   } else if (task.type === 'checklist') {
                     const doneCount = checklistItems.filter(item => item.done).length;
                     saveData.progress = Math.round((doneCount / checklistItems.length) * 100);
                     saveData.checklist = checklistItems;
                   } else if (task.type === 'meals') {
-                    const doneCount = mealInputs.filter(m => m.food.trim() !== '').length;
-                    saveData.progress = Math.round((doneCount / mealInputs.length) * 100);
-                    saveData.meals = mealInputs;
+                    saveData.progress = analysis ? analysis.score : task.progress || 0;
+                    saveData.meals = [{ id: 'm1', food: mealInput }];
                   }
                   handleClose(saveData);
                 }}>
                   <Text style={styles.saveButtonText}>
-                    {task.type === 'simple' ? 'Mark as Complete' : 'Save Progress'}
+                    {task.type === 'simple' || task.type === 'simple_dont' ? 'Mark as Complete' : 'Save Progress'}
                   </Text>
                 </TouchableOpacity>
               </LinearGradient>
@@ -292,8 +346,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     overflow: 'hidden',
   },
   gradientContainer: {
@@ -312,34 +366,65 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
+    paddingBottom: 20, // Pushes content up from the save button
   },
   taskTitle: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: 'bold',
+    color: '#E0E0E0',
+    fontSize: 22,
+    fontWeight: '700',
     textAlign: 'center',
     marginBottom: 30,
-  },
-  mealsContainer: {
-    width: '100%',
-  },
-  mealInputContainer: {
-    marginBottom: 20,
-  },
-  mealLabel: {
-    color: '#888888',
-    fontSize: 16,
-    marginBottom: 8,
   },
   mealTextInput: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     color: '#FFFFFF',
     fontSize: 18,
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    minHeight: 120,
+    textAlignVertical: 'top',
+    width: '100%',
+  },
+  analysisContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  analyzeButton: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+  },
+  analyzeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  analysisResult: {
+    alignItems: 'center',
+    padding: 16,
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.4)',
+  },
+  analysisText: {
+    color: '#E0E0E0',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  analysisScore: {
+    color: '#4CAF50',
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   checklistContainer: {
     width: '100%',
@@ -348,18 +433,18 @@ const styles = StyleSheet.create({
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     width: '100%',
   },
   checkboxContainer: {
-    width: 28,
-    height: 28,
+    width: 30,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
   checklistText: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '600',
   },
   strikethrough: {
@@ -369,16 +454,14 @@ const styles = StyleSheet.create({
     top: '50%',
   },
   saveButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     padding: 20,
     alignItems: 'center',
     width: '100%',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: '#0A0A0A',
     fontSize: 18,
     fontWeight: 'bold',
   },

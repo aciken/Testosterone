@@ -14,7 +14,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
   const getGoalText = () => {
     switch (todo.type) {
       case 'slider':
-        return `Goal: ${todo.goal} ${todo.unit}`;
+        return todo.inverted ? `Goal: < ${todo.maxValue / 2} ${todo.unit}` : `Goal: ${todo.goal} ${todo.unit}`;
       case 'checklist':
         return `Goal: ${todo.checklist.length} items`;
       case 'meals':
@@ -51,7 +51,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
     }),
     borderColor: animation.interpolate({
       inputRange: [0, 1],
-      outputRange: ['rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.9)'],
+      outputRange: ['rgba(255, 255, 255, 0.2)', todo.inverted ? 'rgba(255, 107, 107, 0.9)' : 'rgba(255, 255, 255, 0.9)'],
     }),
   };
 
@@ -78,17 +78,17 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
     >
       <ImageBackground source={todo.image} style={styles.imageBackground} imageStyle={styles.imageStyle}>
         <Animated.View style={{...StyleSheet.absoluteFillObject, opacity: blurOpacity }}>
-          {isCompleted && <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />}
+          {isCompleted && <BlurView intensity={30} tint={todo.inverted ? "dark" : "light"} style={StyleSheet.absoluteFill} />}
         </Animated.View>
         <LinearGradient
-          colors={isCompleted ? ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)'] : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
+          colors={isCompleted ? (todo.inverted ? ['rgba(150,0,0,0.5)', 'rgba(50,0,0,0.5)'] : ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)']) : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
           style={styles.gradient}
         >
           <View style={{ height: 28 }}>
             <Animated.View style={{ opacity: doneOpacity, position: 'absolute' }}>
-              <View style={[styles.badgeContainer, styles.completedBadge]}>
-                <Ionicons name="checkmark-sharp" size={16} color="#FFFFFF" />
-                <Text style={styles.completedText}>DONE</Text>
+              <View style={[styles.badgeContainer, isCompleted && todo.inverted ? styles.failedBadge : styles.completedBadge]}>
+                <Ionicons name={isCompleted && todo.inverted ? "warning-outline" : "checkmark-sharp"} size={16} color="#FFFFFF" />
+                <Text style={styles.completedText}>{isCompleted && todo.inverted ? "FAILED" : "DONE"}</Text>
               </View>
             </Animated.View>
           </View>
@@ -143,6 +143,10 @@ const styles = StyleSheet.create({
   },
   completedBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 10,
+  },
+  failedBadge: {
+    backgroundColor: 'rgba(255, 107, 107, 0.3)',
     paddingHorizontal: 10,
   },
   completedText: {
