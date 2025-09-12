@@ -41,6 +41,36 @@ export default function HomeScreen() {
           
           setProgramDay(diffDays);
           setCurrentDay(diffDays);
+          
+          // Load saved tasks from user and merge with programData
+          if (user.tasks && user.tasks.length > 0) {
+            const newTodosByDay = JSON.parse(JSON.stringify(programData)); // Deep copy to avoid mutation
+
+            user.tasks.forEach(savedTask => {
+              const taskDate = new Date(savedTask.date);
+              const startDate = new Date(dateCreated);
+              startDate.setHours(0, 0, 0, 0);
+              taskDate.setHours(0, 0, 0, 0);
+
+              const dayIndex = Math.ceil((taskDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+              if (newTodosByDay[dayIndex]) {
+                const findAndupdateTask = (taskArray) => {
+                  if (!taskArray) return;
+                  const taskIndex = taskArray.findIndex(t => t.id === savedTask.taskId);
+                  if (taskIndex > -1) {
+                    taskArray[taskIndex].progress = savedTask.progress;
+                    if (savedTask.checked) {
+                      taskArray[taskIndex].checked = savedTask.checked;
+                    }
+                  }
+                };
+                findAndupdateTask(newTodosByDay[dayIndex].dos);
+                findAndupdateTask(newTodosByDay[dayIndex].donts);
+              }
+            });
+            setTodosByDay(newTodosByDay);
+          }
         }
       } catch (error) {
         console.error("Failed to load user data:", error);
