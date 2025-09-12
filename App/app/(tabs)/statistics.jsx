@@ -38,98 +38,45 @@ export default function StatisticsScreen() {
     const [currentTScore, setCurrentTScore] = useState(BASELINE_TESTOSTERONE);
 
     useEffect(() => {
-        const calculateStats = async () => {
-            try {
-                const userString = await AsyncStorage.getItem('user');
-                if (!userString) { setIsLoading(false); return; }
+        const generatePlaceholderStats = () => {
+            setIsLoading(true);
+            const programDuration = 30; // Simulate 30 days of data
+            let dailyContributions = [BASELINE_TESTOSTERONE];
 
-                const user = JSON.parse(userString);
-                if (!user.tasks || user.tasks.length === 0) { setIsLoading(false); return; }
-                
-                const allTasks = [...programData[1].dos, ...programData[1].donts];
-                const taskMap = allTasks.reduce((map, task) => {
-                    map[task.id] = { ...task };
-                    return map;
-                }, {});
-
-                const dateCreated = new Date(user.dateCreated);
-                const today = new Date();
-                dateCreated.setHours(0,0,0,0);
-                today.setHours(0,0,0,0);
-                const programDuration = Math.ceil((today - dateCreated) / (1000 * 60 * 60 * 24)) + 1;
-                
-                const dailyContributions = Array(programDuration).fill(0);
-                dailyContributions[0] = BASELINE_TESTOSTERONE;
-
-                user.tasks.forEach(savedTask => {
-                    const taskInfo = taskMap[savedTask.taskId];
-                    if (!taskInfo) return;
-
-                    const taskDate = new Date(savedTask.date);
-                    taskDate.setHours(0,0,0,0);
-                    const dayIndex = Math.round((taskDate - dateCreated) / (1000 * 60 * 60 * 24));
-                    
-                    const progressPercent = savedTask.progress / 100;
-                    const contribution = taskInfo.inverted 
-                        ? -1 * progressPercent * taskInfo.impact
-                        : progressPercent * taskInfo.impact;
-                    
-                    if (dayIndex > 0 && dayIndex < programDuration) {
-                        dailyContributions[dayIndex] += contribution;
-                    }
-                });
-                
-                for (let i = 1; i < programDuration; i++) {
-                    dailyContributions[i] += dailyContributions[i-1];
-                }
-
-                const rawChartData = dailyContributions.map(c => Math.max(200, Math.min(1100, c)));
-
-                // Apply a simple moving average to smooth the data
-                const smoothingWindow = Math.min(5, Math.floor(programDuration / 2));
-                const chartData = rawChartData.map((_, i, arr) => {
-                    if (i < smoothingWindow) return arr[i];
-                    const slice = arr.slice(i - smoothingWindow, i + 1);
-                    return slice.reduce((a, b) => a + b, 0) / slice.length;
-                });
-                
-                const finalChartData = [chartData[0], ...chartData];
-
-                const chartLabels = Array(programDuration + 1).fill('');
-                if (programDuration > 0) {
-                    chartLabels[1] = 'Day 0';
-                    if (programDuration > 1) {
-                        chartLabels[programDuration] = `Day ${programDuration - 1}`;
-                    }
-                }
-
-                const allImpacts = {};
-                user.tasks.forEach(savedTask => {
-                    const taskInfo = taskMap[savedTask.taskId];
-                    if (!taskInfo) return;
-                    const contribution = (taskInfo.inverted ? -1 : 1) * (savedTask.progress / 100) * taskInfo.impact;
-                    if (!allImpacts[savedTask.taskId]) {
-                        allImpacts[savedTask.taskId] = { id: savedTask.taskId, name: taskInfo.task, totalImpact: 0 };
-                    }
-                    allImpacts[savedTask.taskId].totalImpact += contribution;
-                });
-
-                const impactsArray = Object.values(allImpacts);
-                const topBoosts = impactsArray.filter(t => t.totalImpact > 0).sort((a,b) => b.totalImpact - a.totalImpact).slice(0, 3);
-                const topDrains = impactsArray.filter(t => t.totalImpact < 0).sort((a,b) => a.totalImpact - b.totalImpact).slice(0, 3);
-                const maxImpact = Math.max(...topBoosts.map(t => t.totalImpact), ...topDrains.map(t => Math.abs(t.totalImpact)), 1);
-                
-                const finalTodayScore = chartData[chartData.length - 1];
-                setCurrentTScore(finalTodayScore);
-                setStats({ chartData: finalChartData, chartLabels, topBoosts, topDrains, maxImpact });
-
-            } catch (error) {
-                console.error("Failed to calculate stats:", error);
-            } finally {
-                setIsLoading(false);
+            for (let i = 1; i < programDuration; i++) {
+                const randomChange = (Math.random() - 0.45) * 25; // Skewed slightly positive
+                const newVal = dailyContributions[i-1] + randomChange;
+                dailyContributions.push(Math.max(250, Math.min(1050, newVal)));
             }
+
+            const chartData = dailyContributions;
+            const finalChartData = [chartData[0], ...chartData];
+
+            const chartLabels = Array(programDuration + 1).fill('');
+            chartLabels[1] = 'Day 0';
+            chartLabels[programDuration] = `Day ${programDuration - 1}`;
+            
+            const finalTodayScore = chartData[chartData.length - 1];
+            setCurrentTScore(finalTodayScore);
+
+            const topBoosts = [
+                { id: '2', name: 'High-intensity workout', totalImpact: 180 },
+                { id: '4', name: '8 hours of quality sleep', totalImpact: 150 },
+                { id: '3', name: 'Eat a protein-rich meal', totalImpact: 120 },
+            ];
+
+            const topDrains = [
+                { id: 'd2', name: 'Stress Level', totalImpact: -90 },
+                { id: 'd1', name: 'Sugar Intake', totalImpact: -75 },
+                { id: 'd3', name: 'Alcohol Consumption', totalImpact: -50 },
+            ];
+            
+            const maxImpact = 180;
+
+            setStats({ chartData: finalChartData, chartLabels, topBoosts, topDrains, maxImpact });
+            setIsLoading(false);
         };
-        calculateStats();
+        generatePlaceholderStats();
     }, []);
 
     return (

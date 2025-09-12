@@ -178,7 +178,7 @@ export default function HomeScreen() {
         };
 
         console.log("Sending task update:", updatePayload);
-        const response = await axios.post('https://81f3c953726d.ngrok-free.app/tasks/update', updatePayload);
+        const response = await axios.post('https://12772dd540b9.ngrok-free.app/tasks/update', updatePayload);
         console.log("Update response:", response.data);
 
         if (response.data && response.data.tasks) {
