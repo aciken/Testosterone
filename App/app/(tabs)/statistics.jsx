@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import TestosteroneGauge from '../../components/TestosteroneGauge';
-import programData from '../../data/programData';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const screenWidth = Dimensions.get('window').width;
 const BASELINE_TESTOSTERONE = 450;
 
-const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue }) => (
-    <View style={styles.keyFactorItem}>
+const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress }) => (
+    <TouchableOpacity style={styles.keyFactorItem} onPress={onPress}>
         <Ionicons name={icon} size={22} color={color} style={styles.keyFactorIcon} />
         <View style={styles.keyFactorDetails}>
             <Text style={styles.keyFactorName}>{name}</Text>
@@ -23,7 +22,7 @@ const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue }) => (
         <Text style={[styles.keyFactorValue, { color }]}>
             {totalImpact > 0 ? '+' : ''}{Math.round(totalImpact)}
         </Text>
-    </View>
+    </TouchableOpacity>
 );
 
 const taskIcons = {
@@ -33,6 +32,7 @@ const taskIcons = {
 };
 
 export default function StatisticsScreen() {
+    const router = useRouter();
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentTScore, setCurrentTScore] = useState(BASELINE_TESTOSTERONE);
@@ -40,23 +40,30 @@ export default function StatisticsScreen() {
     useEffect(() => {
         const generatePlaceholderStats = () => {
             setIsLoading(true);
-            const programDuration = 30; // Simulate 30 days of data
-            let dailyContributions = [BASELINE_TESTOSTERONE];
-
-            for (let i = 1; i < programDuration; i++) {
-                const randomChange = (Math.random() - 0.45) * 25; // Skewed slightly positive
-                const newVal = dailyContributions[i-1] + randomChange;
-                dailyContributions.push(Math.max(250, Math.min(1050, newVal)));
+            const programDuration = 48; // Simulate 48 days of data
+            const startT = BASELINE_TESTOSTERONE;
+            const endT = 780; // A good target score
+            
+            let dailyContributions = [];
+            for (let i = 0; i < programDuration; i++) {
+                const progress = i / (programDuration - 1);
+                // Use a cosine easing function for a smooth S-curve
+                const easedProgress = (1 - Math.cos(progress * Math.PI)) / 2;
+                const value = startT + (endT - startT) * easedProgress;
+                // Add minor random noise to make it look more organic
+                const noise = (Math.random() - 0.5) * 15;
+                const finalValue = Math.round(value + noise);
+                dailyContributions.push(Math.max(250, Math.min(1050, finalValue)));
             }
 
-            const chartData = dailyContributions;
+            const chartData = [...dailyContributions, dailyContributions[dailyContributions.length - 1]]; // Add a dummy point at the end
             const finalChartData = [chartData[0], ...chartData];
 
-            const chartLabels = Array(programDuration + 1).fill('');
+            const chartLabels = Array(programDuration + 2).fill(''); // Adjusted for dummy point
             chartLabels[1] = 'Day 0';
             chartLabels[programDuration] = `Day ${programDuration - 1}`;
             
-            const finalTodayScore = chartData[chartData.length - 1];
+            const finalTodayScore = dailyContributions[dailyContributions.length - 1]; // Use the real last value
             setCurrentTScore(finalTodayScore);
 
             const topBoosts = [
@@ -121,8 +128,8 @@ export default function StatisticsScreen() {
                             
                             <View style={styles.keyFactorsContainer}>
                                 <Text style={styles.sectionTitle}>KEY FACTORS</Text>
-                                {stats.topBoosts.map(c => <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color="#FFFFFF" maxValue={stats.maxImpact}/>)}
-                                {stats.topDrains.map(c => <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color="#FF6B6B" maxValue={stats.maxImpact}/>)}
+                                {stats.topBoosts.map(c => <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color="#FFFFFF" maxValue={stats.maxImpact} onPress={() => router.push({ pathname: '/modal/factorHistory', params: { factorId: c.id } })} />)}
+                                {stats.topDrains.map(c => <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color="#FF6B6B" maxValue={stats.maxImpact} onPress={() => router.push({ pathname: '/modal/factorHistory', params: { factorId: c.id } })} />)}
                             </View>
                         </>
                     ) : (
@@ -186,12 +193,19 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     keyFactorsContainer: { width: '100%', marginTop: 40, paddingHorizontal: 20, },
-    keyFactorItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 25, },
+    keyFactorItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: 12,
+        padding: 15,
+        marginBottom: 15,
+    },
     keyFactorIcon: { marginRight: 15, width: 25, },
     keyFactorDetails: { flex: 1, },
-    keyFactorName: { color: '#E0E0E0', fontSize: 16, fontWeight: '600', marginBottom: 8, },
-    keyFactorBarBackground: { height: 5, width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2.5, },
-    keyFactorBar: { height: '100%', borderRadius: 2.5, },
+    keyFactorName: { color: '#E0E0E0', fontSize: 16, fontWeight: '600', marginBottom: 6, },
+    keyFactorBarBackground: { height: 6, width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 3, },
+    keyFactorBar: { height: '100%', borderRadius: 3, },
     keyFactorValue: { fontSize: 15, fontWeight: 'bold', marginLeft: 15, width: 50, textAlign: 'right' },
     noDataContainer: { marginTop: 60, alignItems: 'center', opacity: 0.5 },
     noDataText: { color: '#8A95B6', marginTop: 20, fontSize: 16, textAlign: 'center' },
