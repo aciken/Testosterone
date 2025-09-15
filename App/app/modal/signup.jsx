@@ -1,19 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  StatusBar, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
   Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  Alert,
+  StyleSheet
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -35,8 +37,8 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordsMatch, setPasswordsMatch] = useState(true);
-  
-  
+
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -84,14 +86,14 @@ export default function Signup() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(emailToTest);
 
-    
+
   };
 
   useEffect(() => {
     // Don't show error if email is empty
     if (!email) {
       setEmailError('');
-      return; 
+      return;
     }
     // Show error if email is not empty AND invalid
     if (!isValidEmail(email)) {
@@ -148,22 +150,22 @@ export default function Signup() {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
-    
+
     // --- If all validation passes, proceed with API call ---
     console.log("Validation passed, attempting sign up...");
     try {
-      const response = await axios.put('https://81f3c953726d.ngrok-free.app/signup', { // Ensure URL is correct
+      const response = await axios.put('https://d5181679a5eb.ngrok-free.app/signup', { // Ensure URL is correct
         name: name.trim(), // Send trimmed name
         email: email.trim(), // Send trimmed email
         password // Send original password
       });
-      
+
       console.log("API Response Status:", response.status);
       console.log("API Response Data:", JSON.stringify(response.data, null, 2));
 
       if(response.status === 200) { // Check for user object
           await AsyncStorage.setItem('user', JSON.stringify(response.data));
-          setUser(response.data); 
+          setUser(response.data);
           router.replace('/modal/verify');
 
 
@@ -183,203 +185,209 @@ export default function Signup() {
           message = error.message || "Error setting up request.";
         }
         setError(message);
-        Alert.alert("Sign Up Error", message); 
+        Alert.alert("Sign Up Error", message);
     }
   };
-  
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0C1126' }}>
-      <StatusBar style="light" />
-      
-      {/* Close button */}
-      <TouchableOpacity 
-        style={{ 
-          position: 'absolute', 
-          top: 48, 
-          right: 24, 
-          zIndex: 10 
-        }}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="close" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1, justifyContent: 'center' }}
-      >
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-          <Animated.View 
-            style={{ 
-              paddingHorizontal: 24,
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }}
-          >
-            {/* Welcome Text */}
-            <Text style={{ color: '#FFFFFF', fontSize: 32, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' }}>
-              Create Account
-            </Text>
-            <Text style={{ color: '#B3B8C8', fontSize: 18, marginBottom: 32, textAlign: 'center' }}>
-              Start your journaling journey
-            </Text>
-            
-            {/* Input Fields */}
-            <View style={{ marginBottom: 16 }}>
-              <TextInput
-                style={{
-                  backgroundColor: '#1E2747',
-                  color: 'white',
-                  paddingVertical: 14,
-                  paddingHorizontal: 20,
-                  borderRadius: 30,
-                  fontSize: 16
-                }}
-                placeholder="Your Name"
-                placeholderTextColor="#8A92B2"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
-            
-            <View style={{ marginBottom: 16 }}>
-              <TextInput
-                style={{
-                  backgroundColor: '#1E2747',
-                  color: 'white',
-                  paddingVertical: 14,
-                  paddingHorizontal: 20,
-                  borderRadius: 30,
-                  fontSize: 16,
-                  borderWidth: emailError ? 1 : 0,
-                  borderColor: emailError ? '#FF3B30' : 'transparent'
-                }}
-                placeholder="Your Email"
-                placeholderTextColor="#8A92B2"
-                value={email}
-                onChangeText={(text) => setEmail(text.trim())}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              {emailError ? (
-                <View style={{ marginTop: 4, marginLeft: 16 }}>
-                  <Text style={{ color: '#FF3B30', fontSize: 12 }}>{emailError}</Text>
-                </View>
-              ) : null}
-            </View>
-            
-            <View style={{ marginBottom: 16 }}>
-              <TextInput
-                style={{
-                  backgroundColor: '#1E2747',
-                  color: 'white',
-                  paddingVertical: 14,
-                  paddingHorizontal: 20,
-                  borderRadius: 30,
-                  fontSize: 16,
-                  borderWidth: passwordError ? 1 : 0,
-                  borderColor: passwordError ? '#FF3B30' : 'transparent'
-                }}
-                placeholder="Create Password"
-                placeholderTextColor="#8A92B2"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-              {passwordError ? (
-                <View style={{ marginTop: 4, marginLeft: 16 }}>
-                  <Text style={{ color: '#FF3B30', fontSize: 12 }}>{passwordError}</Text>
-                </View>
-              ) : null}
-            </View>
-            
-            <View style={{ marginBottom: 8 }}>
-              <TextInput
-                style={{
-                  backgroundColor: '#1E2747',
-                  color: 'white',
-                  paddingVertical: 14,
-                  paddingHorizontal: 20,
-                  borderRadius: 30,
-                  fontSize: 16,
-                  borderWidth: (!passwordsMatch && confirmPassword) ? 1 : 0,
-                  borderColor: (!passwordsMatch && confirmPassword) ? '#FF3B30' : 'transparent'
-                }}
-                placeholder="Confirm Password"
-                placeholderTextColor="#8A92B2"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-            </View>
-            
-            {/* Password match error */}
-            {!passwordsMatch && confirmPassword ? (
-              <Text style={{ color: '#FF3B30', fontSize: 12, marginTop: 4, marginBottom: 12, marginLeft: 16 }}>
-                Passwords don't match
-              </Text>
-            ) : <View style={{ height: 18, marginBottom: 3}} />}
-            
-            {/* Terms and Privacy */}
-            <Text style={{ color: '#8A92B2', fontSize: 12, textAlign: 'center', marginBottom: 24 }}>
-              By signing up, you agree to our{' '}
-              <Text style={{ color: '#00DDFF', textDecorationLine: 'underline' }}>Terms of Service</Text> and{' '}
-              <Text style={{ color: '#00DDFF', textDecorationLine: 'underline' }}>Privacy Policy</Text>
-            </Text>
-            
-            {/* Sign Up Button */}
-            <TouchableOpacity 
-              style={{
-                backgroundColor: '#00DDFF',
-                paddingVertical: 16,
-                borderRadius: 30,
-                marginBottom: 24
-              }}
-              onPress={handleSignUp}
+  return (
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
+
+        {/* Close button */}
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="close" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <Animated.View
+              style={[
+                styles.formContainer,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }]
+                }
+              ]}
             >
-              <Text style={{ color: '#0C1126', textAlign: 'center', fontSize: 18, fontWeight: 'bold' }}>
+              {/* Welcome Text */}
+              <Text style={styles.title}>
                 Create Account
               </Text>
-            </TouchableOpacity>
-            
-            {/* Divider */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#2A3455' }} />
-              <Text style={{ color: '#B3B8C8', marginHorizontal: 16 }}>or</Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#2A3455' }} />
-            </View>
-            
-            {/* Continue with Google */}
-            <TouchableOpacity 
-              style={{
-                backgroundColor: '#1E2747',
-                paddingVertical: 14,
-                borderRadius: 30,
-                marginBottom: 24,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-            >
-              <Ionicons name="logo-google" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 16 }}>
-                Continue with Google
+              <Text style={styles.subtitle}>
+                Join the community and start your journey.
               </Text>
-            </TouchableOpacity>
-            
-            {/* Already have an account */}
-            <TouchableOpacity 
-              style={{ marginBottom: 32 }}
-              onPress={() => router.push('/modal/signin')}
-            >
-              <Text style={{ color: '#B3B8C8', textAlign: 'center', fontSize: 16 }}>
-                Already have an account? <Text style={{ color: '#00DDFF' }}>Sign in</Text>
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+              {/* Input Fields */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your Name"
+                  placeholderTextColor="#888"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[styles.input, emailError && styles.inputError]}
+                  placeholder="Your Email"
+                  placeholderTextColor="#888"
+                  value={email}
+                  onChangeText={(text) => setEmail(text.trim())}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[styles.input, passwordError && styles.inputError]}
+                  placeholder="Create Password"
+                  placeholderTextColor="#888"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+                {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[styles.input, (!passwordsMatch && confirmPassword) && styles.inputError]}
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#888"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                />
+                {(!passwordsMatch && confirmPassword) ? <Text style={styles.errorText}>Passwords don't match</Text> : null}
+              </View>
+
+              {/* Sign Up Button */}
+              <TouchableOpacity
+                style={styles.signUpButton}
+                onPress={handleSignUp}
+              >
+                <Text style={styles.signUpButtonText}>
+                  Create Account
+                </Text>
+              </TouchableOpacity>
+
+              {/* Already have an account */}
+              <TouchableOpacity
+                style={styles.signInPrompt}
+                onPress={() => router.replace('/modal/signin')}
+              >
+                <Text style={styles.signInText}>
+                  Already have an account? <Text style={styles.signInLink}>Sign In</Text>
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
+    zIndex: 10,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  formContainer: {
+    paddingHorizontal: 24,
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#8A95B6',
+    fontSize: 18,
+    marginBottom: 40,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    color: 'white',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  inputError: {
+    borderColor: '#FF6B6B',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 5,
+    marginLeft: 5,
+  },
+  signUpButton: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 18,
+    borderRadius: 30,
+    marginTop: 20,
+    marginBottom: 30,
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.30,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  signUpButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  signInPrompt: {
+    marginBottom: 32,
+  },
+  signInText: {
+    color: '#8A95B6',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  signInLink: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+});

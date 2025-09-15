@@ -10,9 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  Alert,
+  StyleSheet
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useGlobalContext } from '../context/GlobalProvider';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
@@ -90,139 +92,183 @@ export default function Signin() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0C1126' }}>
-      <StatusBar style="light" />
-      
-      {/* Close button */}
-      <TouchableOpacity 
-        style={{ 
-          position: 'absolute', 
-          top: 48, 
-          right: 24, 
-          zIndex: 10 
-        }}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="close" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
+        
+        {/* Close button */}
+        <TouchableOpacity 
+          style={styles.closeButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="close" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1, justifyContent: 'center' }}
-      >
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-          <Animated.View 
-            style={{ 
-              paddingHorizontal: 24,
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }}
-          >
-            {/* Welcome Text */}
-            <Text style={{ color: '#FFFFFF', fontSize: 32, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' }}>
-              Welcome back
-            </Text>
-            <Text style={{ color: '#B3B8C8', fontSize: 18, marginBottom: 32, textAlign: 'center' }}>
-              Let's get you in to your journal
-            </Text>
-            
-            {/* Input Fields */}
-            <View style={{ marginBottom: 16 }}>
-              <TextInput
-                style={{
-                  backgroundColor: '#1E2747',
-                  color: 'white',
-                  paddingVertical: 14,
-                  paddingHorizontal: 20,
-                  borderRadius: 30,
-                  fontSize: 16
-                }}
-                placeholder="Your Email"
-                placeholderTextColor="#8A92B2"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-            
-            <View style={{ marginBottom: 12 }}>
-              <TextInput
-                style={{
-                  backgroundColor: '#1E2747',
-                  color: 'white',
-                  paddingVertical: 14,
-                  paddingHorizontal: 20,
-                  borderRadius: 30,
-                  fontSize: 16
-                }}
-                placeholder="Your Password"
-                placeholderTextColor="#8A92B2"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
-            
-            {/* Forgot Password */}
-            <TouchableOpacity style={{ marginBottom: 28 }}>
-              <Text style={{ color: '#B3B8C8', textAlign: 'center', fontSize: 14 }}>
-                Forgot password?
-              </Text>
-            </TouchableOpacity>
-            
-            {/* Sign In Button */}
-            <TouchableOpacity 
-              style={{
-                backgroundColor: '#00DDFF',
-                paddingVertical: 16,
-                borderRadius: 30,
-                marginBottom: 24
-              }}
-              onPress={handleSignIn}
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <Animated.View 
+              style={[
+                styles.formContainer,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }]
+                }
+              ]}
             >
-              <Text style={{ color: '#0C1126', textAlign: 'center', fontSize: 18, fontWeight: 'bold' }}>
-                Sign in
+              {/* Welcome Text */}
+              <Text style={styles.title}>
+                Welcome Back
               </Text>
-            </TouchableOpacity>
-            
-            {/* Divider */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#2A3455' }} />
-              <Text style={{ color: '#B3B8C8', marginHorizontal: 16 }}>or</Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#2A3455' }} />
-            </View>
-            
-            {/* Continue with Google */}
-            <TouchableOpacity 
-              style={{
-                backgroundColor: '#1E2747',
-                paddingVertical: 14,
-                borderRadius: 30,
-                marginBottom: 24,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-            >
-              <Ionicons name="logo-google" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 16 }}>
-                Continue with Google
+              <Text style={styles.subtitle}>
+                Continue your journey to optimized health.
               </Text>
-            </TouchableOpacity>
-            
-            {/* Don't have an account */}
-            <TouchableOpacity 
-              style={{ marginBottom: 32 }}
-              onPress={() =>{ router.back();router.push('/modal/signup')}}
-            >
-              <Text style={{ color: '#B3B8C8', textAlign: 'center', fontSize: 16 }}>
-                Don't have an account? <Text style={{ color: '#00DDFF' }}>Sign up</Text>
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              
+              {/* Input Fields */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your Email"
+                  placeholderTextColor="#888"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your Password"
+                  placeholderTextColor="#888"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+              </View>
+              
+              {/* Forgot Password */}
+              <TouchableOpacity style={styles.forgotPasswordButton}>
+                <Text style={styles.forgotPasswordText}>
+                  Forgot password?
+                </Text>
+              </TouchableOpacity>
+              
+              {/* Sign In Button */}
+              <TouchableOpacity 
+                style={styles.signInButton}
+                onPress={handleSignIn}
+              >
+                <Text style={styles.signInButtonText}>
+                  Sign In
+                </Text>
+              </TouchableOpacity>
+              
+              {/* Don't have an account */}
+              <TouchableOpacity 
+                style={styles.signUpPrompt}
+                onPress={() =>{ router.back();router.push('/modal/signup')}}
+              >
+                <Text style={styles.signUpText}>
+                  Don't have an account? <Text style={styles.signUpLink}>Sign Up</Text>
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
+    zIndex: 10,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  formContainer: {
+    paddingHorizontal: 24,
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#8A95B6',
+    fontSize: 18,
+    marginBottom: 40,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    color: 'white',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  forgotPasswordButton: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    color: '#8A95B6',
+    fontSize: 14,
+  },
+  signInButton: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 18,
+    borderRadius: 30,
+    marginBottom: 30,
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.30,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  signInButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  signUpPrompt: {
+    marginBottom: 32,
+  },
+  signUpText: {
+    color: '#8A95B6',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  signUpLink: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+});

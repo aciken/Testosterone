@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, SafeAreaView, Animated, Image, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Animated, Dimensions, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
@@ -50,80 +50,43 @@ export default function WelcomePage() {
 
   return (
     <LinearGradient
-      colors={['#0C1126', '#000000']}
-      style={{ flex: 1 }}
+      colors={['#101010', '#000000']}
+      style={styles.container}
     >
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
+      <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
         
         <Animated.View 
-          style={{ 
-            flex: 1, 
-            paddingHorizontal: 24, 
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            opacity: fadeAnim, 
-            transform: [{ translateY: slideAnim }] 
-          }}
+          style={[
+            styles.contentContainer,
+            { 
+              opacity: fadeAnim, 
+              transform: [{ translateY: slideAnim }] 
+            }
+          ]}
         >
           {/* Top Section - Logo */}
-          <View style={{ marginTop: 40 }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold', letterSpacing: 4 }}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>
               TESTOSTERONE
             </Text>
           </View>
 
           {/* Middle Section - Welcome Text */}
-          <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
-            <Text style={{
-              color: '#FFFFFF',
-              fontSize: 48,
-              fontWeight: 'bold',
-              marginBottom: 20,
-              textAlign: 'center',
-              textShadowColor: 'rgba(0, 0, 0, 0.75)',
-              textShadowOffset: {width: 2, height: 2},
-              textShadowRadius: 5,
-            }}>
-              Welcome!
+          <View style={styles.welcomeContainer}>
+            <Text style={styles.welcomeTitle}>
+              Unlock Your Potential
             </Text>
-            <Text style={{
-              color: '#FFFFFF',
-              fontSize: 22,
-              textAlign: 'center',
-              lineHeight: 30,
-              textShadowColor: 'rgba(0, 0, 0, 0.75)',
-              textShadowOffset: {width: 2, height: 2},
-              textShadowRadius: 5,
-            }}>
-              Let's start by finding out if you have a problem with low testosterone
+            <Text style={styles.welcomeSubtitle}>
+              Begin your journey to optimized health and vitality.
             </Text>
           </View>
 
           {/* Bottom Section - Buttons */}
-          <View style={{ width: '100%', alignItems: 'center', marginBottom: 40 }}>
+          <View style={styles.buttonContainer}>
             <Link href="/onboarding/question1" asChild>
-              <TouchableOpacity 
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  width: '90%',
-                  paddingVertical: 18,
-                  borderRadius: 30,
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 20,
-                  shadowColor: "#000",
-                  shadowOffset: {
-                    width: 0,
-                    height: 4,
-                  },
-                  shadowOpacity: 0.30,
-                  shadowRadius: 4.65,
-                  elevation: 8,
-                }}
-              >
-                <Text style={{ color: '#000000', textAlign: 'center', fontSize: 18, fontWeight: 'bold', marginRight: 10 }}>
+              <TouchableOpacity style={styles.continueButton}>
+                <Text style={styles.continueButtonText}>
                   Continue
                 </Text>
               </TouchableOpacity>
@@ -131,8 +94,8 @@ export default function WelcomePage() {
             
             <Link href="/modal/signin" asChild>
               <TouchableOpacity>
-                <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 16 }}>
-                  Already joined via web?
+                <Text style={styles.signInText}>
+                  Already have an account? Sign In
                 </Text>
               </TouchableOpacity>
             </Link>
@@ -142,3 +105,89 @@ export default function WelcomePage() {
     </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  logoContainer: {
+    marginTop: 40,
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    letterSpacing: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  welcomeContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  welcomeTitle: {
+    color: '#FFFFFF',
+    fontSize: 56,
+    fontWeight: '900',
+    marginBottom: 15,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+  },
+  welcomeSubtitle: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 18,
+    textAlign: 'center',
+    lineHeight: 26,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  continueButton: {
+    backgroundColor: '#FFFFFF',
+    width: '90%',
+    paddingVertical: 18,
+    borderRadius: 30,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.30,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  continueButtonText: {
+    color: '#000000',
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  signInText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+});
