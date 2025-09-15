@@ -12,16 +12,26 @@ const getDisplayValue = (task, progress) => {
 
     switch (task.type) {
         case 'slider':
-            const value = (progress / 100) * task.maxValue;
+            const value = (progress / 100) * task.goal;
             // Round to the nearest step for cleanliness
             const roundedValue = Math.round(value / task.step) * task.step;
             // Handle cases where step might be a decimal
             const finalValue = Number.isInteger(roundedValue) ? roundedValue : roundedValue.toFixed(1);
             return `${finalValue}${task.unit ? ` ${task.unit}` : ''}`;
         case 'simple':
-        case 'meals':
-        case 'checklist':
             return progress === 100 ? 'Completed' : 'Incomplete';
+        case 'meals':
+            if (progress < 0) {
+                return `Bad Meal (${Math.abs(progress)}%)`;
+            } else if (progress === 100) {
+                return 'Completed';
+            } else {
+                return 'Incomplete';
+            }
+        case 'checklist':
+            const totalItems = task.checklist ? task.checklist.length : 4; // Default to 4 for supplements
+            const completedItems = Math.round((progress / 100) * totalItems);
+            return `${completedItems}/${totalItems}`;
         default:
             return `${progress}%`;
     }

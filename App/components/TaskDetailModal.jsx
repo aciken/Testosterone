@@ -4,6 +4,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import CustomSlider from './CustomSlider';
+import { OPENAI_API_KEY } from '@env';
+import OpenAI from 'openai';  
+
+
+
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+console.log(OPENAI_API_KEY);
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -226,17 +233,38 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   };
 
   const renderMealsTask = () => {
-    const handleAnalyze = () => {
+    const handleAnalyze = async () => {
       setIsAnalyzing(true);
       setAnalysis(null);
-      setTimeout(() => {
-        const score = Math.floor(Math.random() * 11) + 90; // 90-100
-        setAnalysis({
-          text: 'Excellent choice! Rich in protein and micronutrients to support hormone health.',
-          score: score,
+      Keyboard.dismiss();
+
+      try {
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a testosterone optimization assistant. Analyze the user's meal for its impact on testosterone production. Provide a response in JSON format with two keys: "score" (a number from 0 to 100 representing how good this meal is for testosterone optimization) and "text" (a brief, one-sentence analysis explaining why this meal is good or bad for testosterone).`
+            },
+            {
+              role: 'user',
+              content: mealInput
+            }
+          ],
         });
+
+        const result = JSON.parse(completion.choices[0].message.content);
+        setAnalysis({ text: result.text, score: result.score });
+
+      } catch (error) {
+        console.error("OpenAI API Error:", error);
+        setAnalysis({
+          text: 'Sorry, the analysis could not be completed at this time.',
+          score: 0,
+        });
+      } finally {
         setIsAnalyzing(false);
-      }, 1500);
+      }
     };
 
     return (
@@ -259,9 +287,9 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
               {isAnalyzing ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : analysis ? (
-                <View style={styles.analysisResult}>
+                <View style={[styles.analysisResult, analysis.score < 50 && styles.badAnalysisResult]}>
                   <Text style={styles.analysisText}>{analysis.text}</Text>
-                  <Text style={styles.analysisScore}>{analysis.score}%</Text>
+                  <Text style={[styles.analysisScore, analysis.score < 50 && styles.badAnalysisScore]}>{analysis.score}%</Text>
                 </View>
               ) : (
                 <TouchableOpacity
@@ -321,13 +349,18 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                   } else if (task.type === 'slider') {
                     saveData.progress = task.inverted
                       ? Math.min(Math.round((currentValue / (task.maxValue / 2)) * 100), 100)
-                      : Math.min(Math.round((currentValue / task.goal) * 100), 100);
+                      : Math.round((currentValue / task.goal) * 100);
                   } else if (task.type === 'checklist') {
                     const doneCount = checklistItems.filter(item => item.done).length;
                     saveData.progress = Math.round((doneCount / checklistItems.length) * 100);
                     saveData.checked = checklistItems.filter(item => item.done).map(item => item.id);
                   } else if (task.type === 'meals') {
-                    saveData.progress = analysis ? analysis.score : task.progress || 0;
+                    if (analysis) {
+                      // For meals, if score is below 50%, make it negative progress
+                      saveData.progress = analysis.score < 50 ? -(100 - analysis.score) : analysis.score;
+                    } else {
+                      saveData.progress = task.progress || 0;
+                    }
                     saveData.meals = [{ id: 'm1', food: mealInput }];
                   }
                   handleClose(saveData);
@@ -430,6 +463,12 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  badAnalysisResult: {
+    borderColor: 'rgba(255, 107, 107, 0.4)',
+  },
+  badAnalysisScore: {
+    color: '#FF6B6B',
   },
   checklistContainer: {
     width: '100%',

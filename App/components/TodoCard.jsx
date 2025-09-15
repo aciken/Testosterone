@@ -7,9 +7,10 @@ import { BlurView } from 'expo-blur';
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const TodoCard = ({ todo, onPress, isEditable }) => {
-  const isCompleted = todo.progress === 100;
+  const isCompleted = todo.progress >= 100;
+  const isNegative = todo.progress < 0;
   const animation = useRef(new Animated.Value(isCompleted ? 1 : 0)).current;
-  const progressAnim = useRef(new Animated.Value(todo.progress || 0)).current;
+  const progressAnim = useRef(new Animated.Value(Math.abs(todo.progress || 0))).current;
 
   const getGoalText = () => {
     switch (todo.type) {
@@ -37,7 +38,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
 
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: todo.progress || 0,
+      toValue: Math.abs(todo.progress || 0),
       duration: 600,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
@@ -51,7 +52,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
     }),
     borderColor: animation.interpolate({
       inputRange: [0, 1],
-      outputRange: ['rgba(255, 255, 255, 0.2)', todo.inverted ? 'rgba(255, 107, 107, 0.9)' : 'rgba(255, 255, 255, 0.9)'],
+      outputRange: ['rgba(255, 255, 255, 0.2)', (todo.inverted || isNegative) ? 'rgba(255, 107, 107, 0.9)' : 'rgba(255, 255, 255, 0.9)'],
     }),
   };
 
@@ -68,6 +69,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
   const animatedProgressWidth = progressAnim.interpolate({
     inputRange: [0, 100],
     outputRange: ['0%', '100%'],
+    extrapolate: 'clamp',
   });
 
   return (
@@ -78,17 +80,17 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
     >
       <ImageBackground source={todo.image} style={styles.imageBackground} imageStyle={styles.imageStyle}>
         <Animated.View style={{...StyleSheet.absoluteFillObject, opacity: blurOpacity }}>
-          {isCompleted && <BlurView intensity={30} tint={todo.inverted ? "dark" : "light"} style={StyleSheet.absoluteFill} />}
+          {isCompleted && <BlurView intensity={30} tint={(todo.inverted || isNegative) ? "dark" : "light"} style={StyleSheet.absoluteFill} />}
         </Animated.View>
         <LinearGradient
-          colors={isCompleted ? (todo.inverted ? ['rgba(150,0,0,0.5)', 'rgba(50,0,0,0.5)'] : ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)']) : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
+          colors={isCompleted ? ((todo.inverted || isNegative) ? ['rgba(150,0,0,0.5)', 'rgba(50,0,0,0.5)'] : ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)']) : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
           style={styles.gradient}
         >
           <View style={{ height: 28 }}>
             <Animated.View style={{ opacity: doneOpacity, position: 'absolute' }}>
-              <View style={[styles.badgeContainer, isCompleted && todo.inverted ? styles.failedBadge : styles.completedBadge]}>
-                <Ionicons name={isCompleted && todo.inverted ? "warning-outline" : "checkmark-sharp"} size={16} color="#FFFFFF" />
-                <Text style={styles.completedText}>{isCompleted && todo.inverted ? "FAILED" : "DONE"}</Text>
+              <View style={[styles.badgeContainer, isCompleted && (todo.inverted || isNegative) ? styles.failedBadge : styles.completedBadge]}>
+                <Ionicons name={isCompleted && (todo.inverted || isNegative) ? "warning-outline" : "checkmark-sharp"} size={16} color="#FFFFFF" />
+                <Text style={styles.completedText}>{isCompleted && (todo.inverted || isNegative) ? "FAILED" : "DONE"}</Text>
               </View>
             </Animated.View>
           </View>
@@ -101,7 +103,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
                   <Animated.View style={[
                     styles.cardProgressBarFill, 
                     { width: animatedProgressWidth },
-                    todo.inverted && { backgroundColor: '#FF6B6B' }
+                    (todo.inverted || isNegative) && { backgroundColor: '#FF6B6B' }
                   ]} />
                 </View>
               </View>

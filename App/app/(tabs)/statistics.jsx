@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import TestosteroneGauge from '../../components/TestosteroneGauge';
+import programData from '../../data/programData';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -38,52 +40,142 @@ export default function StatisticsScreen() {
     const [currentTScore, setCurrentTScore] = useState(BASELINE_TESTOSTERONE);
 
     useEffect(() => {
-        const generatePlaceholderStats = () => {
-            setIsLoading(true);
-            const programDuration = 48; // Simulate 48 days of data
-            const startT = BASELINE_TESTOSTERONE;
-            const endT = 780; // A good target score
-            
-            let dailyContributions = [];
-            for (let i = 0; i < programDuration; i++) {
-                const progress = i / (programDuration - 1);
-                // Use a cosine easing function for a smooth S-curve
-                const easedProgress = (1 - Math.cos(progress * Math.PI)) / 2;
-                const value = startT + (endT - startT) * easedProgress;
-                // Add minor random noise to make it look more organic
-                const noise = (Math.random() - 0.5) * 15;
-                const finalValue = Math.round(value + noise);
-                dailyContributions.push(Math.max(250, Math.min(1050, finalValue)));
+        const calculateStats = async () => {
+            try {
+                const userString = await AsyncStorage.getItem('user');
+                if (!userString) { setIsLoading(false); return; }
+
+                const user = JSON.parse(userString);
+                if (!user.tasks || user.tasks.length === 0) { setIsLoading(false); return; }
+                
+                const allTasks = [...programData[1].dos, ...programData[1].donts];
+                const taskMap = allTasks.reduce((map, task) => {
+                    map[task.id] = { ...task };
+                    return map;
+                }, {});
+
+                const dateCreated = new Date(user.dateCreated);
+                const today = new Date();
+                dateCreated.setHours(0,0,0,0);
+                today.setHours(0,0,0,0);
+                const programDuration = Math.ceil((today - dateCreated) / (1000 * 60 * 60 * 24)) + 1;
+                
+                const dailyContributions = Array(programDuration).fill(0);
+                dailyContributions[0] = BASELINE_TESTOSTERONE;
+
+                user.tasks.forEach(savedTask => {
+                    const taskInfo = taskMap[savedTask.taskId];
+                    if (!taskInfo) return;
+
+                    const taskDate = new Date(savedTask.date);
+                    taskDate.setHours(0,0,0,0);
+                    const dayIndex = Math.round((taskDate - dateCreated) / (1000 * 60 * 60 * 24));
+                    
+                    // New calculation: use actual value achieved (progress × goal) for impact
+                    let contribution;
+                    if (taskInfo.type === 'slider' && !taskInfo.inverted) {
+                        // For regular slider tasks: progress × goal gives actual value achieved
+                        const actualValue = (savedTask.progress / 100) * taskInfo.goal;
+                        // Scale impact based on how much of the goal was achieved
+                        const impactMultiplier = Math.min(actualValue / taskInfo.goal, 2); // Cap at 2x for overachievement
+                        contribution = impactMultiplier * taskInfo.impact;
+                    } else if (taskInfo.type === 'slider' && taskInfo.inverted) {
+                        // For inverted tasks (don'ts): higher progress = worse impact
+                        const progressPercent = savedTask.progress / 100;
+                        contribution = -1 * progressPercent * taskInfo.impact;
+                    } else if (taskInfo.type === 'meals') {
+                        // For meals: negative progress means bad meal (negative impact)
+                        if (savedTask.progress < 0) {
+                            contribution = savedTask.progress * taskInfo.impact / 100;
+                        } else {
+                            contribution = (savedTask.progress / 100) * taskInfo.impact;
+                        }
+                    } else {
+                        // For simple/checklist: use original calculation
+                        const progressPercent = savedTask.progress / 100;
+                        contribution = taskInfo.inverted 
+                            ? -1 * progressPercent * taskInfo.impact
+                            : progressPercent * taskInfo.impact;
+                    }
+                    
+                    if (dayIndex > 0 && dayIndex < programDuration) {
+                        dailyContributions[dayIndex] += contribution;
+                    }
+                });
+                
+                for (let i = 1; i < programDuration; i++) {
+                    dailyContributions[i] += dailyContributions[i-1];
+                }
+
+                const rawChartData = dailyContributions.map(c => Math.max(200, Math.min(1100, c)));
+
+                // Apply a simple moving average to smooth the data
+                const smoothingWindow = Math.min(5, Math.floor(programDuration / 2));
+                const chartData = rawChartData.map((_, i, arr) => {
+                    if (i < smoothingWindow) return arr[i];
+                    const slice = arr.slice(i - smoothingWindow, i + 1);
+                    return slice.reduce((a, b) => a + b, 0) / slice.length;
+                });
+                
+                const finalChartData = [chartData[0], ...chartData];
+
+                const chartLabels = Array(programDuration + 1).fill('');
+                if (programDuration > 0) {
+                    chartLabels[1] = 'Day 0';
+                    if (programDuration > 1) {
+                        chartLabels[programDuration] = `Day ${programDuration - 1}`;
+                    }
+                }
+
+                const allImpacts = {};
+                user.tasks.forEach(savedTask => {
+                    const taskInfo = taskMap[savedTask.taskId];
+                    if (!taskInfo) return;
+                    
+                    let contribution;
+                    if (taskInfo.type === 'slider' && !taskInfo.inverted) {
+                        const actualValue = (savedTask.progress / 100) * taskInfo.goal;
+                        const impactMultiplier = Math.min(actualValue / taskInfo.goal, 2);
+                        contribution = impactMultiplier * taskInfo.impact;
+                    } else if (taskInfo.type === 'slider' && taskInfo.inverted) {
+                        const progressPercent = savedTask.progress / 100;
+                        contribution = -1 * progressPercent * taskInfo.impact;
+                    } else if (taskInfo.type === 'meals') {
+                        // For meals: negative progress means bad meal (negative impact)
+                        if (savedTask.progress < 0) {
+                            contribution = savedTask.progress * taskInfo.impact / 100;
+                        } else {
+                            contribution = (savedTask.progress / 100) * taskInfo.impact;
+                        }
+                    } else {
+                        const progressPercent = savedTask.progress / 100;
+                        contribution = taskInfo.inverted 
+                            ? -1 * progressPercent * taskInfo.impact
+                            : progressPercent * taskInfo.impact;
+                    }
+                    
+                    if (!allImpacts[savedTask.taskId]) {
+                        allImpacts[savedTask.taskId] = { id: savedTask.taskId, name: taskInfo.task, totalImpact: 0 };
+                    }
+                    allImpacts[savedTask.taskId].totalImpact += contribution;
+                });
+
+                const impactsArray = Object.values(allImpacts);
+                const topBoosts = impactsArray.filter(t => t.totalImpact > 0).sort((a,b) => b.totalImpact - a.totalImpact).slice(0, 3);
+                const topDrains = impactsArray.filter(t => t.totalImpact < 0).sort((a,b) => a.totalImpact - b.totalImpact).slice(0, 3);
+                const maxImpact = Math.max(...topBoosts.map(t => t.totalImpact), ...topDrains.map(t => Math.abs(t.totalImpact)), 1);
+                
+                const finalTodayScore = Math.round(chartData[chartData.length - 1]);
+                setCurrentTScore(finalTodayScore);
+                setStats({ chartData: finalChartData, chartLabels, topBoosts, topDrains, maxImpact });
+
+            } catch (error) {
+                console.error("Failed to calculate stats:", error);
+            } finally {
+                setIsLoading(false);
             }
-
-            const chartData = [...dailyContributions, dailyContributions[dailyContributions.length - 1]]; // Add a dummy point at the end
-            const finalChartData = [chartData[0], ...chartData];
-
-            const chartLabels = Array(programDuration + 2).fill(''); // Adjusted for dummy point
-            chartLabels[1] = 'Day 0';
-            chartLabels[programDuration] = `Day ${programDuration - 1}`;
-            
-            const finalTodayScore = dailyContributions[dailyContributions.length - 1]; // Use the real last value
-            setCurrentTScore(finalTodayScore);
-
-            const topBoosts = [
-                { id: '2', name: 'High-intensity workout', totalImpact: 180 },
-                { id: '4', name: '8 hours of quality sleep', totalImpact: 150 },
-                { id: '3', name: 'Eat a protein-rich meal', totalImpact: 120 },
-            ];
-
-            const topDrains = [
-                { id: 'd2', name: 'Stress Level', totalImpact: -90 },
-                { id: 'd1', name: 'Sugar Intake', totalImpact: -75 },
-                { id: 'd3', name: 'Alcohol Consumption', totalImpact: -50 },
-            ];
-            
-            const maxImpact = 180;
-
-            setStats({ chartData: finalChartData, chartLabels, topBoosts, topDrains, maxImpact });
-            setIsLoading(false);
         };
-        generatePlaceholderStats();
+        calculateStats();
     }, []);
 
     return (
