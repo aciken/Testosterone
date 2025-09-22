@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,25 +12,63 @@ import { useRouter } from 'expo-router';
 const screenWidth = Dimensions.get('window').width;
 const BASELINE_TESTOSTERONE = 450;
 
-const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress }) => (
-    <TouchableOpacity style={styles.keyFactorItem} onPress={onPress}>
-        <Ionicons name={icon} size={22} color={color} style={styles.keyFactorIcon} />
-        <View style={styles.keyFactorDetails}>
-            <Text style={styles.keyFactorName}>{name}</Text>
-            <View style={styles.keyFactorBarBackground}>
-                <View style={[styles.keyFactorBar, { width: `${(Math.abs(totalImpact) / maxValue) * 100}%`, backgroundColor: color }]} />
-            </View>
-        </View>
-        <Text style={[styles.keyFactorValue, { color }]}>
-            {totalImpact > 0 ? '+' : ''}{Math.round(totalImpact)}
-        </Text>
-    </TouchableOpacity>
-);
+const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress, streak }) => {
+    const hasStreak = streak > 0;
+
+    // The glow effect will radiate from the right, getting stronger with the streak
+    const glowOpacity = hasStreak ? Math.min(0.05 + streak * 0.03, 0.5) : 0;
+    const nonStreakBg = 'rgba(255, 255, 255, 0.05)';
+    const streakGlowColor = `rgba(255, 149, 0, ${glowOpacity})`;
+    
+    const gradientColors = hasStreak
+        ? [streakGlowColor, nonStreakBg]
+        : [nonStreakBg, nonStreakBg];
+    
+    // The border and shadow will also reflect the streak's intensity
+    const borderOpacity = hasStreak ? Math.min(0.05 + streak * 0.02, 0.4) : 0.1;
+    const borderColor = hasStreak ? `rgba(255, 149, 0, ${borderOpacity})` : 'rgba(255, 255, 255, 0.1)';
+    
+    const shadowColor = hasStreak ? `rgba(255, 149, 0, 1)` : '#000';
+    const shadowOpacity = hasStreak ? Math.min(0.05 + streak * 0.02, 0.2) : 0.3;
+
+    return (
+        <TouchableOpacity onPress={onPress} style={[styles.keyFactorTouchable, { shadowColor, shadowOpacity }]}>
+            <LinearGradient
+                colors={gradientColors}
+                start={{ x: 1, y: 0.5 }}
+                end={{ x: 0, y: 0.5 }}
+                style={[styles.keyFactorItem, { borderColor }]}
+            >
+                <View style={styles.keyFactorIconContainer}>
+                    {typeof icon === 'string' ? (
+                        <Ionicons name={icon} size={24} color={color} />
+                    ) : (
+                        <Image source={icon} style={styles.keyFactorImage} />
+                    )}
+                </View>
+                <View style={styles.keyFactorDetails}>
+                    <Text style={styles.keyFactorName}>{name}</Text>
+                </View>
+                <View style={styles.keyFactorValueContainer}>
+                    <Image source={streak > 0 ? require('../../assets/StreakImage3.png') : require('../../assets/StreakImage4.png')} style={[styles.streakImage, { opacity: streak > 0 ? 1 : 0.7 }]} />
+                    <Text style={[styles.keyFactorValue, { color: streak > 0 ? '#FFFFFF' : '#888' }]}>
+                        {streak}
+                    </Text>
+                </View>
+            </LinearGradient>
+        </TouchableOpacity>
+    );
+};
 
 const taskIcons = {
-    '1': 'sunny-outline', '2': 'barbell-outline', '3': 'restaurant-outline',
-    '4': 'moon-outline', '5': 'medkit-outline', 'd1': 'ice-cream-outline',
-    'd2': 'pulse-outline', 'd3': 'beer-outline'
+    '1': require('../../assets/SunColor.png'),
+    '2': require('../../assets/TrainingColor2.png'),
+    '3': require('../../assets/Food.png'),
+    '4': require('../../assets/BedColor2.png'),
+    '5': require('../../assets/PillColor3.png'),
+    'd1': 'cafe',
+    'd2': require('../../assets/Angry.png'),
+    'd3': require('../../assets/BeerColor.png')
 };
 
 export default function StatisticsScreen() {
@@ -60,8 +98,13 @@ export default function StatisticsScreen() {
                 today.setHours(0,0,0,0);
                 const programDuration = Math.ceil((today - dateCreated) / (1000 * 60 * 60 * 24)) + 1;
                 
-                const dailyContributions = Array(programDuration).fill(0);
-                dailyContributions[0] = BASELINE_TESTOSTERONE;
+                const totalPossiblePositiveImpact = programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0);
+                const totalPossibleNegativeImpact = 
+                    programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) +
+                    programData[1].dos.filter(t => t.type === 'meals').reduce((sum, task) => sum + (task.impact || 0), 0);
+
+                const dailyPositiveContributions = Array(programDuration).fill(0);
+                const dailyNegativeContributions = Array(programDuration).fill(0);
 
                 user.tasks.forEach(savedTask => {
                     const taskInfo = taskMap[savedTask.taskId];
@@ -99,9 +142,29 @@ export default function StatisticsScreen() {
                     }
                     
                     if (dayIndex > 0 && dayIndex < programDuration) {
-                        dailyContributions[dayIndex] += contribution;
+                        if (contribution > 0) {
+                            dailyPositiveContributions[dayIndex] += contribution;
+                        } else {
+                            dailyNegativeContributions[dayIndex] += contribution;
+                        }
                     }
                 });
+
+                const dailyContributions = Array(programDuration).fill(0);
+                dailyContributions[0] = BASELINE_TESTOSTERONE;
+                
+                for (let i = 1; i < programDuration; i++) {
+                    const scaledPositive = totalPossiblePositiveImpact > 0
+                        ? (dailyPositiveContributions[i] / totalPossiblePositiveImpact) * 6
+                        : 0;
+                    
+                    const scaledNegative = totalPossibleNegativeImpact > 0
+                        ? (dailyNegativeContributions[i] / totalPossibleNegativeImpact) * 3
+                        : 0;
+
+                    const netChange = scaledPositive + scaledNegative;
+                    dailyContributions[i] = netChange;
+                }
                 
                 for (let i = 1; i < programDuration; i++) {
                     dailyContributions[i] += dailyContributions[i-1];
@@ -121,13 +184,20 @@ export default function StatisticsScreen() {
 
                 const chartLabels = Array(programDuration + 1).fill('');
                 if (programDuration > 0) {
-                    chartLabels[1] = 'Day 0';
+                    chartLabels[1] = 'Start';
                     if (programDuration > 1) {
-                        chartLabels[programDuration] = `Day ${programDuration - 1}`;
+                        chartLabels[programDuration] = `Now`;
                     }
                 }
 
                 const allImpacts = {};
+                programData[1].dos.forEach(task => {
+                    allImpacts[task.id] = { id: task.id, name: task.task, totalImpact: 0, isDo: true };
+                });
+                programData[1].donts.forEach(task => {
+                    allImpacts[task.id] = { id: task.id, name: task.task, totalImpact: 0, isDo: false };
+                });
+
                 user.tasks.forEach(savedTask => {
                     const taskInfo = taskMap[savedTask.taskId];
                     if (!taskInfo) return;
@@ -154,20 +224,72 @@ export default function StatisticsScreen() {
                             : progressPercent * taskInfo.impact;
                     }
                     
-                    if (!allImpacts[savedTask.taskId]) {
-                        allImpacts[savedTask.taskId] = { id: savedTask.taskId, name: taskInfo.task, totalImpact: 0 };
+                    if (allImpacts[savedTask.taskId]) {
+                        allImpacts[savedTask.taskId].totalImpact += contribution;
                     }
-                    allImpacts[savedTask.taskId].totalImpact += contribution;
                 });
 
+                const tasksById = user.tasks.reduce((acc, task) => {
+                    if (!acc[task.taskId]) acc[task.taskId] = [];
+                    acc[task.taskId].push(task);
+                    return acc;
+                }, {});
+
+                for (const taskId in allImpacts) {
+                    const taskLogs = tasksById[taskId];
+                    if (!taskLogs) {
+                        allImpacts[taskId].streak = 0;
+                        continue;
+                    }
+                    const taskInfo = taskMap[taskId];
+                
+                    const successTimestamps = new Set();
+                    taskLogs.forEach(log => {
+                        const isSuccess = taskInfo.inverted ? log.progress < 50 : log.progress >= 50;
+                        if (isSuccess) {
+                            const date = new Date(log.date);
+                            date.setHours(0, 0, 0, 0);
+                            successTimestamps.add(date.getTime());
+                        }
+                    });
+                    
+                    let streak = 0;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const yesterday = new Date(today);
+                    yesterday.setDate(today.getDate() - 1);
+                    let currentDate = new Date(today);
+                
+                    if (!successTimestamps.has(today.getTime()) && !successTimestamps.has(yesterday.getTime())) {
+                        streak = 0;
+                    } else {
+                        if (!successTimestamps.has(today.getTime())) {
+                            currentDate.setDate(currentDate.getDate() - 1);
+                        }
+                        while (successTimestamps.has(currentDate.getTime())) {
+                            streak++;
+                            currentDate.setDate(currentDate.getDate() - 1);
+                        }
+                    }
+                    allImpacts[taskId].streak = streak;
+                }
+
                 const impactsArray = Object.values(allImpacts);
-                const topBoosts = impactsArray.filter(t => t.totalImpact > 0).sort((a,b) => b.totalImpact - a.totalImpact).slice(0, 3);
-                const topDrains = impactsArray.filter(t => t.totalImpact < 0).sort((a,b) => a.totalImpact - b.totalImpact).slice(0, 3);
-                const maxImpact = Math.max(...topBoosts.map(t => t.totalImpact), ...topDrains.map(t => Math.abs(t.totalImpact)), 1);
+                
+                // Separate factors into streaking and non-streaking to ensure streaking are always on top
+                const streakingFactors = impactsArray.filter(t => t.streak > 0).sort((a, b) => b.streak - a.streak);
+                const nonStreakingFactors = impactsArray.filter(t => t.streak === 0);
+
+                // Sort non-streaking factors: boosts first, then drains, each sorted by impact
+                const nonStreakingBoosts = nonStreakingFactors.filter(t => t.isDo).sort((a, b) => b.totalImpact - a.totalImpact);
+                const nonStreakingDrains = nonStreakingFactors.filter(t => !t.isDo).sort((a, b) => a.totalImpact - b.totalImpact);
+                const sortedNonStreakingFactors = [...nonStreakingBoosts, ...nonStreakingDrains];
+
+                const maxImpact = Math.max(...impactsArray.map(t => Math.abs(t.totalImpact)), 1);
                 
                 const finalTodayScore = Math.round(chartData[chartData.length - 1]);
                 setCurrentTScore(finalTodayScore);
-                setStats({ chartData: finalChartData, chartLabels, topBoosts, topDrains, maxImpact });
+                setStats({ chartData: finalChartData, chartLabels, streakingFactors, nonStreakingFactors: sortedNonStreakingFactors, maxImpact });
 
             } catch (error) {
                 console.error("Failed to calculate stats:", error);
@@ -219,9 +341,15 @@ export default function StatisticsScreen() {
                             </View>
                             
                             <View style={styles.keyFactorsContainer}>
-                                <Text style={styles.sectionTitle}>KEY FACTORS</Text>
-                                {stats.topBoosts.map(c => <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color="#FFFFFF" maxValue={stats.maxImpact} onPress={() => router.push({ pathname: '/modal/factorHistory', params: { factorId: c.id } })} />)}
-                                {stats.topDrains.map(c => <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color="#FF6B6B" maxValue={stats.maxImpact} onPress={() => router.push({ pathname: '/modal/factorHistory', params: { factorId: c.id } })} />)}
+                                <Text style={styles.sectionTitle}>TASK STREAKS</Text>
+                                {stats.streakingFactors.map(c => {
+                                    const color = c.isDo ? "#FFFFFF" : "#FF6B6B";
+                                    return <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color={color} maxValue={stats.maxImpact} onPress={() => router.push({ pathname: '/modal/factorHistory', params: { factorId: c.id } })} streak={c.streak} />;
+                                })}
+                                {stats.nonStreakingFactors.map(c => {
+                                    const color = c.isDo ? "#FFFFFF" : "#FF6B6B";
+                                    return <KeyFactorItem key={c.id} icon={taskIcons[c.id]} name={c.name} totalImpact={c.totalImpact} color={color} maxValue={stats.maxImpact} onPress={() => router.push({ pathname: '/modal/factorHistory', params: { factorId: c.id } })} streak={c.streak} />;
+                                })}
                             </View>
                         </>
                     ) : (
@@ -285,20 +413,53 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     keyFactorsContainer: { width: '100%', marginTop: 40, paddingHorizontal: 20, },
+    keyFactorTouchable: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
+        marginBottom: 15,
+    },
     keyFactorItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: 12,
-        padding: 15,
-        marginBottom: 15,
+        borderRadius: 20,
+        padding: 20,
+        borderWidth: 1,
     },
-    keyFactorIcon: { marginRight: 15, width: 25, },
+    keyFactorIconContainer: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    keyFactorIcon: {
+        marginRight: 15,
+    },
     keyFactorDetails: { flex: 1, },
-    keyFactorName: { color: '#E0E0E0', fontSize: 16, fontWeight: '600', marginBottom: 6, },
-    keyFactorBarBackground: { height: 6, width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 3, },
-    keyFactorBar: { height: '100%', borderRadius: 3, },
-    keyFactorValue: { fontSize: 15, fontWeight: 'bold', marginLeft: 15, width: 50, textAlign: 'right' },
+    keyFactorName: { color: '#E0E0E0', fontSize: 17, fontWeight: '700', },
+    keyFactorImage: {
+        width: 36,
+        height: 36,
+    },
+    streakImage: {
+        width: 26,
+        height: 26,
+    },
+    keyFactorValueContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginLeft: 15,
+        width: 50,
+        justifyContent: 'flex-end',
+    },
+    keyFactorValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 4,
+    },
     noDataContainer: { marginTop: 60, alignItems: 'center', opacity: 0.5 },
     noDataText: { color: '#8A95B6', marginTop: 20, fontSize: 16, textAlign: 'center' },
 });

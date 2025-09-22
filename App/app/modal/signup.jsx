@@ -154,7 +154,7 @@ export default function Signup() {
     // --- If all validation passes, proceed with API call ---
     console.log("Validation passed, attempting sign up...");
     try {
-      const response = await axios.put('https://d5181679a5eb.ngrok-free.app/signup', { // Ensure URL is correct
+      const response = await axios.put('https://ed83e4e4b2be.ngrok-free.app/signup', { // Ensure URL is correct
         name: name.trim(), // Send trimmed name
         email: email.trim(), // Send trimmed email
         password // Send original password

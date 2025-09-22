@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Easing, ActivityIndicator, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Asset } from 'expo-asset';
@@ -22,6 +22,7 @@ export default function HomeScreen() {
 
   const widthAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const getProgramDay = async () => {
@@ -84,7 +85,7 @@ export default function HomeScreen() {
   const currentDos = currentDayData.dos || [];
   const currentDonts = currentDayData.donts || [];
 
-  const positiveProgress = currentDos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+  const positiveProgress = currentDos.reduce((sum, todo) => sum + Math.min(todo.progress || 0, 100), 0);
   const negativeProgress = currentDonts.reduce((sum, todo) => sum + (todo.progress || 0), 0);
   const totalPossiblePositive = currentDos.length * 100;
 
@@ -97,7 +98,7 @@ export default function HomeScreen() {
     const dos = dayData.dos || [];
     const donts = dayData.donts || [];
 
-    const posProgress = dos.reduce((sum, todo) => sum + (todo.progress || 0), 0);
+    const posProgress = dos.reduce((sum, todo) => sum + Math.min(todo.progress || 0, 100), 0);
     const negProgress = donts.reduce((sum, todo) => sum + (todo.progress || 0), 0);
     const totalPossible = dos.length * 100;
     
@@ -173,12 +174,12 @@ export default function HomeScreen() {
         const user = JSON.parse(userString);
         const updatePayload = {
           userId: user._id,
-          date: new Date(),
+          date: new Date(),         
           task: taskData,
         };
 
         console.log("Sending task update:", updatePayload);
-        const response = await axios.post('https://d5181679a5eb.ngrok-free.app/tasks/update', updatePayload);
+        const response = await axios.post('https://ed83e4e4b2be.ngrok-free.app/tasks/update', updatePayload);
         console.log("Update response:", response.data);
 
         if (response.data && response.data.tasks) {
@@ -198,7 +199,7 @@ export default function HomeScreen() {
       setIsDayChanging(true); // Show loader immediately
 
       const nextDayTasks = [...(todosByDay[newDay].dos || []), ...(todosByDay[newDay].donts || [])];
-      const imagesToLoad = nextDayTasks.map(task => task.image);
+      const imagesToLoad = nextDayTasks.map(task => task.image).filter(Boolean);
 
       const assetPromises = imagesToLoad.map(image => {
         return Asset.fromModule(image).downloadAsync();
