@@ -10,6 +10,7 @@ import axios from 'axios';
 import TaskDetailModal from '../../components/TaskDetailModal';
 import TodoCard from '../../components/TodoCard';
 import programData from '../../data/programData';
+import StreakNotification from '../../components/StreakNotification';
 
 export default function HomeScreen() {
   const [programDay, setProgramDay] = useState(1);
@@ -19,6 +20,10 @@ export default function HomeScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [dailyNgDlChange, setDailyNgDlChange] = useState(0);
+  const [progressValue, setProgressValue] = useState(0);
+  const [notification, setNotification] = useState(null);
+  const notificationAnim = useRef(new Animated.Value(-150)).current;
 
   const widthAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
@@ -115,6 +120,26 @@ export default function HomeScreen() {
   }, [currentDay, todosByDay]);
 
   useEffect(() => {
+    if (notification) {
+      Animated.sequence([
+        Animated.spring(notificationAnim, {
+          toValue: insets.top + 10,
+          tension: 60,
+          friction: 12,
+          useNativeDriver: false,
+        }),
+        Animated.delay(3000),
+        Animated.spring(notificationAnim, {
+          toValue: -150,
+          tension: 60,
+          friction: 12,
+          useNativeDriver: false,
+        }),
+      ]).start(() => setNotification(null));
+    }
+  }, [notification]);
+
+  useEffect(() => {
     if (!isDayChanging) {
       // Fade in the list
       Animated.stagger(50, [
@@ -164,6 +189,65 @@ export default function HomeScreen() {
       }
       
       sendTaskUpdate(saveData);
+      checkAndTriggerStreakNotification(saveData);
+    }
+  };
+
+  const checkAndTriggerStreakNotification = async (taskData) => {
+    if (!taskData) return;
+
+    const { id, task, progress } = taskData;
+    const taskInfo = [...programData[1].dos, ...programData[1].donts].find(t => t.id === id);
+    if (!taskInfo) return;
+
+    const isSuccess = taskInfo.inverted ? progress < 50 : progress >= 50;
+    if (!isSuccess) return;
+
+    try {
+        const userString = await AsyncStorage.getItem('user');
+        if (!userString) return;
+
+        const user = JSON.parse(userString);
+        const userTasks = user.tasks || [];
+
+        const taskLogs = userTasks.filter(t => t.taskId === id);
+
+        const successTimestamps = new Set();
+        taskLogs.forEach(log => {
+            const logTaskInfo = [...programData[1].dos, ...programData[1].donts].find(t => t.id === log.taskId);
+            if (logTaskInfo) {
+                const success = logTaskInfo.inverted ? log.progress < 50 : log.progress >= 50;
+                if (success) {
+                    const date = new Date(log.date);
+                    date.setHours(0, 0, 0, 0);
+                    successTimestamps.add(date.getTime());
+                }
+            }
+        });
+        
+        let streak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Add today's success manually for calculation
+        successTimestamps.add(today.getTime());
+
+        let currentDate = new Date(today);
+        
+        while (successTimestamps.has(currentDate.getTime())) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+        }
+        
+        if (streak > 0) {
+            setNotification({
+                title: 'STREAK GROWING',
+                message: 'Another day of winning!',
+                streakCount: streak,
+            });
+        }
+    } catch (error) {
+        console.error("Failed to check streak:", error);
     }
   };
 
@@ -179,7 +263,7 @@ export default function HomeScreen() {
         };
 
         console.log("Sending task update:", updatePayload);
-        const response = await axios.post('https://ed83e4e4b2be.ngrok-free.app/tasks/update', updatePayload);
+        const response = await axios.post('https://3a9743bd66d6.ngrok-free.app/tasks/update', updatePayload);
         console.log("Update response:", response.data);
 
         if (response.data && response.data.tasks) {
@@ -337,6 +421,15 @@ export default function HomeScreen() {
           onClose={handleModalClose}
         />
       )}
+      {notification && (
+        <Animated.View style={[styles.notificationContainer, { top: notificationAnim }]}>
+            <StreakNotification
+                title={notification.title}
+                message={notification.message}
+                streakCount={notification.streakCount}
+            />
+        </Animated.View>
+      )}
     </LinearGradient>
   );
 }
@@ -475,5 +568,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 15,
+  },
+  notificationContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
 }); 
