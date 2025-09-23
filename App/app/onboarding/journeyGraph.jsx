@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import Svg, { Path, Text as SvgText, Circle } from 'react-native-svg';
+import Svg, { Path, Text as SvgText, Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
@@ -29,16 +29,16 @@ const JourneyGraph = () => {
               strokeWidth="4"
               fill="url(#redFillGradient)"
             />
-            <defs>
-              <LinearGradient id="redGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#E53935" stopOpacity="1" />
-                <stop offset="1" stopColor="#D90429" stopOpacity="1" />
-              </LinearGradient>
-              <LinearGradient id="redFillGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#D90429" stopOpacity="0.4" />
-                <stop offset="1" stopColor="#101010" stopOpacity="0.1" />
-              </LinearGradient>
-            </defs>
+            <Defs>
+              <SvgLinearGradient id="redGradient" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0" stopColor="#E53935" stopOpacity="1" />
+                <Stop offset="1" stopColor="#D90429" stopOpacity="1" />
+              </SvgLinearGradient>
+              <SvgLinearGradient id="redFillGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#D90429" stopOpacity="0.4" />
+                <Stop offset="1" stopColor="#101010" stopOpacity="0.1" />
+              </SvgLinearGradient>
+            </Defs>
 
             {/* Green Steady Path */}
             <Path
@@ -78,11 +78,6 @@ const JourneyGraph = () => {
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
         
-        <View style={styles.dotsContainer}>
-          {[...Array(4)].map((_, index) => (
-            <View key={index} style={[styles.dot, index === 1 ? styles.activeDot : {}]} />
-          ))}
-        </View>
       </View>
     </LinearGradient>
   );

@@ -79,11 +79,6 @@ export default function ExpertTestimonials() {
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
         
-        <View style={styles.dotsContainer}>
-          {[...Array(4)].map((_, index) => (
-            <View key={index} style={[styles.dot, index === 0 ? styles.activeDot : {}]} />
-          ))}
-        </View>
       </SafeAreaView>
     </LinearGradient>
   );

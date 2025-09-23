@@ -82,7 +82,7 @@ const BenefitsGraph = () => {
     if (currentDayIndex < dayKeys.length - 1) {
       setCurrentDayIndex(currentDayIndex + 1);
     } else {
-      router.push('/onboarding/programResults');
+      router.push('/onboarding/createAccount');
     }
   };
 
@@ -171,11 +171,6 @@ const BenefitsGraph = () => {
         <Text style={styles.continueButtonText}>Continue</Text>
       </TouchableOpacity>
       
-      <View style={styles.dotsContainer}>
-          {[...Array(4)].map((_, index) => (
-            <View key={index} style={[styles.dot, index === 2 ? styles.activeDot : {}]} />
-          ))}
-        </View>
     </LinearGradient>
   );
 };
