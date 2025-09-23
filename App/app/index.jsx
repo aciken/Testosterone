@@ -92,7 +92,7 @@ export default function WelcomePage() {
               </TouchableOpacity>
             </Link>
             
-            <Link href="/modal/signin" asChild>
+            <Link href="/onboarding/planSummary" asChild>
               <TouchableOpacity>
                 <Text style={styles.signInText}>
                   Already have an account? Sign In

@@ -73,11 +73,17 @@ export default function ExpertTestimonials() {
           style={styles.continueButton} 
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/onboarding/programResults');
+            router.push('/onboarding/journeyGraph');
           }}
         >
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
+        
+        <View style={styles.dotsContainer}>
+          {[...Array(4)].map((_, index) => (
+            <View key={index} style={[styles.dot, index === 0 ? styles.activeDot : {}]} />
+          ))}
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -197,5 +203,21 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: '#FFFFFF',
   },
 });
