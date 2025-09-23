@@ -33,7 +33,7 @@ export default function ExpertTestimonials() {
   ];
 
   return (
-    <LinearGradient colors={['#0C1126', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -141,6 +141,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   profileImage: {
     width: 50,
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   authorTitle: {
-    color: '#B3B8C8',
+    color: '#8A95B6',
     fontSize: 14,
     marginTop: 2,
   },
@@ -164,11 +166,11 @@ const styles = StyleSheet.create({
     marginLeft: 62,
   },
   chatBubble: {
-    backgroundColor: '#1E2747',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 15,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#2A3A5C',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   bubbleText: {
     color: '#FFFFFF',

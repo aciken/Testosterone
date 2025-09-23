@@ -11,6 +11,7 @@ import TaskDetailModal from '../../components/TaskDetailModal';
 import TodoCard from '../../components/TodoCard';
 import programData from '../../data/programData';
 import StreakNotification from '../../components/StreakNotification';
+import { taskIcons } from '../../data/icons';
 
 export default function HomeScreen() {
   const [programDay, setProgramDay] = useState(1);
@@ -124,15 +125,15 @@ export default function HomeScreen() {
       Animated.sequence([
         Animated.spring(notificationAnim, {
           toValue: insets.top + 10,
-          tension: 60,
-          friction: 12,
+          tension: 40,
+          friction: 14,
           useNativeDriver: false,
         }),
         Animated.delay(3000),
         Animated.spring(notificationAnim, {
           toValue: -150,
-          tension: 60,
-          friction: 12,
+          tension: 40,
+          friction: 14,
           useNativeDriver: false,
         }),
       ]).start(() => setNotification(null));
@@ -241,9 +242,10 @@ export default function HomeScreen() {
         
         if (streak > 0) {
             setNotification({
-                title: 'STREAK GROWING',
-                message: 'Another day of winning!',
+                title: streak === 1 ? 'Streak Started!' : 'Streak Growing!',
+                message: taskInfo.task,
                 streakCount: streak,
+                icon: taskIcons[id],
             });
         }
     } catch (error) {
@@ -427,6 +429,7 @@ export default function HomeScreen() {
                 title={notification.title}
                 message={notification.message}
                 streakCount={notification.streakCount}
+                icon={notification.icon}
             />
         </Animated.View>
       )}

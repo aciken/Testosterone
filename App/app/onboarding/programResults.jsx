@@ -9,7 +9,7 @@ export default function ProgramResults() {
   const router = useRouter();
 
   return (
-    <LinearGradient colors={['#0C1126', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -22,7 +22,7 @@ export default function ProgramResults() {
         <View style={styles.content}>
           <View style={styles.iconContainer}>
             <View style={styles.iconCircle}>
-              <Ionicons name="trending-up" size={60} color="#4A90E2" />
+              <Ionicons name="trending-up" size={60} color="#FFFFFF" />
             </View>
           </View>
 
@@ -40,23 +40,23 @@ export default function ProgramResults() {
 
           <View style={styles.benefitsContainer}>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={24} color="#4A90E2" />
+              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
               <Text style={styles.benefitText}>Increased energy and vitality</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={24} color="#4A90E2" />
+              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
               <Text style={styles.benefitText}>Enhanced muscle mass and strength</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={24} color="#4A90E2" />
+              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
               <Text style={styles.benefitText}>Improved mood and confidence</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={24} color="#4A90E2" />
+              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
               <Text style={styles.benefitText}>Better sleep quality</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={24} color="#4A90E2" />
+              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
               <Text style={styles.benefitText}>Sharper mental focus</Text>
             </View>
           </View>
@@ -115,11 +115,11 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#1E2747',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#4A90E2',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   title: {
     color: '#FFFFFF',
@@ -133,13 +133,13 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   resultCard: {
-    backgroundColor: '#1E2747',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 20,
     padding: 30,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#4A90E2',
-    shadowColor: '#4A90E2',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   resultNumber: {
-    color: '#4A90E2',
+    color: '#FFFFFF',
     fontSize: 48,
     fontWeight: 'bold',
     marginBottom: 5,
@@ -161,11 +161,11 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   resultUnit: {
-    color: '#B3B8C8',
+    color: '#8A95B6',
     fontSize: 16,
   },
   timeframe: {
-    color: '#B3B8C8',
+    color: '#8A95B6',
     fontSize: 16,
     textAlign: 'center',
     marginTop: 15,

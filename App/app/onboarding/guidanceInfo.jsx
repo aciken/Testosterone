@@ -24,7 +24,6 @@ export default function GuidanceInfo() {
 
         <View style={styles.dotsContainer}>
           <View style={styles.dot} />
-          <View style={styles.dot} />
           <View style={[styles.dot, styles.activeDot]} />
         </View>
         

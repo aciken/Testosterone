@@ -23,7 +23,7 @@ const OnboardingQuestion = ({ questionNumber, question, answers, nextPage, isLas
   const progress = (questionNumber / TOTAL_QUESTIONS) * 100;
 
   return (
-    <LinearGradient colors={['#0C1126', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={{ flex: 1, width: '100%' }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: '#1E2747',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 4,
     marginLeft: 15,
   },
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   questionText: {
-    color: '#B3B8C8',
+    color: '#8A95B6',
     fontSize: 20,
     textAlign: 'center',
     marginBottom: 50,
@@ -118,13 +118,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   answerButton: {
-    backgroundColor: '#1E2747',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 15,
     padding: 20,
     alignItems: 'flex-start',
     marginBottom: 15,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   selectedAnswer: {
     borderColor: '#FFFFFF',
-    backgroundColor: '#2A3A5C',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     shadowColor: '#FFFFFF',
     shadowOffset: {
       width: 0,

@@ -26,7 +26,7 @@ export default function CreateAccount() {
   };
 
   return (
-    <LinearGradient colors={['#0C1126', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -37,7 +37,7 @@ export default function CreateAccount() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>Become a QUITTR</Text>
+          <Text style={styles.title}>Become the MAN</Text>
 
           <View style={styles.optionsContainer}>
             {/* Apple Sign In */}
@@ -124,9 +124,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 30,
     marginBottom: 16,
-    backgroundColor: 'rgba(30, 39, 71, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   optionButtonText: {
     color: '#FFFFFF',

@@ -10,7 +10,7 @@ export default function WeaknessInfo() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Image source={require('../../assets/Cartoon5.png')} style={styles.image} />
+      <Image source={require('../../assets/ShameImage2.png')} style={styles.image} />
       
       <Text style={styles.title}>Other men think you are weak</Text>
       
@@ -26,7 +26,7 @@ export default function WeaknessInfo() {
       
       <TouchableOpacity style={styles.button} onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        router.push('/onboarding/increaseInfo');
+        router.push('/onboarding/dietExerciseInfo');
       }}>
         <Text style={styles.buttonText}>Next</Text>
         <Ionicons name="chevron-forward-outline" size={24} color="#000" />

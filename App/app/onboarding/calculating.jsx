@@ -32,13 +32,13 @@ const CircularProgress = ({ progress }) => {
     <View style={styles.progressContainer}>
       <Svg width={size} height={size}>
         <Defs>
-          <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#2563EB" />
-            <Stop offset="100%" stopColor="#10B981" />
+          <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" />
+            <Stop offset="100%" stopColor="#FF9533" />
           </SvgLinearGradient>
         </Defs>
         <Circle
-          stroke="#1E293B"
+          stroke="rgba(255, 255, 255, 0.1)"
           fill="none"
           cx={size / 2}
           cy={size / 2}
@@ -91,7 +91,7 @@ export default function Calculating() {
   }, [progress, router]);
 
   return (
-    <LinearGradient colors={['#0C1126', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <CircularProgress progress={progress} />
         <Text style={styles.text}>Calculating your results...</Text>
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   text: {
-    color: '#FFFFFF',
+    color: '#8A95B6',
     fontSize: 22,
     marginTop: 20,
   },

@@ -28,7 +28,7 @@ export default function HeightWeight() {
   const kgOptions = Array.from({ length: 131 }, (_, i) => i + 40); // 40-170 kg
 
   return (
-    <LinearGradient colors={['#0C1126', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={{ flex: 1, width: '100%' }}>
         <View style={styles.content}>
           <View style={styles.topContainer}>
@@ -106,8 +106,8 @@ export default function HeightWeight() {
               <Switch
                 value={unit === 'metric'}
                 onValueChange={toggleUnit}
-                trackColor={{ false: '#767577', true: '#6A4CFF' }}
-                thumbColor={unit === 'metric' ? '#FFFFFF' : '#f4f3f4'}
+                trackColor={{ false: 'rgba(255, 255, 255, 0.2)', true: '#FFFFFF' }}
+                thumbColor={unit === 'metric' ? '#101010' : '#FFFFFF'}
               />
               <Text style={styles.switchLabel}>Metric</Text>
             </View>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     description: {
-        color: '#B3B8C8',
+        color: '#8A95B6',
         fontSize: 16,
         textAlign: 'center',
         marginBottom: 40,
