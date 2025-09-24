@@ -72,7 +72,7 @@ export default function VerifyAccount() {
     Keyboard.dismiss();
 
     try {
-      const response = await axios.put('https://3a9743bd66d6.ngrok-free.app/verify', {
+      const response = await axios.put('https://f95b31457302.ngrok-free.app/verify', {
         email: user.email,
         verificationCode: verificationCode
       });

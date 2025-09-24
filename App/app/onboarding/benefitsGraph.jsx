@@ -97,70 +97,71 @@ const BenefitsGraph = () => {
         <Text style={styles.description}>
           See how your key attributes can develop over the 90-day program.
         </Text>
+        <View style={styles.graphAndDayContainer}>
+          <View style={styles.dayTitleContainer}>
+            <Text style={styles.dayTitleText}>{dayTitle}</Text>
+          </View>
 
-        <View style={styles.graphContainer}>
-          <Svg height={graphSize} width={graphSize}>
-            {/* Background Lines */}
-            {labels.map((_, i) => {
-              const angle_rad = (Math.PI / 180) * (60 * i - 30);
-              const x2 = centerX + radius * Math.cos(angle_rad);
-              const y2 = centerY + radius * Math.sin(angle_rad);
-              return <Line key={i} x1={centerX} y1={centerY} x2={x2} y2={y2} stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1" />;
-            })}
-            
-            {/* Concentric Hexagons */}
-            {[0.25, 0.5, 0.75, 1].map(scale => (
+          <View style={styles.graphContainer}>
+            <Svg height={graphSize} width={graphSize}>
+              {/* Background Lines */}
+              {labels.map((_, i) => {
+                const angle_rad = (Math.PI / 180) * (60 * i - 30);
+                const x2 = centerX + radius * Math.cos(angle_rad);
+                const y2 = centerY + radius * Math.sin(angle_rad);
+                return <Line key={i} x1={centerX} y1={centerY} x2={x2} y2={y2} stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1" />;
+              })}
+              
+              {/* Concentric Hexagons */}
+              {[0.25, 0.5, 0.75, 1].map(scale => (
+                <Polygon
+                  key={scale}
+                  points={labels.map((_, i) => {
+                    const angle_rad = (Math.PI / 180) * (60 * i - 30);
+                    const r = radius * scale;
+                    const x = centerX + r * Math.cos(angle_rad);
+                    const y = centerY + r * Math.sin(angle_rad);
+                    return `${x},${y}`;
+                  }).join(' ')}
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.1)"
+                  strokeWidth="1"
+                />
+              ))}
+              
+              {/* Data Polygon */}
               <Polygon
-                key={scale}
-                points={labels.map((_, i) => {
-                  const angle_rad = (Math.PI / 180) * (60 * i - 30);
-                  const r = radius * scale;
-                  const x = centerX + r * Math.cos(angle_rad);
-                  const y = centerY + r * Math.sin(angle_rad);
-                  return `${x},${y}`;
-                }).join(' ')}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.1)"
-                strokeWidth="1"
+                ref={polygonRef}
+                points={generatePolygonPoints(data.day1)}
+                fill={currentColor}
+                fillOpacity="0.7"
+                stroke={currentColor}
+                strokeWidth="2"
               />
-            ))}
-            
-            {/* Data Polygon */}
-            <Polygon
-              ref={polygonRef}
-              points={generatePolygonPoints(data.day1)}
-              fill={currentColor}
-              fillOpacity="0.7"
-              stroke={currentColor}
-              strokeWidth="2"
-            />
-            
-            {/* Labels */}
-            {labels.map((label, i) => {
-              const angle_rad = (Math.PI / 180) * (60 * i - 30);
-              const r = radius * 1.15;
-              const x = centerX + r * Math.cos(angle_rad);
-              const y = centerY + r * Math.sin(angle_rad);
-              return (
-                <SvgText
-                  key={label}
-                  x={x}
-                  y={y}
-                  fill="#FFFFFF"
-                  fontSize="12"
-                  fontWeight="bold"
-                  textAnchor="middle"
-                  alignmentBaseline="middle"
-                >
-                  {label}
-                </SvgText>
-              );
-            })}
-          </Svg>
-        </View>
-
-        <View style={styles.dayTitleContainer}>
-          <Text style={styles.dayTitleText}>{dayTitle}</Text>
+              
+              {/* Labels */}
+              {labels.map((label, i) => {
+                const angle_rad = (Math.PI / 180) * (60 * i - 30);
+                const r = radius * 1.15;
+                const x = centerX + r * Math.cos(angle_rad);
+                const y = centerY + r * Math.sin(angle_rad);
+                return (
+                  <SvgText
+                    key={label}
+                    x={x}
+                    y={y}
+                    fill="#FFFFFF"
+                    fontSize="12"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    alignmentBaseline="middle"
+                  >
+                    {label}
+                  </SvgText>
+                );
+              })}
+            </Svg>
+          </View>
         </View>
       </View>
 
@@ -184,7 +185,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   content: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 28,
@@ -197,13 +200,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#8A95B6',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 40,
     paddingHorizontal: 10,
+  },
+  graphAndDayContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   graphContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 30,
   },
   daySelector: {
     flexDirection: 'row',
@@ -220,6 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 40,
   },
   dayTitleText: {
     color: '#FFFFFF',
