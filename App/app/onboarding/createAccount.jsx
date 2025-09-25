@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,8 +25,29 @@ export default function CreateAccount() {
     router.push('/modal/signup');
   };
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   return (
-    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+    <LinearGradient 
+      colors={['#FF8C00', '#4B1D04', '#000000']} 
+      style={styles.container}
+    >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -37,9 +58,28 @@ export default function CreateAccount() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>Become the MAN</Text>
+          <Animated.Image 
+            source={require('../../assets/Portal4.png')} 
+            style={[
+              styles.portalImage,
+              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+            ]} 
+          />
+          <Animated.Text 
+            style={[
+              styles.title,
+              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+            ]}
+          >
+            BOOST the Test
+          </Animated.Text>
 
-          <View style={styles.optionsContainer}>
+          <Animated.View 
+            style={[
+              styles.optionsContainer,
+              { opacity: fadeAnim }
+            ]}
+          >
             {/* Apple Sign In */}
             <TouchableOpacity
               style={styles.optionButton}
@@ -66,7 +106,7 @@ export default function CreateAccount() {
               <Ionicons name="mail" size={24} color="#FFFFFF" />
               <Text style={styles.optionButtonText}>Continue with Email</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -106,9 +146,15 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingBottom: 50,
   },
+  portalImage: {
+    width: 300,
+    height: 300,
+    resizeMode: 'contain',
+    marginBottom: 20,
+  },
   title: {
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 40,

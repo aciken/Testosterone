@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, SafeAreaView, Animated, Dimensions, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Animated, Dimensions, StyleSheet, ImageBackground } from 'react-native';
 import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
@@ -49,66 +49,70 @@ export default function WelcomePage() {
   };
 
   return (
-    <LinearGradient
-      colors={['#101010', '#000000']}
+    <ImageBackground
+      source={require('../assets/Background1.png')}
       style={styles.container}
+      resizeMode="cover"
     >
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="light" />
-        
-        <Animated.View 
-          style={[
-            styles.contentContainer,
-            { 
-              opacity: fadeAnim, 
-              transform: [{ translateY: slideAnim }] 
-            }
-          ]}
-        >
-          {/* Top Section - Logo */}
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>
-              TESTOSTERONE
-            </Text>
-          </View>
+      <View style={styles.overlay}>
+        <SafeAreaView style={styles.safeArea}>
+          <StatusBar style="light" />
+          
+          <Animated.View 
+            style={[
+              styles.contentContainer,
+              { 
+                opacity: fadeAnim, 
+                transform: [{ translateY: slideAnim }] 
+              }
+            ]}
+          >
+            {/* Top Section - Logo */}
+            <View style={styles.logoContainer}>
+              <Text style={styles.logoText}>
+                Boost
+              </Text>
+            </View>
 
-          {/* Middle Section - Welcome Text */}
-          <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeTitle}>
-              Unlock Your Potential
-            </Text>
-            <Text style={styles.welcomeSubtitle}>
-              Begin your journey to optimized health and vitality.
-            </Text>
-          </View>
+            {/* Middle Section - Welcome Text */}
+            <View style={styles.welcomeContainer}>
+              <Text style={styles.welcomeTitle}>
+                Unlock Your Primal Potential
+              </Text>
+            </View>
 
-          {/* Bottom Section - Buttons */}
-          <View style={styles.buttonContainer}>
-            <Link href="/onboarding/question1" asChild>
-              <TouchableOpacity style={styles.continueButton}>
-                <Text style={styles.continueButtonText}>
-                  Continue
-                </Text>
-              </TouchableOpacity>
-            </Link>
-            
-            <Link href="/onboarding/planSummary" asChild>
-              <TouchableOpacity>
-                <Text style={styles.signInText}>
-                  Already have an account? Sign In
-                </Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
-        </Animated.View>
-      </SafeAreaView>
-    </LinearGradient>
+            {/* Bottom Section - Buttons */}
+            <View style={styles.buttonContainer}>
+              <Link href="/onboarding/intro" asChild>
+                <TouchableOpacity style={styles.continueButton}>
+                  <Text style={styles.continueButtonText}>
+                    Continue
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+              
+              <Link href="/modal/signin" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.signInText}>
+                    Already have an account? Sign In
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </Animated.View>
+        </SafeAreaView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   safeArea: {
     flex: 1,
@@ -135,12 +139,13 @@ const styles = StyleSheet.create({
   welcomeContainer: {
     alignItems: 'center',
     paddingHorizontal: 20,
+    flex: 1,
+    justifyContent: 'center',
   },
   welcomeTitle: {
     color: '#FFFFFF',
     fontSize: 56,
     fontWeight: '900',
-    marginBottom: 15,
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 2, height: 2 },

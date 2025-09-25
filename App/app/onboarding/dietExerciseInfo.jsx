@@ -11,13 +11,13 @@ export default function DietExerciseInfo() {
 
   return (
     <LinearGradient
-      colors={['#101010', '#000000']}
+      colors={['#FFD700', '#FFA500']} // Yellow to Orange gradient
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
         </View>
 
@@ -32,6 +32,11 @@ export default function DietExerciseInfo() {
         </View>
 
         <View style={styles.footer}>
+          <View style={styles.dotsContainer}>
+            <View style={[styles.dot, styles.activeDot]} />
+            <View style={styles.dot} />
+          </View>
+
           <TouchableOpacity 
             style={styles.button} 
             onPress={() => {
@@ -40,12 +45,8 @@ export default function DietExerciseInfo() {
             }}
           >
             <Text style={styles.buttonText}>Next</Text>
+            <Ionicons name="chevron-forward-outline" size={24} color="#000" />
           </TouchableOpacity>
-
-          <View style={styles.dotsContainer}>
-            <View style={[styles.dot, styles.activeDot]} />
-            <View style={styles.dot} />
-          </View>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -82,14 +83,14 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   title: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
   },
   description: {
-    color: '#8A95B6',
+    color: '#333333',
     fontSize: 18,
     textAlign: 'center',
     lineHeight: 25,
@@ -97,32 +98,37 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 30,
     paddingBottom: 40,
+    alignItems: 'center',
   },
   button: {
     backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 30,
+    paddingVertical: 15,
+    paddingHorizontal: 35,
+    borderRadius: 30,
+    width: '100%',
   },
   buttonText: {
     color: '#000000',
     fontSize: 18,
     fontWeight: 'bold',
+    marginRight: 5,
   },
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    marginBottom: 20,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#000000',
   },
 });

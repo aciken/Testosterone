@@ -28,7 +28,11 @@ export default function HeightWeight() {
   const kgOptions = Array.from({ length: 131 }, (_, i) => i + 40); // 40-170 kg
 
   return (
-    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+    <LinearGradient 
+      colors={['#4C3100', '#000000']} 
+      style={styles.container}
+      locations={[0, 0.5]}
+    >
       <SafeAreaView style={{ flex: 1, width: '100%' }}>
         <View style={styles.content}>
           <View style={styles.topContainer}>
