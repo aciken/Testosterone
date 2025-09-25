@@ -4,21 +4,44 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+// import * as AppleAuthentication from 'expo-apple-authentication';
+// import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 export default function CreateAccount() {
   const router = useRouter();
 
-  const handleAppleSignIn = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // TODO: Implement Apple Sign In
-    console.log('Apple Sign In');
-  };
+  // const handleGoogleSignIn = async () => {
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     const userInfo = await GoogleSignin.signIn();
+  //     console.log('Google User Info:', userInfo);
+  //     // TODO: Send the userInfo.idToken to your backend for verification
+  //   } catch (error) {
+  //     console.error('Google Sign-In Error:', error);
+  //   }
+  // };
 
-  const handleGoogleSignIn = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // TODO: Implement Google Sign In
-    console.log('Google Sign In');
-  };
+  // const handleAppleSignIn = async () => {
+  //   try {
+  //     const credential = await AppleAuthentication.signInAsync({
+  //       requestedScopes: [
+  //         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+  //         AppleAuthentication.AppleAuthenticationScope.EMAIL,
+  //       ],
+  //     });
+  //     // signed in
+  //     console.log(credential);
+  //     // TODO: Send the credential.identityToken to your backend for verification
+  //   } catch (e) {
+  //     if (e.code === 'ERR_REQUEST_CANCELED') {
+  //       // handle that the user canceled the sign-in flow
+  //       console.log('User canceled Apple Sign-In.');
+  //     } else {
+  //       // handle other errors
+  //       console.error('Apple Sign-In error:', e);
+  //     }
+  //   }
+  // };
 
   const handleEmailSignUp = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -29,6 +52,13 @@ export default function CreateAccount() {
   const slideAnim = useRef(new Animated.Value(-20)).current;
 
   useEffect(() => {
+    // Configure Google Sign-In
+    // GoogleSignin.configure({
+    //   webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your Web Client ID
+    //   iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com', // Replace with your iOS Client ID
+    // });
+
+    // Animate content in
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -62,13 +92,19 @@ export default function CreateAccount() {
             source={require('../../assets/Portal4.png')} 
             style={[
               styles.portalImage,
-              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              { 
+                opacity: fadeAnim, 
+                transform: [{ translateY: slideAnim }] 
+              }
             ]} 
           />
           <Animated.Text 
             style={[
               styles.title,
-              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+              { 
+                opacity: fadeAnim, 
+                transform: [{ translateY: slideAnim }] 
+              }
             ]}
           >
             BOOST the Test
@@ -83,7 +119,6 @@ export default function CreateAccount() {
             {/* Apple Sign In */}
             <TouchableOpacity
               style={styles.optionButton}
-              onPress={handleAppleSignIn}
             >
               <Ionicons name="logo-apple" size={24} color="#FFFFFF" />
               <Text style={styles.optionButtonText}>Continue with Apple</Text>
@@ -92,7 +127,6 @@ export default function CreateAccount() {
             {/* Google Sign In */}
             <TouchableOpacity
               style={styles.optionButton}
-              onPress={handleGoogleSignIn}
             >
               <Image source={require('../../assets/search.png')} style={styles.iconImage} />
               <Text style={styles.optionButtonText}>Continue with Google</Text>

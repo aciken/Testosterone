@@ -13,6 +13,12 @@ export default function RootLayout() {
                         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                         <Stack.Screen name="modal" options={{ headerShown: false, presentation: 'modal' }} />
                         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                        <Stack.Screen
+                                name="utils/Paywall"
+                                options={{
+                                    headerShown: false,
+                                }}
+                            />
                     </Stack>
                 </GlobalProvider>
             </GestureHandlerRootView>

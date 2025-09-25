@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from './context/GlobalProvider';
 import { useRouter } from 'expo-router';
+import Purchases from 'react-native-purchases';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -40,8 +41,19 @@ export default function WelcomePage() {
     try {
       const user = await AsyncStorage.getItem('user');
       if (user) {
-        // User exists, route to home
-        router.replace('/home');
+        // User exists, check pro status
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          if (customerInfo.entitlements.all['pro']?.isActive) {
+            router.replace('/home');
+          } else {
+            router.replace('/utils/Paywall');
+          }
+        } catch (e) {
+          console.error('Failed to get RevenueCat customer info', e);
+          // Fallback to home on error
+          router.replace('/home');
+        }
       }
     } catch (error) {
       console.error('Error checking user:', error);

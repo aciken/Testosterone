@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useGlobalContext } from '../context/GlobalProvider';
+import Purchases from 'react-native-purchases';
 
 export default function VerifyAccount() {
   const { user, setUser, isAuthenticated, setIsAuthenticated } = useGlobalContext();
@@ -80,7 +81,21 @@ export default function VerifyAccount() {
         await AsyncStorage.setItem('user', JSON.stringify(response.data));
         setUser(response.data);
         setIsAuthenticated(true);
-        router.replace('/home');
+        
+        // Check RevenueCat status
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          if (typeof customerInfo.entitlements.all['pro'] === "undefined") {
+            router.replace('/utils/Paywall');
+          } else {
+            router.replace('/home');
+          }
+        } catch (e) {
+          // Error fetching customer info
+          console.error("RevenueCat customer info error:", e);
+          // Fallback to home, or show an error
+          router.replace('/home');
+        }
       } else {
         Alert.alert('Failed to verify account. Please try again.');
       }

@@ -2,8 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import axios from 'axios';
-import { Platform } from 'react-native'
+import { Platform } from 'react-native';
+import Purchases from 'react-native-purchases';
 
+const API_KEY = Platform.select({
+    ios: "appl_rIVvwDddRxPEkmjanYMteRJrXzT",
+    android: "YOUR_ANDROID_API_KEY"
+});
 
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -14,21 +19,40 @@ export const GlobalProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [error, setError] = useState(null);
     const [selectedAdventure, setSelectedAdventure] = useState(null);
+    const [isPro, setIsPro] = useState(false);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const token = await AsyncStorage.getItem('token');
-            if (token) {
+        const init = async () => {
+            if (API_KEY) {
+                Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+                Purchases.configure({ apiKey: API_KEY });
+            }
+        };
+        init();
+    }, []);
+
+    useEffect(() => {
+        const checkAuthAndLoginRevenueCat = async () => {
+            const storedUser = await AsyncStorage.getItem('user');
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
                 setIsAuthenticated(true);
-                setUser(JSON.parse(token));
+                setUser(parsedUser);
+                
+                if (API_KEY) {
+                    try {
+                        const loginResult = await Purchases.logIn(parsedUser._id);
+                        console.log("RevenueCat login success:", loginResult);
+                    } catch (e) {
+                        console.error("RevenueCat login error:", e);
+                    }
+                }
             } else {
                 setIsAuthenticated(false);
                 setUser(null);
             }
         };
-        checkAuth();
-
-
+        checkAuthAndLoginRevenueCat();
     }, []);
 
     const login = async (email, password) => {
@@ -38,6 +62,14 @@ export const GlobalProvider = ({ children }) => {
                 await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
                 setIsAuthenticated(true);   
                 setUser(response.data.user);
+
+                if (API_KEY) {
+                    try {
+                        await Purchases.logIn(response.data.user._id);
+                    } catch (e) {
+                        console.error("RevenueCat login error on signin:", e);
+                    }
+                }
             } else {
                 setError(response.data.message);
             }
@@ -52,6 +84,13 @@ export const GlobalProvider = ({ children }) => {
     };
 
     const logout = async () => {
+        if (API_KEY) {
+            try {
+                await Purchases.logOut();
+            } catch (e) {
+                console.error("RevenueCat logout error:", e);
+            }
+        }
         await AsyncStorage.removeItem('user');
         setIsAuthenticated(false);
         setUser(null);
