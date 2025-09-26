@@ -17,9 +17,11 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aciken.Testosterone",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+      "bundleIdentifier": "com.company.testosterone",
+      "entitlements": {
+        "com.apple.developer.applesignin": [
+          "Default"
+        ]
       }
     },
     "android": {
