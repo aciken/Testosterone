@@ -9,6 +9,7 @@ import programData from '../../data/programData';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { taskIcons, taskIconsGrayscale } from '../../data/icons';
+import * as Haptics from 'expo-haptics';
 
 const screenWidth = Dimensions.get('window').width;
 const BASELINE_TESTOSTERONE = 280;
@@ -78,6 +79,7 @@ export default function StatisticsScreen() {
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentTScore, setCurrentTScore] = useState(BASELINE_TESTOSTERONE);
+    const [viewMode, setViewMode] = useState('score');
 
     useFocusEffect(
         useCallback(() => {
@@ -301,42 +303,87 @@ export default function StatisticsScreen() {
         <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <ScrollView contentContainerStyle={styles.contentContainer}>
-                    <TestosteroneGauge value={currentTScore} />
+                    <View style={styles.header}>
+                        <View style={styles.toggleContainer}>
+                            <TouchableOpacity 
+                                style={[styles.toggleButton, viewMode === 'score' && styles.toggleButtonActive]} 
+                                onPress={() => {
+                                    setViewMode('score');
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                }}
+                            >
+                                <Text style={[styles.toggleButtonText, viewMode === 'score' && styles.toggleButtonTextActive]}>Score</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.toggleButton, viewMode === 'rank' && styles.toggleButtonActive]} 
+                                onPress={() => {
+                                    setViewMode('rank');
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                }}
+                            >
+                                <Text style={[styles.toggleButtonText, viewMode === 'rank' && styles.toggleButtonTextActive]}>Rank</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.toggleButton, viewMode === 'graph' && styles.toggleButtonActive]} 
+                                onPress={() => {
+                                    setViewMode('graph');
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                }}
+                            >
+                                <Text style={[styles.toggleButtonText, viewMode === 'graph' && styles.toggleButtonTextActive]}>Graph</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                     {isLoading ? <ActivityIndicator size="large" color="#FFFFFF" style={{ marginTop: 50 }} />
                     : stats ? (
                         <>
-                            <View style={styles.chartContainer}>
-                                <Text style={styles.sectionTitle}>PERFORMANCE TIMELINE</Text>
-                                <LineChart
-                                    data={{ labels: stats.chartLabels, datasets: [{ data: stats.chartData, strokeWidth: 2.5 }] }}
-                                    width={screenWidth}
-                                    height={240}
-                                    chartConfig={chartConfig}
-                                    withShadow={true}
-                                    withInnerLines={true}
-                                    withOuterLines={false}
-                                    withVerticalLabels={true}
-                                    withHorizontalLabels={true}
-                                    bezier
-                                    style={styles.chart}
-                                    renderDotContent={({x, y, index, indexData}) => {
-                                        if (index === 1 || index === stats.chartData.length - 1) {
-                                            const isStart = index === 1;
-                                            const labelY = y;
-                                            const labelX = isStart ? x + 5 : x - 45;
-                                            const labelOffset = y > 100 ? -35 : 15;
+                            <View style={styles.mainDisplayContainer}>
+                                {viewMode === 'score' && <TestosteroneGauge value={currentTScore} />}
+
+                                {viewMode === 'rank' && (
+                                    <View style={styles.rankContainer}>
+                                        <View style={styles.rankImageContainer}>
+                                            <Image source={require('../../assets/BronzeRank.png')} style={styles.rankImage} />
+                                        </View>
+                                        <Text style={styles.rankText}>Bronze Tier</Text>
+                                    </View>
+                                )}
                                 
-                                            return (
-                                                <View key={index} style={[styles.chartLabelContainer, { top: labelY + labelOffset, left: labelX }]}>
-                                                    <Text style={styles.chartLabelText}>{Math.round(indexData)}</Text>
-                                                </View>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
+                                {viewMode === 'graph' && (
+                                    <View style={styles.chartContainer}>
+                                        <Text style={styles.sectionTitle}>PERFORMANCE TIMELINE</Text>
+                                        <LineChart
+                                            data={{ labels: stats.chartLabels, datasets: [{ data: stats.chartData, strokeWidth: 2.5 }] }}
+                                            width={screenWidth}
+                                            height={240}
+                                            chartConfig={chartConfig}
+                                            withShadow={true}
+                                            withInnerLines={true}
+                                            withOuterLines={false}
+                                            withVerticalLabels={true}
+                                            withHorizontalLabels={true}
+                                            bezier
+                                            style={styles.chart}
+                                            renderDotContent={({x, y, index, indexData}) => {
+                                                if (index === 1 || index === stats.chartData.length - 1) {
+                                                    const isStart = index === 1;
+                                                    const labelY = y;
+                                                    const labelX = isStart ? x + 5 : x - 45;
+                                                    const labelOffset = y > 100 ? -35 : 15;
+                                        
+                                                    return (
+                                                        <View key={index} style={[styles.chartLabelContainer, { top: labelY + labelOffset, left: labelX }]}>
+                                                            <Text style={styles.chartLabelText}>{Math.round(indexData)}</Text>
+                                                        </View>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                    </View>
+                                )}
                             </View>
-                            
+
                             <View style={styles.badgesContainer}>
                                 <Text style={styles.sectionTitle}>BADGES COLLECTED</Text>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScrollView}>
@@ -399,10 +446,64 @@ const chartConfig = {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     safeArea: { flex: 1 },
-    contentContainer: { paddingTop: 30, paddingBottom: 100 },
+    contentContainer: { paddingBottom: 100 },
     header: {
         paddingHorizontal: 20,
-        marginBottom: 10,
+        paddingTop: 20,
+        paddingBottom: 10,
+        alignItems: 'flex-end',
+        width: '100%',
+    },
+    toggleContainer: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 20,
+        padding: 4,
+    },
+    toggleButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 16,
+    },
+    toggleButtonActive: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    },
+    toggleButtonText: {
+        color: '#FFFFFF',
+        fontWeight: '700',
+    },
+    toggleButtonTextActive: {
+        color: '#000000',
+    },
+    mainDisplayContainer: {
+        height: 300,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    rankContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    rankImageContainer: {
+        shadowColor: '#CD7F32',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.8,
+        shadowRadius: 25,
+    },
+    rankImage: {
+        width: 220,
+        height: 220,
+        resizeMode: 'contain',
+    },
+    rankText: {
+        color: '#E6A66A',
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginTop: 20,
+        letterSpacing: 1.5,
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 3,
     },
     headerTitle: {
         color: '#E0E0E0',
@@ -411,10 +512,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     sectionTitle: { color: '#C5C5C5', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 20, textAlign: 'center' },
-    chartContainer: { 
-        marginTop: 20,
-        borderTopWidth: 1, 
-        borderBottomWidth: 1, 
+    chartContainer: {
+        width: '100%',
         borderColor: 'rgba(255, 255, 255, 0.1)',
         paddingVertical: 20,
     },
