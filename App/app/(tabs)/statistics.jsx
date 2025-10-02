@@ -11,7 +11,17 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { taskIcons, taskIconsGrayscale } from '../../data/icons';
 
 const screenWidth = Dimensions.get('window').width;
-const BASELINE_TESTOSTERONE = 450;
+const BASELINE_TESTOSTERONE = 280;
+
+// Mock data for badges
+const badges = [
+    { id: '1', name: 'First Victory', image: require('../../assets/reward.png'), unlocked: true },
+    { id: '2', name: 'Week Streak', image: null, unlocked: false },
+    { id: '3', name: 'Perfect Month', image: null, unlocked: false },
+    { id: '4', name: 'Comeback King', image: null, unlocked: false },
+    { id: '5', name: 'T-Level 500', image: null, unlocked: false },
+    { id: '6', name: 'Alpha Badge', image: null, unlocked: false },
+];
 
 const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress, streak }) => {
     const hasStreak = streak > 0;
@@ -327,6 +337,24 @@ export default function StatisticsScreen() {
                                 />
                             </View>
                             
+                            <View style={styles.badgesContainer}>
+                                <Text style={styles.sectionTitle}>BADGES COLLECTED</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScrollView}>
+                                    {badges.map(badge => (
+                                        <View key={badge.id} style={styles.badgeItem}>
+                                            <View style={[styles.badgeImageContainer, !badge.unlocked && styles.badgeLocked]}>
+                                                {badge.unlocked ? (
+                                                    <Image source={badge.image} style={styles.badgeImage} />
+                                                ) : (
+                                                    <Ionicons name="lock-closed" size={30} color="rgba(255, 255, 255, 0.5)" />
+                                                )}
+                                            </View>
+                                            <Text style={styles.badgeName}>{badge.name}</Text>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            </View>
+
                             <View style={styles.keyFactorsContainer}>
                                 <Text style={styles.sectionTitle}>TASK STREAKS</Text>
                                 {stats.streakingFactors.map(c => {
@@ -354,10 +382,14 @@ const chartConfig = {
     backgroundGradientTo: "#000000",
     backgroundGradientToOpacity: 0,
     color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-    strokeWidth: 2.5,
+    strokeWidth: 3,
     propsForDots: { r: "0" },
-    fillShadowGradient: '#FFFFFF',
-    fillShadowGradientOpacity: 0.1,
+    fillShadowGradientFrom: '#FFFFFF',
+    fillShadowGradientFromOpacity: 0.1,
+    fillShadowGradientTo: '#FFFFFF',
+    fillShadowGradientToOpacity: 0,
+    decimalPlaces: 0,
+    linejoinType: 'round',
     propsForBackgroundLines: {
         stroke: 'rgba(255, 255, 255, 0.1)',
         strokeDasharray: '0',
@@ -378,7 +410,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
     },
-    sectionTitle: { color: '#8A95B6', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 20, textAlign: 'center' },
+    sectionTitle: { color: '#C5C5C5', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 20, textAlign: 'center' },
     chartContainer: { 
         marginTop: 20,
         borderTopWidth: 1, 
@@ -400,6 +432,57 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     keyFactorsContainer: { width: '100%', marginTop: 40, paddingHorizontal: 20, },
+    badgesContainer: {
+        marginTop: 40,
+        paddingTop: 10,
+        paddingBottom: 30,
+        borderBottomWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    badgesScrollView: {
+        paddingHorizontal: 20,
+    },
+    badgeItem: {
+        alignItems: 'center',
+        marginRight: 25,
+        width: 90,
+    },
+    badgeImageContainer: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        borderWidth: 2,
+        borderColor: '#C0C0C0',
+        shadowColor: '#FFFFFF',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 12,
+        elevation: 10,
+    },
+    badgeLocked: {
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        shadowColor: '#000',
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
+    },
+    badgeImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+    },
+    badgeName: {
+        color: '#E0E0E0',
+        fontSize: 13,
+        fontWeight: '600',
+        textAlign: 'center',
+        marginTop: 5,
+    },
     keyFactorTouchable: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 5 },

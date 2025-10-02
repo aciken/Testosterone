@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Testosterone",
+    "name": "Boost",
     "slug": "Testosterone",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "scheme": "testosterone",
+    "icon": "./assets/BoostLogo.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "Boost",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/BoostLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,8 +20,12 @@
       "bundleIdentifier": "com.company.testosterone",
       "entitlements": {
         "com.apple.developer.applesignin": [
+          "Default",
           "Default"
         ]
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

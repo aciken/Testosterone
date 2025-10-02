@@ -33,6 +33,7 @@ export const GlobalProvider = ({ children }) => {
 
     useEffect(() => {
         const checkAuthAndLoginRevenueCat = async () => {
+            setIsLoading(true);
             const storedUser = await AsyncStorage.getItem('user');
             if (storedUser) {
                 const parsedUser = JSON.parse(storedUser);
@@ -51,6 +52,7 @@ export const GlobalProvider = ({ children }) => {
                 setIsAuthenticated(false);
                 setUser(null);
             }
+            setIsLoading(false);
         };
         checkAuthAndLoginRevenueCat();
     }, []);

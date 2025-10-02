@@ -1,14 +1,18 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Animated, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useGlobalContext } from '../context/GlobalProvider';
 
 export default function CreateAccount() {
   const router = useRouter();
+  const { setUser, setIsAuthenticated } = useGlobalContext();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -29,15 +33,33 @@ export default function CreateAccount() {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      // signed in
-      console.log(credential);
-      // TODO: Send the credential.identityToken to your backend for verification
+      
+      const { user, email, fullName } = credential;
+      const name = fullName ? `${fullName.givenName} ${fullName.familyName}` : 'User';
+      
+      const response = await axios.post('https://dfc73de1bf32.ngrok-free.app/auth/apple', {
+        appleId: user,
+        email,
+        name,
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        const userData = response.data;
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        setIsAuthenticated(true);
+
+        // For Apple Sign-In, verification is implicit, so navigate to home or paywall
+        router.push('/home'); 
+      } else {
+        // Handle non-successful responses
+        console.error('Apple Sign-In failed:', response.data.message);
+      }
+
     } catch (e) {
       if (e.code === 'ERR_REQUEST_CANCELED') {
-        // handle that the user canceled the sign-in flow
         console.log('User canceled Apple Sign-In.');
       } else {
-        // handle other errors
         console.error('Apple Sign-In error:', e);
       }
     }

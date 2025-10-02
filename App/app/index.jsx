@@ -14,9 +14,16 @@ const { width, height } = Dimensions.get('window');
 
 export default function WelcomePage() {
   const router = useRouter();
-  const {setUser, setIsAuthenticated, isAuthenticated} = useGlobalContext();
+  const { isLoading, isAuthenticated } = useGlobalContext();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    // Redirect if user is authenticated
+    if (!isLoading && isAuthenticated) {
+      router.replace('/home');
+    }
+  }, [isLoading, isAuthenticated]);
 
   useEffect(() => {
     Animated.parallel([
@@ -32,33 +39,6 @@ export default function WelcomePage() {
       }),
     ]).start();
   }, []);
-
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    try {
-      const user = await AsyncStorage.getItem('user');
-      if (user) {
-        // User exists, check pro status
-        try {
-          const customerInfo = await Purchases.getCustomerInfo();
-          if (customerInfo.entitlements.all['pro']?.isActive) {
-            router.replace('/home');
-          } else {
-            router.replace('/utils/Paywall');
-          }
-        } catch (e) {
-          console.error('Failed to get RevenueCat customer info', e);
-          // Fallback to home on error
-          router.replace('/home');
-        }
-      }
-    } catch (error) {
-      console.error('Error checking user:', error);
-    }
-  };
 
   return (
     <ImageBackground
@@ -103,7 +83,7 @@ export default function WelcomePage() {
                 </TouchableOpacity>
               </Link>
               
-              <Link href="/modal/signin" asChild>
+              <Link href="/onboarding/createAccount" asChild>
                 <TouchableOpacity>
                   <Text style={styles.signInText}>
                     Already have an account? Sign In

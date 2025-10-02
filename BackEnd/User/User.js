@@ -16,11 +16,15 @@ const userSchema = new mongoose.Schema({
     name: String,
     email: {
         type: String,
-        required: true
+        required: function() { return !this.isApple && !this.isGoogle; }, // Email is required only for non-social logins
+        unique: true,
+        sparse: true // Allows multiple documents to have a null email field
     },
     password: String,
     googleId: String,
     isGoogle: {type: Boolean, default: false},
+    appleId: String,
+    isApple: {type: Boolean, default: false},
     verification: String,
     dateCreated: {
         type: Date,

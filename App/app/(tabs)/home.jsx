@@ -265,7 +265,7 @@ export default function HomeScreen() {
         };
 
         console.log("Sending task update:", updatePayload);
-        const response = await axios.post('https://f95b31457302.ngrok-free.app/tasks/update', updatePayload);
+        const response = await axios.post('https://dfc73de1bf32.ngrok-free.app/tasks/update', updatePayload);
         console.log("Update response:", response.data);
 
         if (response.data && response.data.tasks) {
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dayLabel: {
-    color: '#8A95B6',
+    color: '#C5C5C5',
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 3,
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   isTodayText: {
-    color: '#8A95B6',
+    color: '#C5C5C5',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 2,
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   sectionTitle: {
-    color: '#8A95B6',
+    color: '#C5C5C5',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 2,

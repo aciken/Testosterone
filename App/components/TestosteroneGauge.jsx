@@ -58,8 +58,8 @@ const TestosteroneGauge = ({ value, size = 300, strokeWidth = 3 }) => {
       <Svg width={size} height={size * 0.75}>
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#AECBFA" stopOpacity="1" />
-            <Stop offset="1" stopColor="#4A90E2" stopOpacity="1" />
+            <Stop offset="0" stopColor="#FFA500" stopOpacity="1" />
+            <Stop offset="1" stopColor="#FF8C00" stopOpacity="1" />
           </SvgLinearGradient>
         </Defs>
         <G transform="translate(0, -5)">{renderTicks()}</G>
@@ -70,7 +70,7 @@ const TestosteroneGauge = ({ value, size = 300, strokeWidth = 3 }) => {
           maskElement={<Text style={styles.valueText}>{value}</Text>}
         >
           <LinearGradient
-            colors={['#FFFFFF', '#B3B8C8']}
+            colors={['#FFFFFF', '#FFC078']}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={{ flex: 1 }}
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   scoreLabel: {
-    color: '#8A95B6',
+    color: '#C5C5C5',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 2,
