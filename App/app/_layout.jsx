@@ -11,6 +11,9 @@ export default function RootLayout() {
                     <Stack>
                         <Stack.Screen name="index" options={{ headerShown: false }} />
                         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen name="allBadges" options={{ headerShown: false }} />
+                        <Stack.Screen name="badgeDetails" options={{ headerShown: false, presentation: 'modal' }} />
+                        <Stack.Screen name="rankTimeline" options={{ headerShown: false }} />
                         <Stack.Screen name="modal" options={{ headerShown: false, presentation: 'modal' }} />
                         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                         <Stack.Screen

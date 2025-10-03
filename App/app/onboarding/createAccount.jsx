@@ -37,7 +37,7 @@ export default function CreateAccount() {
       const { user, email, fullName } = credential;
       const name = fullName ? `${fullName.givenName} ${fullName.familyName}` : 'User';
       
-      const response = await axios.post('https://dfc73de1bf32.ngrok-free.app/auth/apple', {
+      const response = await axios.post('https://e462d3020478.ngrok-free.app/auth/apple', {
         appleId: user,
         email,
         name,

@@ -10,19 +10,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { taskIcons, taskIconsGrayscale } from '../../data/icons';
 import * as Haptics from 'expo-haptics';
+import { allBadges } from '../../data/badgeData';
 
 const screenWidth = Dimensions.get('window').width;
 const BASELINE_TESTOSTERONE = 280;
 
-// Mock data for badges
-const badges = [
-    { id: '1', name: 'First Victory', image: require('../../assets/reward.png'), unlocked: true },
-    { id: '2', name: 'Week Streak', image: null, unlocked: false },
-    { id: '3', name: 'Perfect Month', image: null, unlocked: false },
-    { id: '4', name: 'Comeback King', image: null, unlocked: false },
-    { id: '5', name: 'T-Level 500', image: null, unlocked: false },
-    { id: '6', name: 'Alpha Badge', image: null, unlocked: false },
+const ranks = [
+    { name: 'Bronze', minScore: 250, maxScore: 350, image: require('../../assets/BronzeRank.png'), color: '#E6A66A' },
+    { name: 'Silver', minScore: 351, maxScore: 600, image: require('../../assets/SilverRank.png'), color: '#C0C0C0' },
+    { name: 'Gold', minScore: 601, maxScore: 750, image: require('../../assets/GoldRank.png'), color: '#FFD700' },
+    { name: 'Platinum', minScore: 751, maxScore: 900, image: require('../../assets/DiamondRank.png'), color: '#E5E4E2' },
+    { name: 'Diamond', minScore: 901, maxScore: 1100, image: require('../../assets/ChampionRank.png'), color: '#B9F2FF' },
 ];
+
+const badges = allBadges.slice(0, 6);
 
 const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress, streak }) => {
     const hasStreak = streak > 0;
@@ -40,13 +41,14 @@ const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress, stre
     const borderOpacity = hasStreak ? Math.min(0.2 + streak * 0.04, 0.8) : 0.1;
     const borderColor = hasStreak ? `rgba(255, 149, 0, ${borderOpacity})` : 'rgba(255, 255, 255, 0.1)';
     
-    const shadowColor = hasStreak ? `rgba(255, 149, 0, 1)` : '#000';
-    const shadowOpacity = hasStreak ? Math.min(0.05 + streak * 0.02, 0.2) : 0.3;
+    const shadowColor = hasStreak ? '#FF9500' : '#000';
+    const shadowOpacity = hasStreak ? 0.7 : 0.3;
+    const shadowRadius = hasStreak ? 20 : 12;
 
     const currentIcon = hasStreak ? (taskIcons[icon] || icon) : (taskIconsGrayscale[icon] || icon);
 
     return (
-        <TouchableOpacity onPress={onPress} style={[styles.keyFactorTouchable, { shadowColor, shadowOpacity }]}>
+        <TouchableOpacity onPress={onPress} style={[styles.keyFactorTouchable, { shadowColor, shadowOpacity, shadowRadius }]}>
             <LinearGradient
                 colors={gradientColors}
                 start={{ x: 1, y: 0.5 }}
@@ -340,14 +342,27 @@ export default function StatisticsScreen() {
                             <View style={styles.mainDisplayContainer}>
                                 {viewMode === 'score' && <TestosteroneGauge value={currentTScore} />}
 
-                                {viewMode === 'rank' && (
-                                    <View style={styles.rankContainer}>
-                                        <View style={styles.rankImageContainer}>
-                                            <Image source={require('../../assets/BronzeRank.png')} style={styles.rankImage} />
-                                        </View>
-                                        <Text style={styles.rankText}>Bronze Tier</Text>
-                                    </View>
-                                )}
+                                {viewMode === 'rank' && (() => {
+                                    const currentRank = ranks.find(r => currentTScore >= r.minScore && currentTScore <= r.maxScore) || ranks[0];
+                                    const progress = Math.max(0, (currentTScore - currentRank.minScore) / (currentRank.maxScore - currentRank.minScore));
+
+                                    return (
+                                        <TouchableOpacity onPress={() => router.push({ pathname: '/rankTimeline', params: { currentTScore } })}>
+                                            <View style={styles.rankContainer}>
+                                                <View style={styles.rankImageContainer}>
+                                                    <Image source={currentRank.image || require('../../assets/BronzeRank.png')} style={styles.rankImage} />
+                                                </View>
+                                                <Text style={[styles.rankText, { color: currentRank.color }]}>{currentRank.name} Tier</Text>
+                                                <View style={styles.progressContainer}>
+                                                    <Text style={styles.progressText}>{currentTScore} / {currentRank.maxScore} ng/dl</Text>
+                                                    <View style={styles.progressBar}>
+                                                        <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: currentRank.color }]} />
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })()}
                                 
                                 {viewMode === 'graph' && (
                                     <View style={styles.chartContainer}>
@@ -385,18 +400,33 @@ export default function StatisticsScreen() {
                             </View>
 
                             <View style={styles.badgesContainer}>
-                                <Text style={styles.sectionTitle}>BADGES COLLECTED</Text>
+                                <View style={styles.sectionHeader}>
+                                    <Text style={styles.sectionTitle}>BADGES COLLECTED</Text>
+                                    <TouchableOpacity onPress={() => router.push('/allBadges')}>
+                                        <Text style={styles.seeAllButton}>See All</Text>
+                                    </TouchableOpacity>
+                                </View>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScrollView}>
-                                    {badges.map(badge => (
-                                        <View key={badge.id} style={styles.badgeItem}>
-                                            <View style={[styles.badgeImageContainer, !badge.unlocked && styles.badgeLocked]}>
-                                                {badge.unlocked ? (
-                                                    <Image source={badge.image} style={styles.badgeImage} />
-                                                ) : (
-                                                    <Ionicons name="lock-closed" size={30} color="rgba(255, 255, 255, 0.5)" />
-                                                )}
+                                    {badges.filter(b => b.unlocked).map(badge => (
+                                        <TouchableOpacity key={badge.id} onPress={() => router.push({ pathname: '/badgeDetails', params: { ...badge, image: badge.image ? Image.resolveAssetSource(badge.image).uri : null } })}>
+                                            <View style={styles.badgeItem}>
+                                                <View style={[styles.badgeImageContainer, !badge.unlocked && styles.badgeLocked]}>
+                                                    {badge.unlocked ? (
+                                                        <Image source={badge.image} style={styles.badgeImage} />
+                                                    ) : (
+                                                        <Ionicons name="lock-closed" size={30} color="rgba(255, 255, 255, 0.5)" />
+                                                    )}
+                                                </View>
+                                                <Text style={styles.badgeName}>{badge.name}</Text>
                                             </View>
-                                            <Text style={styles.badgeName}>{badge.name}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                    {Array.from({ length: Math.max(0, 4 - badges.filter(b => b.unlocked).length) }).map((_, index) => (
+                                        <View key={`placeholder-${index}`} style={styles.badgeItem}>
+                                            <View style={styles.badgePlaceholder}>
+                                                <Ionicons name="add" size={30} color="rgba(255, 255, 255, 0.2)" />
+                                            </View>
+                                            <Text style={styles.badgeName}></Text>
                                         </View>
                                     ))}
                                 </ScrollView>
@@ -505,13 +535,47 @@ const styles = StyleSheet.create({
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 3,
     },
+    progressContainer: {
+        width: '80%',
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    progressText: {
+        color: '#E0E0E0',
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    progressBar: {
+        width: '100%',
+        height: 12,
+        backgroundColor: '#1A1A1A',
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+    },
     headerTitle: {
         color: '#E0E0E0',
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
     },
-    sectionTitle: { color: '#C5C5C5', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 20, textAlign: 'center' },
+    sectionTitle: { color: '#C5C5C5', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, textAlign: 'center' },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        marginBottom: 20,
+    },
+    seeAllButton: {
+        color: '#FFFFFF',
+        fontWeight: '600',
+    },
     chartContainer: {
         width: '100%',
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -545,6 +609,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 25,
         width: 90,
+    },
+    badgePlaceholder: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        backgroundColor: 'transparent',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderStyle: 'dashed',
     },
     badgeImageContainer: {
         width: 90,

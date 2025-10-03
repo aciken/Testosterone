@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import programData from '../../data/programData';
+import { taskIcons } from '../../data/icons';
 
 const getDisplayValue = (task, progress) => {
     if (!task) return `${progress}%`;
@@ -13,36 +14,44 @@ const getDisplayValue = (task, progress) => {
     switch (task.type) {
         case 'slider':
             const value = (progress / 100) * task.goal;
-            // Round to the nearest step for cleanliness
             const roundedValue = Math.round(value / task.step) * task.step;
-            // Handle cases where step might be a decimal
             const finalValue = Number.isInteger(roundedValue) ? roundedValue : roundedValue.toFixed(1);
             return `${finalValue}${task.unit ? ` ${task.unit}` : ''}`;
         case 'simple':
-            return progress === 100 ? 'Completed' : 'Incomplete';
         case 'meals':
-            if (progress < 0) {
-                return `Bad Meal (${Math.abs(progress)}%)`;
-            } else if (progress === 100) {
-                return 'Completed';
-            } else {
-                return 'Incomplete';
-            }
         case 'checklist':
-            const totalItems = task.checklist ? task.checklist.length : 4; // Default to 4 for supplements
-            const completedItems = Math.round((progress / 100) * totalItems);
-            return `${completedItems}/${totalItems}`;
+            return progress >= 95 ? 'Completed' : 'Incomplete';
         default:
             return `${progress}%`;
     }
 };
 
-const HistoryItem = ({ day, displayValue }) => (
-    <View style={[styles.historyItem, displayValue === 'Not Logged' && styles.notLoggedItem]}>
-        <Text style={styles.historyDay}>Day {day}</Text>
-        <Text style={[styles.historyProgress, displayValue === 'Not Logged' && styles.notLoggedText]}>{displayValue}</Text>
-    </View>
-);
+const HistoryItem = ({ date, status, displayValue }) => {
+    const isCompleted = status === 'completed';
+
+    const containerStyle = [
+        styles.historyItem,
+        isCompleted && styles.completedItem,
+    ];
+
+    const dateTextStyle = [styles.historyDate, isCompleted && styles.completedText];
+    const valueTextStyle = [styles.historyValue, isCompleted && styles.completedText];
+    
+    return (
+        <View style={containerStyle}>
+            {isCompleted && (
+                <LinearGradient
+                    colors={['#1A1A1A', '#402A00']}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={StyleSheet.absoluteFill}
+                />
+            )}
+            <Text style={dateTextStyle}>{date}</Text>
+            <Text style={valueTextStyle}>{displayValue}</Text>
+        </View>
+    );
+};
 
 export default function FactorHistoryModal() {
   const router = useRouter();
@@ -60,7 +69,6 @@ export default function FactorHistoryModal() {
         }
 
         try {
-            // Find task details from programData
             const allTasks = [...programData[1].dos, ...programData[1].donts];
             const foundTask = allTasks.find(t => t.id === factorId);
             setTaskInfo(foundTask);
@@ -76,7 +84,6 @@ export default function FactorHistoryModal() {
             const today = new Date();
             dateCreated.setHours(0, 0, 0, 0);
             today.setHours(0, 0, 0, 0);
-            const programDuration = Math.ceil((today - dateCreated) / (1000 * 60 * 60 * 24)) + 1;
 
             const loggedTasks = user.tasks
                 .filter(task => task.taskId === factorId)
@@ -88,11 +95,33 @@ export default function FactorHistoryModal() {
                 }, {});
 
             const fullHistory = [];
-            for (let i = programDuration - 1; i >= 0; i--) {
-                const loggedTask = loggedTasks[i];
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dayIndex = Math.round((date - dateCreated) / (1000 * 60 * 60 * 24));
+
+                if (dayIndex < 0) continue;
+
+                const loggedTask = loggedTasks[dayIndex];
+                let status = 'notLogged';
+                let displayValue = 'Not Logged';
+
+                if (loggedTask) {
+                    if (foundTask.inverted) {
+                        status = loggedTask.progress < 50 ? 'completed' : 'missed';
+                    } else {
+                        if (loggedTask.progress >= 95) status = 'completed';
+                        else if (loggedTask.progress > 5) status = 'partial';
+                        else status = 'missed';
+                    }
+                    displayValue = getDisplayValue(foundTask, loggedTask.progress);
+                }
+                
                 fullHistory.push({
-                    day: i + 1,
-                    displayValue: loggedTask ? getDisplayValue(foundTask, loggedTask.progress) : 'Not Logged'
+                    key: date.toISOString(),
+                    date: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
+                    status: status,
+                    displayValue: displayValue,
                 });
             }
             
@@ -109,12 +138,13 @@ export default function FactorHistoryModal() {
   }, [factorId]);
 
   return (
-    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#1C1C1E', '#000000']} style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
+            {taskInfo && <Image source={taskIcons[factorId]} style={styles.headerIcon} />}
           <Text style={styles.headerTitle}>{taskInfo ? taskInfo.task : 'History'}</Text>
           <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <Ionicons name="close-circle" size={32} color="#888" />
+            <Ionicons name="close-circle" size={32} color="#333333" />
           </TouchableOpacity>
         </View>
         <View style={styles.content}>
@@ -122,7 +152,7 @@ export default function FactorHistoryModal() {
             : history && history.length > 0 ? (
                 <ScrollView contentContainerStyle={styles.historyList}>
                     {history.map(item => (
-                        <HistoryItem key={item.day} day={item.day} displayValue={item.displayValue} />
+                        <HistoryItem key={item.key} {...item} />
                     ))}
                 </ScrollView>
             ) : (
@@ -144,14 +174,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 15,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
+  headerIcon: {
+    width: 30,
+    height: 30,
+    marginRight: 15,
+  },
   headerTitle: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
   },
   closeButton: {
@@ -165,38 +200,45 @@ const styles = StyleSheet.create({
     color: '#8A95B6',
     fontSize: 16,
     textAlign: 'center',
-    paddingHorizontal: 20,
+    padding: 20,
   },
   historyList: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    padding: 20,
   },
   historyItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 10,
-    paddingVertical: 15,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
     paddingHorizontal: 20,
+    paddingVertical: 25,
     marginBottom: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
-  notLoggedItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+  completedItem: {
+    backgroundColor: 'transparent',
+    borderColor: 'rgba(255, 140, 0, 0.3)',
+    shadowColor: '#FF8C00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
+    elevation: 10,
   },
-  historyDay: {
-    color: '#E0E0E0',
+  historyDate: {
+    color: '#888888',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  historyProgress: {
+  historyValue: {
+    color: '#A8A8A8',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  completedText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  notLoggedText: {
-    color: '#666',
-    fontWeight: 'normal',
-    fontStyle: 'italic',
+    fontWeight: '700',
   },
 });
