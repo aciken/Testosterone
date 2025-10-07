@@ -61,7 +61,10 @@ export default function OnboardingIntro() {
 
   return (
     <LinearGradient
-      colors={['#FF8C00', '#4B1D04', '#000000']}
+      colors={["#0A0A0D", "#4B240A", "#B46010"]}
+      locations={[0, 0.5, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
@@ -137,6 +140,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     lineHeight: 38,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   footer: {
     paddingHorizontal: 30,
@@ -148,9 +154,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 18,
     borderRadius: 30,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.35)',
+    shadowColor: 'rgba(245,158,11,0.5)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
   },
   buttonText: {
-    color: '#000000',
+    color: '#0E0E0E',
     fontSize: 18,
     fontWeight: 'bold',
   },

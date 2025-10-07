@@ -1,22 +1,28 @@
 import { View, Text, TouchableOpacity, SafeAreaView, Animated, Dimensions, StyleSheet, ImageBackground } from 'react-native';
 import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from './context/GlobalProvider';
 import { useRouter } from 'expo-router';
 import Purchases from 'react-native-purchases';
+import RocketAnimation from '../components/RocketAnimation';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
+
+// Calculate a responsive font size based on screen width
+const titleFontSize = width / 7;
+const kickerFontSize = Math.max(14, Math.round(width / 18));
 
 export default function WelcomePage() {
   const router = useRouter();
   const { isLoading, isAuthenticated } = useGlobalContext();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+  const [isSplashFinished, setIsSplashFinished] = useState(false);
 
   useEffect(() => {
     // Redirect if user is authenticated
@@ -26,27 +32,36 @@ export default function WelcomePage() {
   }, [isLoading, isAuthenticated]);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+    if (isSplashFinished) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [isSplashFinished]);
+
+  if (!isSplashFinished) {
+    return <RocketAnimation onAnimationFinish={() => setIsSplashFinished(true)} />;
+  }
 
   return (
     <ImageBackground
-      source={require('../assets/Background1.png')}
+      source={require('../assets/Background2.png')}
       style={styles.container}
       resizeMode="cover"
     >
-      <View style={styles.overlay}>
+      <LinearGradient
+        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+        style={styles.overlay}
+      >
         <SafeAreaView style={styles.safeArea}>
           <StatusBar style="light" />
           
@@ -59,18 +74,18 @@ export default function WelcomePage() {
               }
             ]}
           >
-            {/* Top Section - Logo */}
-            <View style={styles.logoContainer}>
-              <Text style={styles.logoText}>
-                Boost
-              </Text>
-            </View>
+            {/* An empty view for spacing, replacing the logo */}
+            <View style={styles.logoContainer} />
 
             {/* Middle Section - Welcome Text */}
             <View style={styles.welcomeContainer}>
-              <Text style={styles.welcomeTitle}>
-                Unlock Your Primal Potential
-              </Text>
+              <View style={styles.heroTitle}> 
+                <Text style={styles.heroKicker}>BOOST</Text>
+                <Text style={styles.heroMain} numberOfLines={1} adjustsFontSizeToFit>
+                  TESTOSTERONE
+                </Text>
+                <View style={styles.accentBar} />
+              </View>
             </View>
 
             {/* Bottom Section - Buttons */}
@@ -93,7 +108,7 @@ export default function WelcomePage() {
             </View>
           </Animated.View>
         </SafeAreaView>
-      </View>
+      </LinearGradient>
     </ImageBackground>
   );
 }
@@ -134,14 +149,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  welcomeTitle: {
+  heroTitle: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  heroKicker: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: kickerFontSize,
+    fontWeight: '800',
+    letterSpacing: 4,
+  },
+  heroMain: {
     color: '#FFFFFF',
-    fontSize: 56,
+    fontSize: titleFontSize,
     fontWeight: '900',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 10,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(245, 158, 11, 0.45)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 22,
+    paddingHorizontal: 12,
+  },
+  accentBar: {
+    marginTop: 6,
+    width: '55%',
+    height: 2,
+    backgroundColor: 'rgba(245,158,11,0.7)',
+    shadowColor: 'rgba(245,158,11,1)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
   },
   welcomeSubtitle: {
     color: 'rgba(255, 255, 255, 0.8)',

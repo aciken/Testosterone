@@ -158,7 +158,7 @@ export default function StatisticsScreen() {
                                 : progressPercent * taskInfo.impact;
                         }
                         
-                        if (dayIndex > 0 && dayIndex < programDuration) {
+                        if (dayIndex >= 0 && dayIndex < programDuration) {
                             if (contribution > 0) {
                                 dailyPositiveContributions[dayIndex] += contribution;
                             } else {
@@ -168,9 +168,8 @@ export default function StatisticsScreen() {
                     });
 
                     const dailyContributions = Array(programDuration).fill(0);
-                    dailyContributions[0] = BASELINE_TESTOSTERONE;
                     
-                    for (let i = 1; i < programDuration; i++) {
+                    for (let i = 0; i < programDuration; i++) {
                         const scaledPositive = totalPossiblePositiveImpact > 0
                             ? (dailyPositiveContributions[i] / totalPossiblePositiveImpact) * 8
                             : 0;
@@ -180,11 +179,12 @@ export default function StatisticsScreen() {
                             : 0;
                         
                         const netChange = scaledPositive + scaledNegative;
-                        dailyContributions[i] = netChange;
-                    }
-                    
-                    for (let i = 1; i < programDuration; i++) {
-                        dailyContributions[i] += dailyContributions[i-1];
+                        
+                        if (i === 0) {
+                            dailyContributions[i] = BASELINE_TESTOSTERONE + netChange;
+                        } else {
+                            dailyContributions[i] = dailyContributions[i-1] + netChange;
+                        }
                     }
 
                     const rawChartData = dailyContributions.map(c => Math.max(200, Math.min(1100, c)));

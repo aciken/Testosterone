@@ -120,18 +120,96 @@ export default function HomeScreen() {
     ? ((positiveProgress - negativeProgress) / totalPossiblePositive) * 100
     : -negativeProgress / (currentDonts.length * 100) * 100;
 
-  useEffect(() => {
-    const dayData = todosByDay[currentDay] || { dos: [], donts: [] };
-    const dos = dayData.dos || [];
-    const donts = dayData.donts || [];
+  // Calculate daily ng/dl impact
+  const calculateDailyNgDl = () => {
+    const allTasks = [...programData[1].dos, ...programData[1].donts];
+    const taskMap = allTasks.reduce((map, task) => {
+      map[task.id] = { ...task };
+      return map;
+    }, {});
 
-    const posProgress = dos.reduce((sum, todo) => sum + Math.min(todo.progress || 0, 100), 0);
-    const negProgress = donts.reduce((sum, todo) => sum + (todo.progress || 0), 0);
-    const totalPossible = dos.length * 100;
+    let totalPositive = 0;
+    let totalNegative = 0;
+
+    // Calculate for current dos
+    currentDos.forEach(todo => {
+      const taskInfo = taskMap[todo.id];
+      if (!taskInfo) return;
+
+      let contribution;
+      if (taskInfo.id === 'sleep') {
+        const hoursSlept = ((todo.progress || 0) / 100) * taskInfo.goal;
+        let impactMultiplier;
+        if (hoursSlept < 7) {
+          const deficit = 7 - hoursSlept;
+          impactMultiplier = -Math.min(deficit / 3, 1);
+        } else if (hoursSlept < 8) {
+          impactMultiplier = 0;
+        } else {
+          const surplus = hoursSlept - 8;
+          impactMultiplier = Math.min(surplus / 2, 1);
+        }
+        contribution = impactMultiplier * taskInfo.impact;
+      } else if (taskInfo.type === 'slider' && !taskInfo.inverted) {
+        const actualValue = ((todo.progress || 0) / 100) * taskInfo.goal;
+        const impactMultiplier = taskInfo.goal > 0 ? Math.min(actualValue / taskInfo.goal, 2) : 0;
+        contribution = impactMultiplier * taskInfo.impact;
+      } else if (taskInfo.type === 'meals') {
+        if ((todo.progress || 0) < 0) {
+          contribution = (todo.progress || 0) * taskInfo.impact / 100;
+        } else {
+          contribution = ((todo.progress || 0) / 100) * taskInfo.impact;
+        }
+      } else {
+        const progressPercent = (todo.progress || 0) / 100;
+        contribution = taskInfo.inverted 
+          ? -1 * progressPercent * taskInfo.impact
+          : progressPercent * taskInfo.impact;
+      }
+
+      if (contribution > 0) {
+        totalPositive += contribution;
+      } else {
+        totalNegative += contribution;
+      }
+    });
+
+    // Calculate for current donts
+    currentDonts.forEach(todo => {
+      const taskInfo = taskMap[todo.id];
+      if (!taskInfo) return;
+
+      const progressPercent = (todo.progress || 0) / 100;
+      const contribution = -1 * progressPercent * taskInfo.impact;
+      totalNegative += contribution;
+    });
+
+    const totalPossiblePositiveImpact = programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0);
+    const totalPossibleNegativeImpact = 
+      programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) +
+      programData[1].dos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0);
+
+    const normalizedPositive = (totalPositive / totalPossiblePositiveImpact) * 8;
+    const normalizedNegative = (totalNegative / totalPossibleNegativeImpact) * 3;
     
-    const newProgress = totalPossible > 0 
-      ? ((posProgress - negProgress) / totalPossible) * 100
-      : -negProgress / (donts.length * 100) * 100;
+    return normalizedPositive + normalizedNegative;
+  };
+
+  const dailyNgDl = calculateDailyNgDl();
+
+  useEffect(() => {
+    // Use the ng/dl calculation to drive the progress bar
+    const ngDlValue = calculateDailyNgDl();
+    
+    // Map ng/dl to progress percentage (-3 to +8 range maps to -100% to +100%)
+    // Negative: -3 ng/dl = -100%, 0 = 0%
+    // Positive: +8 ng/dl = +100%, 0 = 0%
+    let newProgress;
+    if (ngDlValue < 0) {
+      newProgress = (ngDlValue / 3) * 100; // -3 -> -100%
+    } else {
+      newProgress = (ngDlValue / 8) * 100; // +8 -> +100%
+    }
 
     Animated.timing(widthAnim, {
       toValue: newProgress,
@@ -430,8 +508,19 @@ export default function HomeScreen() {
             <View style={styles.progressContainer}>
               <Animated.View style={[styles.negativeProgressBar, { width: negativeWidth }]} />
               <Animated.View style={[styles.progressBar, { width: positiveWidth }]} />
-              <Text style={[styles.progressText, { color: progress >= 45 && progress > 0 ? '#101010' : '#FFFFFF' }]}>
-                {`${Math.round(progress)}%`}
+              <Text style={[styles.progressText, { 
+                color: (() => {
+                  const ngDlValue = dailyNgDl;
+                  let progressPercent;
+                  if (ngDlValue < 0) {
+                    progressPercent = (ngDlValue / 3) * 100;
+                  } else {
+                    progressPercent = (ngDlValue / 8) * 100;
+                  }
+                  return progressPercent >= 45 && progressPercent > 0 ? '#101010' : '#FFFFFF';
+                })()
+              }]}>
+                {dailyNgDl >= 0 ? `+${dailyNgDl.toFixed(1)}` : dailyNgDl.toFixed(1)} ng/dl
               </Text>
             </View>
           </View>
@@ -499,7 +588,7 @@ export default function HomeScreen() {
       )}
       {showNotification && (
         <BadgeNotification 
-          badge={allBadges.find(b => b.id === '1')} 
+          badge={allBadges.find(b => b.id === '8')} 
           onDismiss={() => setShowNotification(false)}
         />
       )}

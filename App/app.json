@@ -8,9 +8,8 @@
     "userInterfaceStyle": "dark",
     "scheme": "Boost",
     "splash": {
-      "image": "./assets/BoostLogo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "assetBundlePatterns": [
       "**/*"
