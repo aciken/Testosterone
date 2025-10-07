@@ -18,6 +18,14 @@ export default function RootLayout() {
                         <Stack.Screen name="allBadges" options={{ headerShown: false }} />
                         <Stack.Screen name="badgeDetails" options={{ headerShown: false, presentation: 'modal' }} />
                         <Stack.Screen name="rankTimeline" options={{ headerShown: false }} />
+                        <Stack.Screen 
+                            name="mealHistory" 
+                            options={{ 
+                                headerShown: false, 
+                                presentation: 'transparentModal',
+                                animation: 'slide_from_bottom'
+                            }} 
+                        />
                         <Stack.Screen name="modal" options={{ headerShown: false, presentation: 'modal' }} />
                         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                         <Stack.Screen

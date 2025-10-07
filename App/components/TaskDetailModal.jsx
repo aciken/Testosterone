@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, TouchableWithoutFeedback, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import CustomSlider from './CustomSlider';
 import { OPENAI_API_KEY } from '@env';
 import OpenAI from 'openai';  
+import { useRouter } from 'expo-router';
 
 
 
@@ -55,11 +57,13 @@ const ChecklistItem = ({ item, onToggle }) => {
 };
 
 const TaskDetailModal = ({ isVisible, task, onClose }) => {
+  const router = useRouter();
   const [currentValue, setCurrentValue] = useState(0);
   const [checklistItems, setChecklistItems] = useState([]);
   const [mealInput, setMealInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  const [showMealHistory, setShowMealHistory] = useState(false);
   const slideAnim = useRef(new Animated.Value(500)).current;
   const blurAnim = useRef(new Animated.Value(0)).current;
 
@@ -277,16 +281,14 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
             <Text style={styles.taskTitle}>What did you eat today?</Text>
             
             {task.history && task.history.length > 0 && (
-              <ScrollView style={styles.historyScrollView}>
-                {task.history.map((item, index) => (
-                  <View key={index} style={styles.historyItem}>
-                    <Text style={styles.historyText} numberOfLines={1}>{item.description || `Meal ${index + 1}`}</Text>
-                    <Text style={[styles.historyScore, item.value < 0 && styles.negativeHistoryScore]}>
-                      {item.value > 0 ? `+${item.value}` : item.value}%
-                    </Text>
-                  </View>
-                ))}
-              </ScrollView>
+              <TouchableOpacity 
+                style={styles.viewHistoryButton} 
+                onPress={() => setShowMealHistory(true)}
+              >
+                <Ionicons name="list-outline" size={20} color="#FFFFFF" />
+                <Text style={styles.viewHistoryButtonText}>View History ({task.history.length} meals)</Text>
+                <Ionicons name="chevron-forward" size={20} color="#888" />
+              </TouchableOpacity>
             )}
 
             <TextInput
@@ -388,6 +390,87 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
           </TouchableWithoutFeedback>
         </AnimatedBlurView>
       </TouchableWithoutFeedback>
+      
+      {/* Meal History Modal */}
+      {showMealHistory && task.history && (
+        <MealHistoryModal 
+          visible={showMealHistory}
+          meals={task.history}
+          onClose={() => setShowMealHistory(false)}
+        />
+      )}
+    </Modal>
+  );
+};
+
+const MealHistoryModal = ({ visible, meals, onClose }) => {
+  const totalScore = meals.reduce((sum, meal) => sum + meal.value, 0);
+  const averageScore = meals.length > 0 ? Math.round(totalScore / meals.length) : 0;
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.historyModalContainer}>
+        <TouchableOpacity 
+          style={styles.historyBackdrop} 
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <LinearGradient colors={['#0A0A0A', '#000000']} style={styles.historyContent}>
+          <SafeAreaView style={styles.historySafeArea} edges={['top']}>
+            <View style={styles.historyHeader}>
+              <View style={styles.historyHeaderTop}>
+                <Text style={styles.historyTitle}>Meal History</Text>
+                <TouchableOpacity onPress={onClose} style={styles.historyCloseButton}>
+                  <Ionicons name="close-circle" size={32} color="#555" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.historyStatsContainer}>
+                <View style={styles.historyStatBox}>
+                  <Text style={styles.historyStatValue}>{meals.length}</Text>
+                  <Text style={styles.historyStatLabel}>Meals Today</Text>
+                </View>
+                <View style={styles.historyStatDivider} />
+                <View style={styles.historyStatBox}>
+                  <Text style={[styles.historyStatValue, averageScore < 0 ? styles.historyStatValueNegative : styles.historyStatValuePositive]}>
+                    {averageScore > 0 ? '+' : ''}{averageScore}%
+                  </Text>
+                  <Text style={styles.historyStatLabel}>Avg. Score</Text>
+                </View>
+              </View>
+            </View>
+            
+            <ScrollView contentContainerStyle={styles.historyScrollContent} showsVerticalScrollIndicator={false}>
+              {meals.map((item, index) => (
+                <View key={index} style={styles.historyMealCard}>
+                  <View style={styles.historyMealTop}>
+                    <View style={styles.historyMealLeft}>
+                      <View style={[styles.historyMealDot, item.value < 0 && styles.historyMealDotNegative]} />
+                      <View style={styles.historyMealInfo}>
+                        <Text style={styles.historyMealLabel}>Meal {index + 1}</Text>
+                        <Text style={styles.historyMealTime}>
+                          {new Date(item.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[styles.historyScoreBadge, item.value < 0 && styles.historyScoreBadgeNegative]}>
+                      <Text style={[styles.historyScoreText, item.value < 0 && styles.historyScoreTextNegative]}>
+                        {item.value > 0 ? `+${item.value}` : item.value}%
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.historyMealDescription}>{item.description || `Meal ${index + 1}`}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </SafeAreaView>
+        </LinearGradient>
+      </View>
     </Modal>
   );
 };
@@ -421,34 +504,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     paddingBottom: 20, // Pushes content up from the save button
   },
-  historyScrollView: {
-    maxHeight: 100,
-    width: '100%',
-    marginBottom: 15,
-  },
-  historyItem: {
+  viewHistoryButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    marginBottom: 8,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    width: '100%',
   },
-  historyText: {
-    color: '#CCCCCC',
-    fontSize: 16,
+  viewHistoryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
     flex: 1,
-    marginRight: 10,
-  },
-  historyScore: {
-    color: '#4CAF50',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  negativeHistoryScore: {
-    color: '#FF6B6B',
+    marginLeft: 10,
   },
   taskTitle: {
     color: '#E0E0E0',
@@ -551,6 +625,154 @@ const styles = StyleSheet.create({
     color: '#0A0A0A',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  // Meal History Modal Styles
+  historyModalContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  historyBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  historyContent: {
+    flex: 1,
+    marginTop: 60,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    overflow: 'hidden',
+  },
+  historySafeArea: {
+    flex: 1,
+  },
+  historyHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  historyHeaderTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  historyTitle: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  historyCloseButton: {
+    marginLeft: 16,
+  },
+  historyStatsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  historyStatBox: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  historyStatValue: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  historyStatValuePositive: {
+    color: '#FFFFFF',
+  },
+  historyStatValueNegative: {
+    color: '#FF6B6B',
+  },
+  historyStatLabel: {
+    color: '#888',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  historyStatDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginHorizontal: 20,
+  },
+  historyScrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  historyMealCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  historyMealTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  historyMealLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  historyMealDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FFFFFF',
+    marginRight: 12,
+  },
+  historyMealDotNegative: {
+    backgroundColor: '#FF6B6B',
+  },
+  historyMealInfo: {
+    flex: 1,
+  },
+  historyMealLabel: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  historyMealTime: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  historyScoreBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    marginLeft: 12,
+  },
+  historyScoreBadgeNegative: {
+    backgroundColor: 'rgba(255, 107, 107, 0.15)',
+    borderColor: 'rgba(255, 107, 107, 0.3)',
+  },
+  historyScoreText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  historyScoreTextNegative: {
+    color: '#FF6B6B',
+  },
+  historyMealDescription: {
+    color: '#CCCCCC',
+    fontSize: 15,
+    lineHeight: 22,
   },
 });
 
