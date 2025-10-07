@@ -108,7 +108,7 @@ export default function StatisticsScreen() {
                     const totalPossiblePositiveImpact = programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0);
                     const totalPossibleNegativeImpact = 
                         programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) +
-                        programData[1].dos.filter(t => t.type === 'meals').reduce((sum, task) => sum + (task.impact || 0), 0);
+                        programData[1].dos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0);
 
                     const dailyPositiveContributions = Array(programDuration).fill(0);
                     const dailyNegativeContributions = Array(programDuration).fill(0);
@@ -122,7 +122,23 @@ export default function StatisticsScreen() {
                         const dayIndex = Math.round((taskDate - dateCreated) / (1000 * 60 * 60 * 24));
                         
                         let contribution;
-                        if (taskInfo.type === 'slider' && !taskInfo.inverted) {
+                        if (taskInfo.id === 'sleep') {
+                            const hoursSlept = ((savedTask.progress || 0) / 100) * taskInfo.goal;
+                            let impactMultiplier;
+                            if (hoursSlept < 7) {
+                                // Penalty: scales from 0 at 7h to -1 at 4h or less.
+                                const deficit = 7 - hoursSlept;
+                                impactMultiplier = -Math.min(deficit / 3, 1);
+                            } else if (hoursSlept < 8) {
+                                // Neutral zone: 7-8 hours is baseline.
+                                impactMultiplier = 0;
+                            } else {
+                                // Reward: scales from 0 at 8h to 1 at 10h or more.
+                                const surplus = hoursSlept - 8;
+                                impactMultiplier = Math.min(surplus / 2, 1);
+                            }
+                            contribution = impactMultiplier * taskInfo.impact;
+                        } else if (taskInfo.type === 'slider' && !taskInfo.inverted) {
                             const actualValue = ((savedTask.progress || 0) / 100) * taskInfo.goal;
                             const impactMultiplier = taskInfo.goal > 0 ? Math.min(actualValue / taskInfo.goal, 2) : 0;
                             contribution = impactMultiplier * taskInfo.impact;
@@ -204,7 +220,23 @@ export default function StatisticsScreen() {
                         if (!taskInfo) return;
                         
                         let contribution;
-                        if (taskInfo.type === 'slider' && !taskInfo.inverted) {
+                        if (taskInfo.id === 'sleep') {
+                            const hoursSlept = ((savedTask.progress || 0) / 100) * taskInfo.goal;
+                            let impactMultiplier;
+                            if (hoursSlept < 7) {
+                                // Penalty: scales from 0 at 7h to -1 at 4h or less.
+                                const deficit = 7 - hoursSlept;
+                                impactMultiplier = -Math.min(deficit / 3, 1);
+                            } else if (hoursSlept < 8) {
+                                // Neutral zone: 7-8 hours is baseline.
+                                impactMultiplier = 0;
+                            } else {
+                                // Reward: scales from 0 at 8h to 1 at 10h or more.
+                                const surplus = hoursSlept - 8;
+                                impactMultiplier = Math.min(surplus / 2, 1);
+                            }
+                            contribution = impactMultiplier * taskInfo.impact;
+                        } else if (taskInfo.type === 'slider' && !taskInfo.inverted) {
                             const actualValue = ((savedTask.progress || 0) / 100) * taskInfo.goal;
                             const impactMultiplier = taskInfo.goal > 0 ? Math.min(actualValue / taskInfo.goal, 2) : 0;
                             contribution = impactMultiplier * taskInfo.impact;
@@ -245,7 +277,14 @@ export default function StatisticsScreen() {
                     
                         const successTimestamps = new Set();
                         taskLogs.forEach(log => {
-                            const isSuccess = taskInfo.inverted ? log.progress < 50 : log.progress >= 50;
+                            let isSuccess;
+                            if (taskId === 'sleep') {
+                                const hoursSlept = (log.progress / 100) * taskInfo.goal;
+                                isSuccess = hoursSlept >= 8;
+                            } else {
+                                isSuccess = taskInfo.inverted ? log.progress < 50 : log.progress >= 50;
+                            }
+                            
                             if (isSuccess) {
                                 const date = new Date(log.date);
                                 date.setHours(0, 0, 0, 0);

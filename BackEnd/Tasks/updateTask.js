@@ -22,9 +22,22 @@ const updateTask = async (req, res) => {
 
     if (existingTaskIndex > -1) {
       // Update existing task
-      user.tasks[existingTaskIndex].progress = task.progress;
+      const taskToUpdate = user.tasks[existingTaskIndex];
+
+      if (task.id === '3') { // meals task
+        // For meals, we add to history and update progress to be the sum
+        if (!taskToUpdate.history) {
+          taskToUpdate.history = [];
+        }
+        taskToUpdate.history.push({ value: task.progress, description: task.description });
+        taskToUpdate.progress = taskToUpdate.history.reduce((sum, entry) => sum + entry.value, 0);
+      } else {
+        // For other tasks, we overwrite
+        taskToUpdate.progress = task.progress;
+      }
+
       if (task.checked) {
-        user.tasks[existingTaskIndex].checked = task.checked;
+        taskToUpdate.checked = task.checked;
       }
     } else {
       // Add new task
@@ -33,12 +46,18 @@ const updateTask = async (req, res) => {
         date: taskDate,
         progress: task.progress,
       };
+
+      if (task.id === '3') { // meals task
+        newTask.history = [{ value: task.progress, description: task.description }];
+      }
+
       if (task.checked) {
         newTask.checked = task.checked;
       }
       user.tasks.push(newTask);
     }
 
+    user.markModified('tasks');
     await user.save();
     res.status(200).send({ message: 'Task updated successfully.', tasks: user.tasks });
   } catch (error) {

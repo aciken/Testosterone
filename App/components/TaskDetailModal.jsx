@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, TouchableWithoutFeedback, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, TouchableWithoutFeedback, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -67,7 +67,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
     if (!task) return '55%';
     switch (task.type) {
       case 'meals':
-        return '65%';
+        return '75%';
       case 'checklist':
         return '65%';
       case 'sleep':
@@ -275,6 +275,20 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.contentContainer}>
             <Text style={styles.taskTitle}>What did you eat today?</Text>
+            
+            {task.history && task.history.length > 0 && (
+              <ScrollView style={styles.historyScrollView}>
+                {task.history.map((item, index) => (
+                  <View key={index} style={styles.historyItem}>
+                    <Text style={styles.historyText} numberOfLines={1}>{item.description || `Meal ${index + 1}`}</Text>
+                    <Text style={[styles.historyScore, item.value < 0 && styles.negativeHistoryScore]}>
+                      {item.value > 0 ? `+${item.value}` : item.value}%
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
             <TextInput
               style={styles.mealTextInput}
               placeholder="e.g., Steak, eggs, and spinach..."
@@ -361,7 +375,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                     } else {
                       saveData.progress = task.progress || 0;
                     }
-                    saveData.meals = [{ id: 'm1', food: mealInput }];
+                    saveData.description = mealInput;
                   }
                   handleClose(saveData);
                 }}>
@@ -406,6 +420,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 25,
     paddingBottom: 20, // Pushes content up from the save button
+  },
+  historyScrollView: {
+    maxHeight: 100,
+    width: '100%',
+    marginBottom: 15,
+  },
+  historyItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginBottom: 8,
+  },
+  historyText: {
+    color: '#CCCCCC',
+    fontSize: 16,
+    flex: 1,
+    marginRight: 10,
+  },
+  historyScore: {
+    color: '#4CAF50',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  negativeHistoryScore: {
+    color: '#FF6B6B',
   },
   taskTitle: {
     color: '#E0E0E0',

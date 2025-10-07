@@ -9,7 +9,12 @@ const taskSchema = new mongoose.Schema({
     taskId: String,
     date: Date,
     progress: Number,
-    checked: [String]
+    checked: [String],
+    history: [{
+        value: Number,
+        description: String,
+        timestamp: { type: Date, default: Date.now }
+    }]
 }, { _id: false });
 
 const userSchema = new mongoose.Schema({

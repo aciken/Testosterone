@@ -6,9 +6,13 @@ import { GlobalProvider } from './context/GlobalProvider';
 export default function RootLayout() {
     return (
         <SafeAreaProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
                 <GlobalProvider>
-                    <Stack>
+                    <Stack
+                        screenOptions={{
+                            contentStyle: { backgroundColor: '#000000' }
+                        }}
+                    >
                         <Stack.Screen name="index" options={{ headerShown: false }} />
                         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                         <Stack.Screen name="allBadges" options={{ headerShown: false }} />

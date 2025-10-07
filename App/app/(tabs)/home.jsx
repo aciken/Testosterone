@@ -78,6 +78,9 @@ export default function HomeScreen() {
                     if (savedTask.checked) {
                       taskArray[taskIndex].checked = savedTask.checked;
                     }
+                    if (savedTask.history) {
+                        taskArray[taskIndex].history = savedTask.history;
+                    }
                   }
                 };
                 findAndupdateTask(newTodosByDay[dayIndex].dos);
@@ -190,9 +193,18 @@ export default function HomeScreen() {
       const isDo = (todosByDay[currentDay].dos || []).some(t => t.id === saveData.id);
 
       if (isDo) {
-        const newDos = (todosByDay[currentDay].dos || []).map(todo =>
-          todo.id === saveData.id ? { ...todo, ...saveData } : todo
-        );
+        const newDos = (todosByDay[currentDay].dos || []).map(todo => {
+          if (todo.id === saveData.id) {
+            if (saveData.id === '3') { // meals task
+              // For meals, accumulate progress and history on the frontend for immediate feedback
+              const newProgress = (todo.progress || 0) + saveData.progress;
+              const newHistory = [...(todo.history || []), { value: saveData.progress, description: saveData.description, timestamp: new Date() }];
+              return { ...todo, progress: newProgress, history: newHistory };
+            }
+            return { ...todo, ...saveData };
+          }
+          return todo;
+        });
         setTodosByDay(prevData => ({
           ...prevData,
           [currentDay]: { ...prevData[currentDay], dos: newDos },
@@ -282,14 +294,48 @@ export default function HomeScreen() {
           task: taskData,
         };
 
-        console.log("Sending task update:", updatePayload);
         const response = await axios.post('https://26e4f9703e03.ngrok-free.app/tasks/update', updatePayload);
-        console.log("Update response:", response.data);
 
         if (response.data && response.data.tasks) {
           const updatedUser = { ...user, tasks: response.data.tasks };
           await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-          console.log("User updated in AsyncStorage");
+          
+          // Immediately reload the UI with the fresh data from the server
+          const dateCreated = new Date(updatedUser.dateCreated);
+          const today = new Date();
+          dateCreated.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+          
+          const newTodosByDay = JSON.parse(JSON.stringify(programData));
+          
+          response.data.tasks.forEach(savedTask => {
+            const taskDate = new Date(savedTask.date);
+            const startDate = new Date(dateCreated);
+            startDate.setHours(0, 0, 0, 0);
+            taskDate.setHours(0, 0, 0, 0);
+
+            const dayIndex = Math.ceil((taskDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+            if (newTodosByDay[dayIndex]) {
+              const findAndupdateTask = (taskArray) => {
+                if (!taskArray) return;
+                const taskIndex = taskArray.findIndex(t => t.id === savedTask.taskId);
+                if (taskIndex > -1) {
+                  taskArray[taskIndex].progress = savedTask.progress;
+                  if (savedTask.checked) {
+                    taskArray[taskIndex].checked = savedTask.checked;
+                  }
+                  if (savedTask.history) {
+                    taskArray[taskIndex].history = savedTask.history;
+                  }
+                }
+              };
+              findAndupdateTask(newTodosByDay[dayIndex].dos);
+              findAndupdateTask(newTodosByDay[dayIndex].donts);
+            }
+          });
+          
+          setTodosByDay(newTodosByDay);
         }
       }
     } catch (error) {
