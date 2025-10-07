@@ -1,5 +1,5 @@
 export const allBadges = [
-    { id: '1', name: 'First Victory', image: require('../assets/reward.png'), unlocked: true, description: 'Complete your first day.', primaryColor: '#1F1F1F', secondaryColor: '#b45309', glowColor: '#d97706' },
+    { id: '1', name: 'First Victory', image: require('../assets/reward.png'), unlocked: true, description: 'Complete your first day.', primaryColor: '#1F1F1F', secondaryColor: '#b45309', glowColor: '#d9770_6' },
     { id: '2', name: 'Initiate', image: require('../assets/Badge2.png'), unlocked: true, description: 'Achieve a 10-day streak.', primaryColor: '#1F1F1F', secondaryColor: '#101D35', glowColor: '#4A90E2' },
     { id: '3', name: 'Perfect Month', image: null, unlocked: false, description: 'Complete every task for a month.', primaryColor: '#3A5A5A', secondaryColor: '#122A2A', glowColor: '#00FFFF' },
     { id: '4', name: 'Comeback King', image: null, unlocked: false, description: 'Recover a lost streak.', primaryColor: '#5A3A3A', secondaryColor: '#2A1212', glowColor: '#FF0000' },

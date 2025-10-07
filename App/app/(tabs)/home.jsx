@@ -12,6 +12,10 @@ import TodoCard from '../../components/TodoCard';
 import programData from '../../data/programData';
 import StreakNotification from '../../components/StreakNotification';
 import { taskIcons } from '../../data/icons';
+import BadgeNotification from '../../components/BadgeNotification';
+import { allBadges } from '../../data/badgeData';
+import { useGlobalContext } from '../context/GlobalProvider';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 export default function HomeScreen() {
   const [programDay, setProgramDay] = useState(1);
@@ -29,6 +33,10 @@ export default function HomeScreen() {
   const widthAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+
+  const { user, setUser } = useGlobalContext();
+  const router = useRouter();
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     const getProgramDay = async () => {
@@ -86,6 +94,16 @@ export default function HomeScreen() {
 
     getProgramDay();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const timer = setTimeout(() => {
+        setShowNotification(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }, [user])
+  );
 
   const currentDayData = todosByDay[currentDay] || { dos: [], donts: [] };
   const currentDos = currentDayData.dos || [];
@@ -432,6 +450,12 @@ export default function HomeScreen() {
                 icon={notification.icon}
             />
         </Animated.View>
+      )}
+      {showNotification && (
+        <BadgeNotification 
+          badge={allBadges.find(b => b.id === '1')} 
+          onDismiss={() => setShowNotification(false)}
+        />
       )}
     </LinearGradient>
   );

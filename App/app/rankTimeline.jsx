@@ -24,6 +24,7 @@ const RankItem = ({ rank, isCurrent, isAchieved, isLast }) => {
                     style={styles.rankImage}
                     blurRadius={!isAchieved ? 5 : 0}
                 />
+                {!isAchieved && <View style={styles.lockedOverlay} />}
                 {!isAchieved && <Ionicons name="lock-closed" size={24} color="rgba(255, 255, 255, 0.7)" style={styles.lockIcon} />}
             </View>
             <View style={styles.rankDetails}>
@@ -117,6 +118,11 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         resizeMode: 'contain',
+    },
+    lockedOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 50,
     },
     lockIcon: {
         position: 'absolute',
