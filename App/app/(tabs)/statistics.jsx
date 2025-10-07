@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { allBadges } from '../../data/badgeData';
 
 const screenWidth = Dimensions.get('window').width;
-const BASELINE_TESTOSTERONE = 280;
+const BASELINE_TESTOSTERONE = 316;
 
 const ranks = [
     { name: 'Bronze', minScore: 250, maxScore: 350, image: require('../../assets/BronzeRank.png'), color: '#E6A66A' },
@@ -156,7 +156,7 @@ export default function StatisticsScreen() {
                     
                     for (let i = 1; i < programDuration; i++) {
                         const scaledPositive = totalPossiblePositiveImpact > 0
-                            ? (dailyPositiveContributions[i] / totalPossiblePositiveImpact) * 6
+                            ? (dailyPositiveContributions[i] / totalPossiblePositiveImpact) * 8
                             : 0;
                         
                         const scaledNegative = totalPossibleNegativeImpact > 0
@@ -287,7 +287,7 @@ export default function StatisticsScreen() {
 
                     const maxImpact = Math.max(...impactsArray.map(t => Math.abs(t.totalImpact)), 1);
                     
-                    const finalTodayScore = Math.round(chartData[chartData.length - 1]);
+                    const finalTodayScore = Math.round(rawChartData[rawChartData.length - 1]);
                     setCurrentTScore(finalTodayScore);
                     setStats({ chartData: finalChartData, chartLabels, streakingFactors, nonStreakingFactors: sortedNonStreakingFactors, maxImpact });
 
@@ -349,7 +349,7 @@ export default function StatisticsScreen() {
                                     return (
                                         <TouchableOpacity onPress={() => router.push({ pathname: '/rankTimeline', params: { currentTScore } })}>
                                             <View style={styles.rankContainer}>
-                                                <View style={styles.rankImageContainer}>
+                                                <View style={[styles.rankImageContainer, { shadowColor: currentRank.color }]}>
                                                     <Image source={currentRank.image || require('../../assets/BronzeRank.png')} style={styles.rankImage} />
                                                 </View>
                                                 <Text style={[styles.rankText, { color: currentRank.color }]}>{currentRank.name} Tier</Text>
@@ -515,7 +515,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     rankImageContainer: {
-        shadowColor: '#CD7F32',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.8,
         shadowRadius: 25,
