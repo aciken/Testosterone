@@ -115,10 +115,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 5,
+        height: 40,
     },
     badgeDescription: {
         color: '#A0A0A0',
         fontSize: 12,
         textAlign: 'center',
+        height: 30,
     },
 });

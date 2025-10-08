@@ -9,6 +9,7 @@ const Signup = require('./Auth/Signup');
 const Signin = require('./Auth/signin');
 const Verify = require('./Auth/verify');
 const AppleSign = require('./Auth/AppleSign');
+const googleAuth = require('./Auth/googleAuth');
 const updateTask = require('./Tasks/updateTask');
 
 
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
   app.put('/signup', Signup);
   app.post('/signin', Signin);
   app.post('/auth/apple', AppleSign);
+  app.post('/auth/google', googleAuth);
   app.put('/verify', Verify);
   app.post('/tasks/update', updateTask);
 

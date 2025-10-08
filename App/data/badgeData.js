@@ -6,5 +6,5 @@ export const allBadges = [
     { id: '5', name: 'T-Level 500', image: null, unlocked: false, description: 'Reach a testosterone score of 500.', primaryColor: '#3A3A5A', secondaryColor: '#12122A', glowColor: '#8A2BE2' },
     { id: '6', name: 'Alpha Badge', image: null, unlocked: false, description: 'Reach a testosterone score of 900.', primaryColor: '#5A5A3A', secondaryColor: '#2A2A12', glowColor: '#FFFF00' },
     { id: '7', name: 'Early Riser', image: null, unlocked: false, description: 'Wake up before 6 AM for 7 days.', primaryColor: '#5A4A3A', secondaryColor: '#2A1A12', glowColor: '#FFA500' },
-    { id: '8', name: 'Champion', image: require('../assets/Badge8.png'), unlocked: false, description: 'Get to the last rank.', primaryColor: '#fef3c7', secondaryColor: '#fef3c7', glowColor: '#3b82f6' },
+    { id: '8', name: 'Champion', image: require('../assets/Badge8.png'), unlocked: false, description: 'Get to the last rank.', primaryColor: '#1F1F1F', secondaryColor: '#60a5fa', glowColor: '#3b82f6' },
 ];

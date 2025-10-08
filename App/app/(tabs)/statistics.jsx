@@ -203,7 +203,7 @@ export default function StatisticsScreen() {
                     if (programDuration > 0) {
                         chartLabels[1] = 'Start';
                         if (programDuration > 1) {
-                            chartLabels[programDuration] = `Now`;
+                            chartLabels[programDuration] = `Day ${programDuration}`;
                         }
                     }
 
@@ -472,7 +472,7 @@ export default function StatisticsScreen() {
                             </View>
 
                             <View style={styles.keyFactorsContainer}>
-                                <Text style={styles.sectionTitle}>TASK STREAKS</Text>
+                                <Text style={[styles.sectionTitle, { marginBottom: 20 }]}>TASK STREAKS</Text>
                                 {stats.streakingFactors.map(c => {
                                     const color = c.isDo ? "#FFFFFF" : "#FF6B6B";
                                     return <KeyFactorItem key={c.id} icon={c.id} name={c.name} totalImpact={c.totalImpact} color={color} maxValue={stats.maxImpact} onPress={() => router.push({ pathname: '/modal/factorHistory', params: { factorId: c.id } })} streak={c.streak} />;

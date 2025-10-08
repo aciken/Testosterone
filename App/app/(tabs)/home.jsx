@@ -588,7 +588,7 @@ export default function HomeScreen() {
       )}
       {showNotification && (
         <BadgeNotification 
-          badge={allBadges.find(b => b.id === '8')} 
+          badge={allBadges.find(b => b.id === '3')} 
           onDismiss={() => setShowNotification(false)}
         />
       )}

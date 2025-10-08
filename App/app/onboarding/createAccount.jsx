@@ -14,12 +14,27 @@ export default function CreateAccount() {
   const router = useRouter();
   const { setUser, setIsAuthenticated } = useGlobalContext();
 
+  // 451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com
+
   const handleGoogleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       console.log('Google User Info:', userInfo);
-      // TODO: Send the userInfo.idToken to your backend for verification
+      
+      const response = await axios.post('https://26e4f9703e03.ngrok-free.app/auth/google', {
+        token: userInfo.idToken,
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        const userData = response.data;
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        setIsAuthenticated(true);
+        router.push('/home');
+      } else {
+        console.error('Google Sign-In failed:', response.data.message);
+      }
     } catch (error) {
       console.error('Google Sign-In Error:', error);
     }
@@ -65,18 +80,13 @@ export default function CreateAccount() {
     }
   };
 
-  const handleEmailSignUp = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/modal/signup');
-  };
-
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your Web Client ID
-      iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com', // Replace with your iOS Client ID
+      webClientId: '451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com', // Replace with your Web Client ID
+      iosClientId: '451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com', // Replace with your iOS Client ID
     });
 
     // Animate content in
@@ -154,15 +164,6 @@ export default function CreateAccount() {
               <Image source={require('../../assets/search.png')} style={styles.iconImage} />
               <Text style={styles.optionButtonText}>Continue with Google</Text>
             </TouchableOpacity>
-
-            {/* Email Sign Up */}
-            <TouchableOpacity
-              style={styles.optionButton}
-              onPress={handleEmailSignUp}
-            >
-              <Ionicons name="mail" size={24} color="#FFFFFF" />
-              <Text style={styles.optionButtonText}>Continue with Email</Text>
-            </TouchableOpacity>
           </Animated.View>
         </View>
       </SafeAreaView>
@@ -204,10 +205,10 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   portalImage: {
-    width: 300,
-    height: 300,
+    width: 320,
+    height: 320,
     resizeMode: 'contain',
-    marginBottom: 20,
+    marginBottom: 50,
   },
   title: {
     color: '#FFFFFF',
