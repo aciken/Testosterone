@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    unlockedAchievements: {
+        type: [String],
+        default: []
+    },
     tasks: [taskSchema],
 });
 

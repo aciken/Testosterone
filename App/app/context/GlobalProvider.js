@@ -20,6 +20,8 @@ export const GlobalProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const [selectedAdventure, setSelectedAdventure] = useState(null);
     const [isPro, setIsPro] = useState(false);
+    const [streak, setStreak] = useState(0);
+    const [newlyUnlockedAchievement, setNewlyUnlockedAchievement] = useState(null);
 
     useEffect(() => {
         const init = async () => {
@@ -96,10 +98,11 @@ export const GlobalProvider = ({ children }) => {
         await AsyncStorage.removeItem('user');
         setIsAuthenticated(false);
         setUser(null);
+        setStreak(0);
     };  
     
     return (
-        <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure }}>
+        <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure, streak, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement }}>
             {children}
         </GlobalContext.Provider>
     );

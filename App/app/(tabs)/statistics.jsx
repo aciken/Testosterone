@@ -11,6 +11,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { taskIcons, taskIconsGrayscale } from '../../data/icons';
 import * as Haptics from 'expo-haptics';
 import { allBadges } from '../../data/badgeData';
+import { useGlobalContext } from '../context/GlobalProvider';
 
 const screenWidth = Dimensions.get('window').width;
 const BASELINE_TESTOSTERONE = 316;
@@ -78,6 +79,7 @@ const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress, stre
 
 export default function StatisticsScreen() {
     const router = useRouter();
+    const { user } = useGlobalContext(); // Get user from global context
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentTScore, setCurrentTScore] = useState(BASELINE_TESTOSTERONE);
@@ -340,6 +342,8 @@ export default function StatisticsScreen() {
         }, [])
     );
 
+    const unlockedBadges = allBadges.filter(badge => user?.unlockedAchievements?.includes(badge.id));
+
     return (
         <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -446,26 +450,21 @@ export default function StatisticsScreen() {
                                     </TouchableOpacity>
                                 </View>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScrollView}>
-                                    {badges.filter(b => b.unlocked).map(badge => (
+                                    {unlockedBadges.slice(0, 4).map(badge => (
                                         <TouchableOpacity key={badge.id} onPress={() => router.push({ pathname: '/badgeDetails', params: { ...badge, image: badge.image ? Image.resolveAssetSource(badge.image).uri : null } })}>
                                             <View style={styles.badgeItem}>
-                                                <View style={[styles.badgeImageContainer, !badge.unlocked && styles.badgeLocked]}>
-                                                    {badge.unlocked ? (
-                                                        <Image source={badge.image} style={styles.badgeImage} />
-                                                    ) : (
-                                                        <Ionicons name="lock-closed" size={30} color="rgba(255, 255, 255, 0.5)" />
-                                                    )}
+                                                <View style={styles.badgeImageContainer}>
+                                                    <Image source={badge.image} style={styles.badgeImage} />
                                                 </View>
                                                 <Text style={styles.badgeName}>{badge.name}</Text>
                                             </View>
                                         </TouchableOpacity>
                                     ))}
-                                    {Array.from({ length: Math.max(0, 4 - badges.filter(b => b.unlocked).length) }).map((_, index) => (
+                                    {Array.from({ length: Math.max(0, 4 - unlockedBadges.length) }).map((_, index) => (
                                         <View key={`placeholder-${index}`} style={styles.badgeItem}>
                                             <View style={styles.badgePlaceholder}>
                                                 <Ionicons name="add" size={30} color="rgba(255, 255, 255, 0.2)" />
                                             </View>
-                                            <Text style={styles.badgeName}></Text>
                                         </View>
                                     ))}
                                 </ScrollView>

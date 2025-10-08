@@ -5,6 +5,10 @@ const User = require('../User/User'); // Assuming User model is in User/User.js
 const client = new OAuth2Client('451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com');
 
 const googleAuth = async (req, res) => {
+  console.log('--- Google Auth Request Body ---');
+  console.log(JSON.stringify(req.body, null, 2));
+  console.log('-----------------------------');
+  
   const { token } = req.body;
   try {
     const ticket = await client.verifyIdToken({

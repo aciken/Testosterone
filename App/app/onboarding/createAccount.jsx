@@ -20,7 +20,13 @@ export default function CreateAccount() {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      console.log('Google User Info:', userInfo);
+      
+      // CRUCIAL CHECK: Ensure the idToken exists before proceeding.
+      if (!userInfo || !userInfo.idToken) {
+        console.error("CRITICAL: Google Sign-In succeeded but did not return an idToken. Please verify your 'webClientId' in the Google Cloud Console is for a 'Web application' credential, not an iOS or Android one.");
+        // Here you could show an alert to the user
+        return;
+      }
       
       const response = await axios.post('https://26e4f9703e03.ngrok-free.app/auth/google', {
         token: userInfo.idToken,
@@ -87,6 +93,7 @@ export default function CreateAccount() {
     GoogleSignin.configure({
       webClientId: '451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com', // Replace with your Web Client ID
       iosClientId: '451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com', // Replace with your iOS Client ID
+      requestIdToken: true, // This is mandatory to receive the idToken
     });
 
     // Animate content in

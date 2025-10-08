@@ -1,7 +1,8 @@
 const User = require('../User/User');
+const { checkAndAwardAchievements } = require('../Auth/achievementChecker');
 
 const updateTask = async (req, res) => {
-  const { userId, date, task } = req.body;
+  const { userId, date, task, dailyNgDl } = req.body;
 
   if (!userId || !date || !task || !task.id) {
     return res.status(400).send('Missing required fields.');
@@ -59,7 +60,21 @@ const updateTask = async (req, res) => {
 
     user.markModified('tasks');
     await user.save();
-    res.status(200).send({ message: 'Task updated successfully.', tasks: user.tasks });
+
+    // Check for new achievements
+    console.log(`[updateTask] Triggering achievement check for userId: ${userId}`);
+    const achievementResult = await checkAndAwardAchievements(userId, dailyNgDl);
+    console.log('[updateTask] Achievement check result:', JSON.stringify(achievementResult, null, 2));
+
+    // Fetch the user again to get the most up-to-date document after modifications
+    const updatedUser = await User.findById(userId);
+
+    res.status(200).send({
+      message: 'Task updated successfully.',
+      user: updatedUser, // Send the full updated user object back
+      newAchievements: achievementResult ? achievementResult.newAchievements : [],
+      streak: achievementResult ? achievementResult.streak : 0,
+    });
   } catch (error) {
     console.error('Error updating task:', error);
     res.status(500).send('Server error.');

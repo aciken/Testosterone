@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { allBadges } from '../data/badgeData';
+import { useGlobalContext } from './context/GlobalProvider';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -27,6 +28,9 @@ const BadgeItem = ({ name, image, unlocked, description }) => {
 
 export default function AllBadgesScreen() {
     const router = useRouter();
+    const { user } = useGlobalContext();
+
+    const unlockedBadgeIds = user?.unlockedAchievements || [];
 
     return (
         <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
@@ -39,11 +43,14 @@ export default function AllBadgesScreen() {
                     <View style={{ width: 24 }} />
                 </View>
                 <ScrollView contentContainerStyle={styles.contentContainer}>
-                    {allBadges.map(badge => (
-                        <TouchableOpacity key={badge.id} onPress={() => badge.unlocked && router.push({ pathname: '/badgeDetails', params: { ...badge, image: badge.image ? Image.resolveAssetSource(badge.image).uri : null } })}>
-                            <BadgeItem {...badge} />
-                        </TouchableOpacity>
-                    ))}
+                    {allBadges.map(badge => {
+                        const isUnlocked = unlockedBadgeIds.includes(badge.id);
+                        return (
+                            <TouchableOpacity key={badge.id} onPress={() => isUnlocked && router.push({ pathname: '/badgeDetails', params: { ...badge, image: badge.image ? Image.resolveAssetSource(badge.image).uri : null } })}>
+                                <BadgeItem {...badge} unlocked={isUnlocked} />
+                            </TouchableOpacity>
+                        );
+                    })}
                 </ScrollView>
             </SafeAreaView>
         </LinearGradient>

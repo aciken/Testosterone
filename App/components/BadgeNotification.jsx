@@ -197,7 +197,8 @@ const styles = StyleSheet.create({
         textShadowRadius: 3,
     },
     badgeDescription: {
-        color: '#B0B0B0',
+        color: '#ffffff',
+        opacity: 0.8,
         fontSize: 16,
         textAlign: 'center',
     },

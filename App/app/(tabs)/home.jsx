@@ -34,9 +34,19 @@ export default function HomeScreen() {
   const listAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
 
-  const { user, setUser } = useGlobalContext();
+  const { user, setUser, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement } = useGlobalContext();
   const router = useRouter();
-  const [showNotification, setShowNotification] = useState(false);
+  const [showBadgeNotification, setShowBadgeNotification] = useState(false);
+
+  useEffect(() => {
+    if (newlyUnlockedAchievement) {
+      const timer = setTimeout(() => {
+        setShowBadgeNotification(true);
+      }, 1000); // 2-second delay
+
+      return () => clearTimeout(timer);
+    }
+  }, [newlyUnlockedAchievement]);
 
   useEffect(() => {
     const getProgramDay = async () => {
@@ -97,16 +107,6 @@ export default function HomeScreen() {
 
     getProgramDay();
   }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const timer = setTimeout(() => {
-        setShowNotification(true);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }, [user])
-  );
 
   const currentDayData = todosByDay[currentDay] || { dos: [], donts: [] };
   const currentDos = currentDayData.dos || [];
@@ -305,59 +305,56 @@ export default function HomeScreen() {
   const checkAndTriggerStreakNotification = async (taskData) => {
     if (!taskData) return;
 
-    const { id, task, progress } = taskData;
+    const { id, progress } = taskData;
     const taskInfo = [...programData[1].dos, ...programData[1].donts].find(t => t.id === id);
     if (!taskInfo) return;
 
-    const isSuccess = taskInfo.inverted ? progress < 50 : progress >= 50;
+    // Use a simple progress check: > 0 for dos, any progress for donts is a "break" but we notify on action
+    const isSuccess = taskInfo.type === 'do' ? progress > 0 : progress > 0;
     if (!isSuccess) return;
 
     try {
-        const userString = await AsyncStorage.getItem('user');
-        if (!userString) return;
+      const userString = await AsyncStorage.getItem('user');
+      if (!userString) return;
 
-        const user = JSON.parse(userString);
-        const userTasks = user.tasks || [];
+      const user = JSON.parse(userString);
+      const userTasks = user.tasks || [];
 
-        const taskLogs = userTasks.filter(t => t.taskId === id);
+      // Filter for logs of this specific task
+      const taskLogs = userTasks.filter(t => t.taskId === id);
 
-        const successTimestamps = new Set();
-        taskLogs.forEach(log => {
-            const logTaskInfo = [...programData[1].dos, ...programData[1].donts].find(t => t.id === log.taskId);
-            if (logTaskInfo) {
-                const success = logTaskInfo.inverted ? log.progress < 50 : log.progress >= 50;
-                if (success) {
-                    const date = new Date(log.date);
-                    date.setHours(0, 0, 0, 0);
-                    successTimestamps.add(date.getTime());
-                }
-            }
+      const successTimestamps = new Set();
+      taskLogs.forEach(log => {
+        // Here we just check if a task exists for a day, assuming any entry is a success for streak purposes
+        const date = new Date(log.date);
+        date.setHours(0, 0, 0, 0);
+        successTimestamps.add(date.getTime());
+      });
+      
+      let streak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Add today's success to the set for calculation
+      successTimestamps.add(today.getTime());
+
+      let currentDate = new Date(today);
+      
+      while (successTimestamps.has(currentDate.getTime())) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+      
+      if (streak > 0) {
+        setNotification({
+          title: streak === 1 ? 'Streak Started!' : 'Streak Growing!',
+          message: taskInfo.task,
+          streakCount: streak,
+          icon: taskIcons[id],
         });
-        
-        let streak = 0;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Add today's success manually for calculation
-        successTimestamps.add(today.getTime());
-
-        let currentDate = new Date(today);
-        
-        while (successTimestamps.has(currentDate.getTime())) {
-            streak++;
-            currentDate.setDate(currentDate.getDate() - 1);
-        }
-        
-        if (streak > 0) {
-            setNotification({
-                title: streak === 1 ? 'Streak Started!' : 'Streak Growing!',
-                message: taskInfo.task,
-                streakCount: streak,
-                icon: taskIcons[id],
-            });
-        }
+      }
     } catch (error) {
-        console.error("Failed to check streak:", error);
+      console.error("Failed to check streak:", error);
     }
   };
 
@@ -366,54 +363,35 @@ export default function HomeScreen() {
       const userString = await AsyncStorage.getItem('user');
       if (userString) {
         const user = JSON.parse(userString);
+        const dailyNgDl = calculateDailyNgDl(); // Calculate the value before sending
         const updatePayload = {
           userId: user._id,
-          date: new Date(),         
+          date: new Date(),
           task: taskData,
+          dailyNgDl: dailyNgDl, // Add the score to the payload
         };
 
         const response = await axios.post('https://26e4f9703e03.ngrok-free.app/tasks/update', updatePayload);
 
-        if (response.data && response.data.tasks) {
-          const updatedUser = { ...user, tasks: response.data.tasks };
-          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-          
-          // Immediately reload the UI with the fresh data from the server
-          const dateCreated = new Date(updatedUser.dateCreated);
-          const today = new Date();
-          dateCreated.setHours(0, 0, 0, 0);
-          today.setHours(0, 0, 0, 0);
-          
-          const newTodosByDay = JSON.parse(JSON.stringify(programData));
-          
-          response.data.tasks.forEach(savedTask => {
-            const taskDate = new Date(savedTask.date);
-            const startDate = new Date(dateCreated);
-            startDate.setHours(0, 0, 0, 0);
-            taskDate.setHours(0, 0, 0, 0);
+        if (response.data) {
+          // The server now sends back the full user object, which is the source of truth
+          if (response.data.user) {
+            const updatedUserFromServer = response.data.user;
+            await AsyncStorage.setItem('user', JSON.stringify(updatedUserFromServer));
+            setUser(updatedUserFromServer); // Update context with the fresh user object
+          }
 
-            const dayIndex = Math.ceil((taskDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+          // Update streak from server response
+          if (typeof response.data.streak === 'number') {
+            const newStreak = response.data.streak;
+            setStreak(newStreak);
+          }
 
-            if (newTodosByDay[dayIndex]) {
-              const findAndupdateTask = (taskArray) => {
-                if (!taskArray) return;
-                const taskIndex = taskArray.findIndex(t => t.id === savedTask.taskId);
-                if (taskIndex > -1) {
-                  taskArray[taskIndex].progress = savedTask.progress;
-                  if (savedTask.checked) {
-                    taskArray[taskIndex].checked = savedTask.checked;
-                  }
-                  if (savedTask.history) {
-                    taskArray[taskIndex].history = savedTask.history;
-                  }
-                }
-              };
-              findAndupdateTask(newTodosByDay[dayIndex].dos);
-              findAndupdateTask(newTodosByDay[dayIndex].donts);
-            }
-          });
-          
-          setTodosByDay(newTodosByDay);
+          // Check for newly unlocked achievements
+          if (response.data.newAchievements && response.data.newAchievements.length > 0) {
+            const achievement = response.data.newAchievements[0]; // Assuming one at a time for simplicity
+            setNewlyUnlockedAchievement(achievement);
+          }
         }
       }
     } catch (error) {
@@ -586,10 +564,13 @@ export default function HomeScreen() {
             />
         </Animated.View>
       )}
-      {showNotification && (
+      {showBadgeNotification && newlyUnlockedAchievement && (
         <BadgeNotification 
-          badge={allBadges.find(b => b.id === '3')} 
-          onDismiss={() => setShowNotification(false)}
+          badge={allBadges.find(b => b.id === newlyUnlockedAchievement.id)} 
+          onDismiss={() => {
+            setShowBadgeNotification(false);
+            setNewlyUnlockedAchievement(null);
+          }}
         />
       )}
     </LinearGradient>
