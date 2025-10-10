@@ -14,14 +14,14 @@ import { allBadges } from '../../data/badgeData';
 import { useGlobalContext } from '../context/GlobalProvider';
 
 const screenWidth = Dimensions.get('window').width;
-const BASELINE_TESTOSTERONE = 316;
+const BASELINE_TESTOSTERONE = 300;
 
 const ranks = [
     { name: 'Bronze', minScore: 250, maxScore: 350, image: require('../../assets/BronzeRank.png'), color: '#E6A66A' },
     { name: 'Silver', minScore: 351, maxScore: 600, image: require('../../assets/SilverRank.png'), color: '#C0C0C0' },
     { name: 'Gold', minScore: 601, maxScore: 750, image: require('../../assets/GoldRank.png'), color: '#FFD700' },
     { name: 'Platinum', minScore: 751, maxScore: 900, image: require('../../assets/DiamondRank.png'), color: '#E5E4E2' },
-    { name: 'Diamond', minScore: 901, maxScore: 1100, image: require('../../assets/ChampionRank.png'), color: '#B9F2FF' },
+    { name: 'Champion', minScore: 901, maxScore: 1100, image: require('../../assets/ChampionRank.png'), color: '#FF4136' },
 ];
 
 const badges = allBadges.slice(0, 6);

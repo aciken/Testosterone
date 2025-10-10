@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Easing, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Svg, { Path, Text as SvgText, Circle, Defs, LinearGradient as SvgLinearGradient, Stop, G, Rect } from 'react-native-svg';
@@ -12,7 +12,7 @@ const graphHeight = 250;
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 const JourneyGraph = () => {
   const router = useRouter();
@@ -22,11 +22,13 @@ const JourneyGraph = () => {
 
   const greenPathAnim = useRef(new Animated.Value(greenPathLength)).current;
   const redPathAnim = useRef(new Animated.Value(redPathLength)).current;
+  const rocketProgress = useRef(new Animated.Value(0)).current;
   
   const x1Anim = useRef(new Animated.Value(0)).current;
   const x2Anim = useRef(new Animated.Value(0)).current;
   const x3Anim = useRef(new Animated.Value(0)).current;
-  const greenDotAnim = useRef(new Animated.Value(0)).current;
+  const orangeDotAnim = useRef(new Animated.Value(0)).current;
+  const rocketAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const drawAnimation = Animated.parallel([
@@ -34,22 +36,29 @@ const JourneyGraph = () => {
         toValue: 0,
         duration: 2000,
         easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
       Animated.timing(redPathAnim, {
         toValue: 0,
         duration: 2000,
         easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rocketProgress, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
       }),
     ]);
 
     const fadeInAnimation = Animated.sequence([
       Animated.delay(1500),
-      Animated.timing(x1Anim, { toValue: 1, duration: 500, useNativeDriver: false }),
-      Animated.timing(x2Anim, { toValue: 1, duration: 500, useNativeDriver: false }),
-      Animated.timing(x3Anim, { toValue: 1, duration: 500, useNativeDriver: false }),
-      Animated.timing(greenDotAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
+      Animated.timing(x1Anim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(x2Anim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(x3Anim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(orangeDotAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(rocketAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
     ]);
     
     Animated.sequence([
@@ -87,6 +96,10 @@ const JourneyGraph = () => {
                 <Stop offset="0" stopColor="#D90429" stopOpacity="0.4" />
                 <Stop offset="1" stopColor="#101010" stopOpacity="0.1" />
               </SvgLinearGradient>
+              <SvgLinearGradient id="orangeGradient" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0" stopColor="#FFC300" />
+                <Stop offset="1" stopColor="#FF5733" />
+              </SvgLinearGradient>
               <SvgLinearGradient id="greenGradient" x1="0" y1="0" x2="1" y2="0">
                 <Stop offset="0" stopColor="#ADFF2F" />
                 <Stop offset="1" stopColor="#8AC926" />
@@ -97,10 +110,10 @@ const JourneyGraph = () => {
               </SvgLinearGradient>
             </Defs>
 
-            {/* Green Steady Path */}
+            {/* Orange Steady Path */}
              <AnimatedPath
               d={`M 20 160 Q 100 100, 200 80 T 340 40`}
-              stroke="url(#greenGradient)"
+              stroke="url(#orangeGradient)"
               strokeWidth="3"
               fill="none"
               strokeDasharray={greenPathLength}
@@ -110,7 +123,7 @@ const JourneyGraph = () => {
             {/* Start & End Points */}
             <Circle cx="20" cy="180" r="6" fill="#FFFFFF" />
             <Circle cx="20" cy="160" r="6" fill="#FFFFFF" />
-            <AnimatedCircle cx="340" cy="40" r="6" fill="#8AC926" opacity={greenDotAnim} />
+            <AnimatedCircle cx="340" cy="40" r="6" fill="#FF5733" opacity={orangeDotAnim} />
 
             {/* Labels */}
             <G x="220" y="165">
@@ -119,8 +132,8 @@ const JourneyGraph = () => {
             </G>
 
             <G x="250" y="25">
-                <Rect x="-10" y="-15" width="100" height="24" rx="12" fill="rgba(138, 201, 38, 0.3)" />
-                <SvgText fill="#FFFFFF" fontSize="12" fontWeight="bold">Our Program</SvgText>
+                <Rect x="-10" y="-15" width="100" height="24" rx="12" fill="rgba(255, 87, 51, 0.3)" />
+                <SvgText fill="#FFFFFF" fontSize="12" fontWeight="bold">With Boost</SvgText>
             </G>
             
             {/* Axis Labels */}
@@ -128,6 +141,34 @@ const JourneyGraph = () => {
             <SvgText x={graphWidth / 2 - 20} y={graphHeight - 5} fill="#8A95B6" fontSize="12">Week 6</SvgText>
             <SvgText x={graphWidth - 60} y={graphHeight - 5} fill="#8A95B6" fontSize="12">Week 12</SvgText>
           </Svg>
+          <AnimatedImage
+            source={require('../../assets/RocketImage2.png')}
+            style={[
+                styles.rocketImage,
+                {
+                    transform: [
+                        {
+                            translateX: rocketProgress.interpolate({
+                                inputRange: [0, 0.5, 1],
+                                outputRange: [20, 200, 350], // Increased final X
+                            })
+                        },
+                        {
+                            translateY: rocketProgress.interpolate({
+                                inputRange: [0, 0.5, 1],
+                                outputRange: [160, 80, 35], // Decreased final Y for more upward motion
+                            })
+                        },
+                        {
+                            rotate: rocketProgress.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ['30deg', '40deg'], // Steeper start angle
+                            })
+                        }
+                    ]
+                }
+            ]}
+          />
         </View>
       </View>
 
@@ -170,6 +211,15 @@ const styles = StyleSheet.create({
   graphContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  rocketImage: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+    position: 'absolute',
+    left: -25, // Center the image on the path
+    top: -25, // Center the image on the path
   },
   footer: {
     paddingHorizontal: 20,

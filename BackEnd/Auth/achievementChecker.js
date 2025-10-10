@@ -1,5 +1,34 @@
 const User = require('../User/User');
 const achievements = require('../achievements');
+const { calculateCurrentTScore } = require('../logic/scoreCalculator');
+
+function calculateExerciseDays(tasks) {
+  if (!tasks || tasks.length === 0) {
+    return 0;
+  }
+
+  const exerciseTaskLogs = tasks.filter(t => t.taskId === '2' && (t.progress > 0 || (t.checked && t.checked.length > 0)));
+  
+  const uniqueDays = new Set();
+  exerciseTaskLogs.forEach(task => {
+    const date = new Date(task.date);
+    uniqueDays.add(date.toDateString());
+  });
+
+  return uniqueDays.size;
+}
+
+function calculateTotalSunExposure(tasks) {
+  if (!tasks || tasks.length === 0) {
+    return 0;
+  }
+  // The task 'Time spent in the sun' has id: '1'
+  const sunTaskLogs = tasks.filter(t => t.taskId === '1' && t.progress > 0);
+  
+  const totalMinutes = sunTaskLogs.reduce((sum, task) => sum + task.progress, 0);
+  
+  return totalMinutes;
+}
 
 function calculateConsecutiveDays(tasks) {
   if (!tasks || tasks.length === 0) {
@@ -85,7 +114,13 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
 
     const newAchievements = [];
     const streak = calculateConsecutiveDays(user.tasks);
+    const exerciseDays = calculateExerciseDays(user.tasks);
+    const totalSunMinutes = calculateTotalSunExposure(user.tasks);
+    const currentTScore = calculateCurrentTScore(user);
     console.log(`[achievementChecker] Calculated streak: ${streak}`);
+    console.log(`[achievementChecker] Calculated exercise days: ${exerciseDays}`);
+    console.log(`[achievementChecker] Calculated total sun exposure: ${totalSunMinutes} minutes`);
+    console.log(`[achievementChecker] Calculated T-Score: ${currentTScore}`);
 
     for (const key in achievements) {
       const achievement = achievements[key];
@@ -125,6 +160,45 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
           newAchievements.push(achievement);
         }
       }
+
+      // Handle t_score achievements
+      if (achievement.criteria.type === 't_score') {
+        console.log(`[achievementChecker] Checking 't_score' achievement: ${achievement.name}`);
+        const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
+        console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
+
+        if (currentTScore >= achievement.criteria.score && !hasUnlocked) {
+          console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
+          user.unlockedAchievements.push(achievement.id);
+          newAchievements.push(achievement);
+        }
+      }
+
+      // Handle exercise day count achievements
+      if (achievement.criteria.type === 'exercise') {
+        console.log(`[achievementChecker] Checking 'exercise' achievement: ${achievement.name}`);
+        const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
+        console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
+        
+        if (exerciseDays >= achievement.criteria.days && !hasUnlocked) {
+          console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
+          user.unlockedAchievements.push(achievement.id);
+          newAchievements.push(achievement);
+        }
+      }
+
+      // Handle sun exposure achievements
+      if (achievement.criteria.type === 'sun_exposure') {
+        console.log(`[achievementChecker] Checking 'sun_exposure' achievement: ${achievement.name}`);
+        const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
+        console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
+        
+        if (totalSunMinutes >= achievement.criteria.minutes && !hasUnlocked) {
+          console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
+          user.unlockedAchievements.push(achievement.id);
+          newAchievements.push(achievement);
+        }
+      }
     }
 
     if (newAchievements.length > 0) {
@@ -133,7 +207,7 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
     }
     
     console.log('[achievementChecker] --- Finished checking. New achievements found:', JSON.stringify(newAchievements, null, 2));
-    return { newAchievements, streak };
+    return { newAchievements, streak, exerciseDays };
   } catch (error) {
     console.error('Error checking achievements:', error);
     return null;

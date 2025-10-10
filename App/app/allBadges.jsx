@@ -10,10 +10,19 @@ import { useGlobalContext } from './context/GlobalProvider';
 
 const screenWidth = Dimensions.get('window').width;
 
-const BadgeItem = ({ name, image, unlocked, description }) => {
+const BadgeItem = ({ name, image, unlocked, description, primaryColor, secondaryColor, glowColor }) => {
+    const itemStyle = {
+        backgroundColor: unlocked ? primaryColor || 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.2)',
+    };
+    const imageContainerStyle = {
+        backgroundColor: unlocked ? primaryColor || 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+        borderColor: unlocked ? secondaryColor || '#C0C0C0' : 'rgba(255, 255, 255, 0.2)',
+        shadowColor: unlocked ? glowColor || '#FFFFFF' : 'transparent',
+    };
+
     return (
-        <View style={[styles.badgeItem, !unlocked && styles.badgeItemLocked]}>
-            <View style={[styles.badgeImageContainer, unlocked && styles.badgeImageContainerUnlocked]}>
+        <View style={[styles.badgeItem, itemStyle]}>
+            <View style={[styles.badgeImageContainer, unlocked && styles.badgeImageContainerUnlocked, imageContainerStyle]}>
                 {unlocked ? (
                     <Image source={image} style={styles.badgeImage} />
                 ) : (
@@ -87,7 +96,6 @@ const styles = StyleSheet.create({
         marginBottom: 25,
         padding: 15,
         borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
     },
     badgeItemLocked: {
         backgroundColor: 'rgba(0, 0, 0, 0.2)',
@@ -99,13 +107,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 15,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         borderWidth: 2,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     badgeImageContainerUnlocked: {
-        borderColor: '#C0C0C0',
-        shadowColor: '#FFFFFF',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.6,
         shadowRadius: 12,

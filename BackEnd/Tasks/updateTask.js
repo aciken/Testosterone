@@ -1,17 +1,21 @@
 const User = require('../User/User');
-const { checkAndAwardAchievements } = require('../Auth/achievementChecker');
+const { checkAndAwardAchievements, calculateConsecutiveDays } = require('../Auth/achievementChecker');
 
 const updateTask = async (req, res) => {
   const { userId, date, task, dailyNgDl } = req.body;
 
-  if (!userId || !date || !task || !task.id) {
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required.' });
+  }
+
+  if (!date || !task || !task.id) {
     return res.status(400).send('Missing required fields.');
   }
 
   try {
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).send('User not found.');
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     const taskDate = new Date(date);
@@ -77,7 +81,7 @@ const updateTask = async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating task:', error);
-    res.status(500).send('Server error.');
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 

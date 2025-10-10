@@ -2,18 +2,14 @@ const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
 const User = require('../User/User'); // Assuming User model is in User/User.js
 
-const client = new OAuth2Client('451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com');
+const client = new OAuth2Client('451475688741-ilikls36p28187o7vl665e9vocmha5nd.apps.googleusercontent.com');
 
 const googleAuth = async (req, res) => {
-  console.log('--- Google Auth Request Body ---');
-  console.log(JSON.stringify(req.body, null, 2));
-  console.log('-----------------------------');
-  
   const { token } = req.body;
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: '451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com',
+      audience: '451475688741-ilikls36p28187o7vl665e9vocmha5nd.apps.googleusercontent.com',
     });
     const { name, email, picture } = ticket.getPayload();
 
@@ -25,22 +21,17 @@ const googleAuth = async (req, res) => {
         email,
         profilePicture: picture,
         googleId: ticket.getUserId(),
-        // Add any other default fields you need for a new user
+        dateCreated: new Date(),
       });
       await user.save();
     }
 
     // Generate a JWT for the user session
-    const sessionToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const sessionToken = jwt.sign({ userId: user._id }, "a_very_long_and_super_secret_string_for_testing_only", { expiresIn: '7d' });
 
     res.status(200).json({
       message: 'Authentication successful',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        profilePicture: user.profilePicture,
-      },
+      user: user, // Send the full user object
       token: sessionToken,
     });
   } catch (error) {

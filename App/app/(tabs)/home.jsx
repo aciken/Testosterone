@@ -51,9 +51,9 @@ export default function HomeScreen() {
   useEffect(() => {
     const getProgramDay = async () => {
       try {
-        const userString = await AsyncStorage.getItem('user');
-        if (userString) {
-          const user = JSON.parse(userString);
+        // Now, we can rely on the user object from the context,
+        // which is guaranteed to be up-to-date.
+        if (user && user.dateCreated) {
           const dateCreated = new Date(user.dateCreated);
           const today = new Date();
           
@@ -106,7 +106,7 @@ export default function HomeScreen() {
     };
 
     getProgramDay();
-  }, []);
+  }, [user]); // Add user as a dependency
 
   const currentDayData = todosByDay[currentDay] || { dos: [], donts: [] };
   const currentDos = currentDayData.dos || [];
@@ -362,7 +362,9 @@ export default function HomeScreen() {
     try {
       const userString = await AsyncStorage.getItem('user');
       if (userString) {
+        console.log(userString)
         const user = JSON.parse(userString);
+        console.log(user.user)
         const dailyNgDl = calculateDailyNgDl(); // Calculate the value before sending
         const updatePayload = {
           userId: user._id,
@@ -370,6 +372,7 @@ export default function HomeScreen() {
           task: taskData,
           dailyNgDl: dailyNgDl, // Add the score to the payload
         };
+        console.log(updatePayload)
 
         const response = await axios.post('https://26e4f9703e03.ngrok-free.app/tasks/update', updatePayload);
 

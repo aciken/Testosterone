@@ -20,22 +20,17 @@ export default function CreateAccount() {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      
-      // CRUCIAL CHECK: Ensure the idToken exists before proceeding.
-      if (!userInfo || !userInfo.idToken) {
-        console.error("CRITICAL: Google Sign-In succeeded but did not return an idToken. Please verify your 'webClientId' in the Google Cloud Console is for a 'Web application' credential, not an iOS or Android one.");
-        // Here you could show an alert to the user
-        return;
-      }
+      console.log('Google User Info:', userInfo);
+      console.log(userInfo.data.idToken)
       
       const response = await axios.post('https://26e4f9703e03.ngrok-free.app/auth/google', {
-        token: userInfo.idToken,
+        token: userInfo.data.idToken,
       });
 
       if (response.status === 200 || response.status === 201) {
         const userData = response.data;
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
+        await AsyncStorage.setItem('user', JSON.stringify(userData.user));
+        setUser(userData.user);
         setIsAuthenticated(true);
         router.push('/home');
       } else {
@@ -48,6 +43,7 @@ export default function CreateAccount() {
 
   const handleAppleSignIn = async () => {
     try {
+      console.log('[AppleSignIn] Starting Apple Sign-In process...');
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -55,34 +51,39 @@ export default function CreateAccount() {
         ],
       });
       
+      console.log('[AppleSignIn] Credential received from Apple:');
+      console.log(JSON.stringify(credential, null, 2));
+
       const { user, email, fullName } = credential;
       const name = fullName ? `${fullName.givenName} ${fullName.familyName}` : 'User';
       
+      console.log(`[AppleSignIn] Sending to backend: appleId=${user}, email=${email}, name=${name}`);
       const response = await axios.post('https://26e4f9703e03.ngrok-free.app/auth/apple', {
         appleId: user,
         email,
         name,
       });
 
+      console.log('[AppleSignIn] Response from backend:', JSON.stringify(response.data, null, 2));
+
       if (response.status === 200 || response.status === 201) {
         const userData = response.data;
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
         setIsAuthenticated(true);
-
-        // For Apple Sign-In, verification is implicit, so navigate to home or paywall
         router.push('/home'); 
       } else {
-        // Handle non-successful responses
-        console.error('Apple Sign-In failed:', response.data.message);
+        console.error('Apple Sign-In failed with status:', response.status, response.data.message);
       }
 
     } catch (e) {
+      console.error('--- [AppleSignIn] CRITICAL ERROR CAUGHT ---');
       if (e.code === 'ERR_REQUEST_CANCELED') {
         console.log('User canceled Apple Sign-In.');
       } else {
-        console.error('Apple Sign-In error:', e);
+        console.error('Apple Sign-In error object:', JSON.stringify(e, null, 2));
       }
+      console.error('------------------------------------------');
     }
   };
 
@@ -91,9 +92,9 @@ export default function CreateAccount() {
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: '451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com', // Replace with your Web Client ID
+      webClientId: '451475688741-ilikls36p28187o7vl665e9vocmha5nd.apps.googleusercontent.com', // Replace with your Web Client ID
       iosClientId: '451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com', // Replace with your iOS Client ID
-      requestIdToken: true, // This is mandatory to receive the idToken
+      requestIdToken: true, // Explicitly request the ID token
     });
 
     // Animate content in
