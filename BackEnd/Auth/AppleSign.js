@@ -21,14 +21,10 @@ const AppleSign = async (req, res) => {
                 user.name = name;
                 updated = true;
             }
-            if (!user.dateCreated) { // Add this check
-                user.dateCreated = new Date();
-                updated = true;
-            }
             if (updated) {
                 await user.save();
             }
-            return res.status(200).json({ user: user }); // Ensure response is consistent
+            return res.status(200).json(user);
         } else {
             // User does not exist, create a new account
             // Check if email is already in use by another account type
@@ -47,7 +43,7 @@ const AppleSign = async (req, res) => {
                 dateCreated: new Date(),
             });
 
-            return res.status(201).json({ user: newUser }); // Ensure response is consistent
+            return res.status(201).json(newUser);
         }
     } catch (error) {
         console.error('Apple Sign-In Error:', error);

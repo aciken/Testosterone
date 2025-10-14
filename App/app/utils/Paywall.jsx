@@ -12,7 +12,7 @@ export default function Paywall() {
       const customerInfo = await Purchases.getCustomerInfo();
       const isPro = customerInfo?.entitlements?.all?.pro?.isActive ?? false;
       setIsPro(isPro);
-      router.back();
+      router.replace('/home');
     } catch (error) {
       console.error('Error handling purchase completion:', error);
     }
@@ -24,7 +24,7 @@ export default function Paywall() {
       console.log(info, isPro);
       if (isPro) {
         setIsPro(true);
-        router.back();
+        router.replace('/home');
       }
     } catch (error) {
       console.error('Error handling restore completion:', error);
@@ -32,7 +32,11 @@ export default function Paywall() {
   };
 
   const handleCloseButton = () => {
-    router.back();
+    router.replace('/home');
+  }
+
+  const handleGoBack = () => {
+    router.replace('/home');
   }
 
   return (
@@ -40,6 +44,7 @@ export default function Paywall() {
       onPurchaseCompleted={handlePurchaseCompleted}
       onRestoreCompleted={handleRestoreCompleted}
       onDismiss={handleCloseButton}
+      onGoBack={handleGoBack}
     />
   );
 }

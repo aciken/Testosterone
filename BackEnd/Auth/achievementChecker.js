@@ -30,6 +30,23 @@ function calculateTotalSunExposure(tasks) {
   return totalMinutes;
 }
 
+function calculateSleepDays(tasks) {
+  if (!tasks || tasks.length === 0) {
+    return 0;
+  }
+  
+  // The task 'Sleep' has id: '3' (assuming this is the sleep task ID)
+  const sleepTaskLogs = tasks.filter(t => t.taskId === '3' && (t.progress > 0 || (t.checked && t.checked.length > 0)));
+  
+  const uniqueDays = new Set();
+  sleepTaskLogs.forEach(task => {
+    const date = new Date(task.date);
+    uniqueDays.add(date.toDateString());
+  });
+  
+  return uniqueDays.size;
+}
+
 function calculateConsecutiveDays(tasks) {
   if (!tasks || tasks.length === 0) {
     return 0;
@@ -116,10 +133,12 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
     const streak = calculateConsecutiveDays(user.tasks);
     const exerciseDays = calculateExerciseDays(user.tasks);
     const totalSunMinutes = calculateTotalSunExposure(user.tasks);
+    const sleepDays = calculateSleepDays(user.tasks);
     const currentTScore = calculateCurrentTScore(user);
     console.log(`[achievementChecker] Calculated streak: ${streak}`);
     console.log(`[achievementChecker] Calculated exercise days: ${exerciseDays}`);
     console.log(`[achievementChecker] Calculated total sun exposure: ${totalSunMinutes} minutes`);
+    console.log(`[achievementChecker] Calculated sleep days: ${sleepDays}`);
     console.log(`[achievementChecker] Calculated T-Score: ${currentTScore}`);
 
     for (const key in achievements) {
@@ -194,6 +213,19 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
         console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
         
         if (totalSunMinutes >= achievement.criteria.minutes && !hasUnlocked) {
+          console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
+          user.unlockedAchievements.push(achievement.id);
+          newAchievements.push(achievement);
+        }
+      }
+
+      // Handle sleep achievements
+      if (achievement.criteria.type === 'sleep') {
+        console.log(`[achievementChecker] Checking 'sleep' achievement: ${achievement.name}`);
+        const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
+        console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
+        
+        if (sleepDays >= achievement.criteria.days && !hasUnlocked) {
           console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
           user.unlockedAchievements.push(achievement.id);
           newAchievements.push(achievement);

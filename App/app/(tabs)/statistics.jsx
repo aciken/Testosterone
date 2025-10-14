@@ -93,7 +93,18 @@ export default function StatisticsScreen() {
                     if (!userString) { setIsLoading(false); return; }
 
                     const user = JSON.parse(userString);
-                    if (!user.tasks || user.tasks.length === 0) { setIsLoading(false); return; }
+                    if (!user.tasks || user.tasks.length === 0) { 
+                        setStats({ 
+                            chartData: [BASELINE_TESTOSTERONE], 
+                            chartLabels: ['Today'], 
+                            streakingFactors: [], 
+                            nonStreakingFactors: [], 
+                            maxImpact: 1 
+                        });
+                        setCurrentTScore(BASELINE_TESTOSTERONE);
+                        setIsLoading(false); 
+                        return; 
+                    }
                     
                     const allTasks = [...programData[1].dos, ...programData[1].donts];
                     const taskMap = allTasks.reduce((map, task) => {

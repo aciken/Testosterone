@@ -142,6 +142,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [showMealHistory, setShowMealHistory] = useState(false);
+  const [sliderKey, setSliderKey] = useState(0);
   const slideAnim = useRef(new Animated.Value(500)).current;
   const blurAnim = useRef(new Animated.Value(0)).current;
 
@@ -171,6 +172,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
             ? (task.progress / 100) * (task.maxValue || 10)
             : (task.progress / 100) * (task.goal || 1);
           setCurrentValue(initialValue);
+          setSliderKey(prev => prev + 1); // Force complete remount of slider
           setChecklistItems([]);
           setMealInput('');
           setIsAnalyzing(false);
@@ -279,6 +281,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         {task.inverted ? `Rate your ${task.task.toLowerCase()}` : `How much ${task.task.toLowerCase()}?`}
       </Text>
       <CustomSlider 
+        key={sliderKey}
         min={0}
         max={task.maxValue || task.goal * 1.5}
         initialValue={currentValue}
@@ -424,6 +427,50 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
 
   if (!task) return null;
 
+  const isSimpleTask = task.type === 'simple' || task.type === 'simple_dont';
+  const isCompleted = isSimpleTask && task.progress > 0;
+
+  const getButtonText = () => {
+    if (isCompleted) {
+      return task.type === 'simple' ? 'Undo Workout' : "I Didn't Avoid It";
+    }
+    if (task.type === 'simple') return 'Mark as Complete';
+    if (task.type === 'simple_dont') return 'I Avoided It';
+    return 'Save Progress';
+  };
+
+  const handleButtonPress = () => {
+    if (isCompleted) {
+      handleClose({ id: task.id, progress: 0, checked: [] });
+      return;
+    }
+
+    let saveData = { id: task.id };
+    if (task.type === 'simple' || task.type === 'simple_dont') {
+      saveData.progress = 100;
+      saveData.checked = ['done'];
+    } else if (task.type === 'slider') {
+      saveData.progress = task.inverted
+        ? Math.min(Math.round((currentValue / (task.maxValue / 2)) * 100), 100)
+        : Math.round((currentValue / task.goal) * 100);
+    } else if (task.type === 'checklist') {
+      const doneCount = checklistItems.filter(item => item.done).length;
+      saveData.progress = Math.round((doneCount / checklistItems.length) * 100);
+      saveData.checked = checklistItems.filter(item => item.done).map(item => item.id);
+    } else if (task.type === 'meals') {
+      if (analysis) {
+        saveData.progress = analysis.score < 50 ? -(100 - analysis.score) : analysis.score;
+        saveData.description = mealInput;
+        saveData.history = {
+          timestamp: new Date().toISOString(),
+          value: analysis.score,
+          description: mealInput,
+        };
+      }
+    }
+    handleClose(saveData);
+  };
+
   return (
     <Modal
       animationType="none"
@@ -448,31 +495,10 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                     (task.type === 'meals' && !analysis) && styles.saveButtonDisabled
                   ]} 
                   disabled={task.type === 'meals' && !analysis}
-                  onPress={() => {
-                  let saveData = { id: task.id };
-                  if (task.type === 'simple' || task.type === 'simple_dont') {
-                    saveData.progress = 100;
-                  } else if (task.type === 'slider') {
-                    saveData.progress = task.inverted
-                      ? Math.min(Math.round((currentValue / (task.maxValue / 2)) * 100), 100)
-                      : Math.round((currentValue / task.goal) * 100);
-                  } else if (task.type === 'checklist') {
-                    const doneCount = checklistItems.filter(item => item.done).length;
-                    saveData.progress = Math.round((doneCount / checklistItems.length) * 100);
-                    saveData.checked = checklistItems.filter(item => item.done).map(item => item.id);
-                  } else if (task.type === 'meals') {
-                    if (analysis) {
-                      // For meals, if score is below 50%, make it negative progress
-                      saveData.progress = analysis.score < 50 ? -(100 - analysis.score) : analysis.score;
-                    } else {
-                      saveData.progress = task.progress || 0;
-                    }
-                    saveData.description = mealInput;
-                  }
-                  handleClose(saveData);
-                }}>
+                  onPress={handleButtonPress}
+                >
                   <Text style={styles.saveButtonText}>
-                    {task.type === 'simple' || task.type === 'simple_dont' ? 'Mark as Complete' : 'Save Progress'}
+                    {getButtonText()}
                   </Text>
                 </TouchableOpacity>
               </LinearGradient>

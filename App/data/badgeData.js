@@ -13,6 +13,9 @@ export const allBadges = [
     { id: '12', name: 'Sun Bronze', image: require('../assets/SunBronze.png'), unlocked: false, description: 'Spend 5 hours in the sun.', primaryColor: '#1F1F1F', secondaryColor: '#854d0e', glowColor: '#fb923c' },
     { id: '13', name: 'Sun Gold', image: require('../assets/SunGold.png'), unlocked: false, description: 'Spend 10 hours in the sun.', primaryColor: '#1F1F1F', secondaryColor: '#eab308', glowColor: '#fde68a' },
     { id: '14', name: 'Sun Diamond', image: require('../assets/SunDiamond.png'), unlocked: false, description: 'Spend 20 hours in the sun.', primaryColor: '#1F1F1F', secondaryColor: '#075985', glowColor: '#0ea5e9' },
+    { id: '15', name: 'Sleep Bronze', image: require('../assets/SleepBronze.png'), unlocked: false, description: 'Complete 10 days of sleep.', primaryColor: '#1F1F1F', secondaryColor: '#854d0e', glowColor: '#fb923c' },
+    { id: '16', name: 'Sleep Gold', image: require('../assets/SleepGold.png'), unlocked: false, description: 'Complete 30 days of sleep.', primaryColor: '#1F1F1F', secondaryColor: '#eab308', glowColor: '#fde68a' },
+    { id: '17', name: 'Sleep Diamond', image: require('../assets/SleepDiamond.png'), unlocked: false, description: 'Complete 60 days of sleep.', primaryColor: '#1F1F1F', secondaryColor: '#075985', glowColor: '#0ea5e9' },
 
 
 

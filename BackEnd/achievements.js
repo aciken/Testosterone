@@ -58,7 +58,7 @@ const achievements = {
     description: 'Complete 10 days of exercise.',
     criteria: {
       type: 'exercise',
-      days: 10,
+      days: 1,
     },
   },
   '10': {
@@ -104,6 +104,33 @@ const achievements = {
     criteria: {
       type: 'sun_exposure',
       minutes: 1200, // 20 hours
+    },
+  },
+  '15': {
+    id: '15',
+    name: 'Sleep Bronze',
+    description: 'Complete 10 days of sleep.',
+    criteria: {
+      type: 'sleep',
+      days: 1,
+    },
+  },
+  '16': {
+    id: '16',
+    name: 'Sleep Gold',
+    description: 'Complete 30 days of sleep.',
+    criteria: {
+      type: 'sleep',
+      days: 30,
+    },
+  },
+  '17': {
+    id: '17',
+    name: 'Sleep Diamond',
+    description: 'Complete 60 days of sleep.',
+    criteria: {
+      type: 'sleep',
+      days: 60,
     },
   },
 };

@@ -45,7 +45,11 @@ export const GlobalProvider = ({ children }) => {
                 if (API_KEY) {
                     try {
                         const loginResult = await Purchases.logIn(parsedUser._id);
-                        console.log("RevenueCat login success:", loginResult);
+                        
+                        // Check if user has active entitlements
+                        const customerInfo = await Purchases.getCustomerInfo();
+                        const isProUser = customerInfo.entitlements.active['pro'] !== undefined;
+                        setIsPro(isProUser);
                     } catch (e) {
                         console.error("RevenueCat login error:", e);
                     }
@@ -70,9 +74,16 @@ export const GlobalProvider = ({ children }) => {
                 if (API_KEY) {
                     try {
                         await Purchases.logIn(response.data.user._id);
+                        // Check if user has active entitlements
+                        const customerInfo = await Purchases.getCustomerInfo();
+                        const isProUser = customerInfo.entitlements.active['pro'] !== undefined;
+                        setIsPro(isProUser);
                     } catch (e) {
                         console.error("RevenueCat login error on signin:", e);
+                        setIsPro(false);
                     }
+                } else {
+                    setIsPro(false);
                 }
             } else {
                 setError(response.data.message);
@@ -102,10 +113,10 @@ export const GlobalProvider = ({ children }) => {
     };  
     
     return (
-        <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure, streak, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement }}>
-            {children}
-        </GlobalContext.Provider>
-    );
+    <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure, streak, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement, isPro, setIsPro }}>
+        {children}
+    </GlobalContext.Provider>
+);
 };
     
     

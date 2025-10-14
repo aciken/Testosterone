@@ -10,21 +10,17 @@ import { useGlobalContext } from './context/GlobalProvider';
 
 const screenWidth = Dimensions.get('window').width;
 
-const BadgeItem = ({ name, image, unlocked, description, primaryColor, secondaryColor, glowColor }) => {
-    const itemStyle = {
-        backgroundColor: unlocked ? primaryColor || 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.2)',
-    };
-    const imageContainerStyle = {
-        backgroundColor: unlocked ? primaryColor || 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-        borderColor: unlocked ? secondaryColor || '#C0C0C0' : 'rgba(255, 255, 255, 0.2)',
-        shadowColor: unlocked ? glowColor || '#FFFFFF' : 'transparent',
-    };
+const BadgeItem = ({ name, image, unlocked, description, level }) => {
+    // For progressive badges, use Diamond3.png
+    const displayImage = (level !== undefined && level > 0) 
+        ? require('../assets/Diamond3.png') 
+        : image;
 
     return (
-        <View style={[styles.badgeItem, itemStyle]}>
-            <View style={[styles.badgeImageContainer, unlocked && styles.badgeImageContainerUnlocked, imageContainerStyle]}>
+        <View style={[styles.badgeItem, !unlocked && styles.badgeItemLocked]}>
+            <View style={[styles.badgeImageContainer, unlocked && styles.badgeImageContainerUnlocked]}>
                 {unlocked ? (
-                    <Image source={image} style={styles.badgeImage} />
+                    <Image source={displayImage} style={styles.badgeImage} />
                 ) : (
                     <Ionicons name="lock-closed" size={40} color="rgba(255, 255, 255, 0.3)" />
                 )}
@@ -41,6 +37,33 @@ export default function AllBadgesScreen() {
 
     const unlockedBadgeIds = user?.unlockedAchievements || [];
 
+    // Helper function to get the highest level for progressive badges
+    const getHighestLevel = (badgeId) => {
+        const levelKeys = unlockedBadgeIds.filter(id => id.startsWith(`${badgeId}_level_`));
+        if (levelKeys.length === 0) return 0;
+        
+        const levels = levelKeys.map(key => parseInt(key.split('_')[2]));
+        return Math.max(...levels);
+    };
+
+    // Helper function to get display info for progressive badges
+    const getProgressiveBadgeInfo = (badge) => {
+        if (!badge.level || badge.level === 0) return badge;
+        
+        const highestLevel = getHighestLevel(badge.id);
+        if (highestLevel === 0) return badge;
+        
+        const levelName = badge.levelNames[highestLevel - 1];
+        const levelDescription = badge.levelDescriptions[highestLevel - 1];
+        
+        return {
+            ...badge,
+            name: `${badge.name} ${levelName}`,
+            description: levelDescription,
+            level: highestLevel
+        };
+    };
+
     return (
         <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -53,6 +76,20 @@ export default function AllBadgesScreen() {
                 </View>
                 <ScrollView contentContainerStyle={styles.contentContainer}>
                     {allBadges.map(badge => {
+                        // For progressive badges, only show if user has achieved any level
+                        if (badge.level !== undefined) {
+                            const highestLevel = getHighestLevel(badge.id);
+                            if (highestLevel === 0) return null; // Don't show if no level achieved
+                            
+                            const displayBadge = getProgressiveBadgeInfo(badge);
+                            return (
+                                <TouchableOpacity key={badge.id} onPress={() => router.push({ pathname: '/badgeDetails', params: { ...displayBadge, image: displayBadge.image ? Image.resolveAssetSource(displayBadge.image).uri : null } })}>
+                                    <BadgeItem {...displayBadge} unlocked={true} />
+                                </TouchableOpacity>
+                            );
+                        }
+                        
+                        // For regular badges
                         const isUnlocked = unlockedBadgeIds.includes(badge.id);
                         return (
                             <TouchableOpacity key={badge.id} onPress={() => isUnlocked && router.push({ pathname: '/badgeDetails', params: { ...badge, image: badge.image ? Image.resolveAssetSource(badge.image).uri : null } })}>
@@ -96,6 +133,7 @@ const styles = StyleSheet.create({
         marginBottom: 25,
         padding: 15,
         borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
     },
     badgeItemLocked: {
         backgroundColor: 'rgba(0, 0, 0, 0.2)',
@@ -107,9 +145,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 15,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     badgeImageContainerUnlocked: {
+        borderColor: '#C0C0C0',
+        shadowColor: '#FFFFFF',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.6,
         shadowRadius: 12,
