@@ -11,6 +11,7 @@ const Verify = require('./Auth/verify');
 const AppleSign = require('./Auth/AppleSign');
 const googleAuth = require('./Auth/googleAuth');
 const updateTask = require('./Tasks/updateTask');
+const deleteMeal = require('./Tasks/deleteMeal');
 
 
 app.get('/', (req, res) => {
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
   app.post('/auth/google', googleAuth);
   app.put('/verify', Verify);
   app.post('/tasks/update', updateTask);
+  app.post('/tasks/meal/delete', deleteMeal);
 
   app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`);

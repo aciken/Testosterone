@@ -8,11 +8,89 @@ import CustomSlider from './CustomSlider';
 import { OPENAI_API_KEY } from '@env';
 import OpenAI from 'openai';  
 import { useRouter } from 'expo-router';
-
+import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import axios from 'axios';
+import { useGlobalContext } from '../app/context/GlobalProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
 console.log(OPENAI_API_KEY);
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+const AnalysisGauge = ({ score }) => {
+    const size = 120;
+    const strokeWidth = 12;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * Math.PI; 
+
+    const progressAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(progressAnim, {
+            toValue: score,
+            duration: 800,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+        }).start();
+    }, [score]);
+
+    const strokeDashoffset = progressAnim.interpolate({
+        inputRange: [0, 100],
+        outputRange: [circumference, 0],
+    });
+
+    let gradientId;
+    let scoreColor;
+
+    if (score >= 75) {
+        gradientId = "greenGradient";
+        scoreColor = '#4CAF50';
+    } else if (score >= 40) {
+        gradientId = "orangeGradient";
+        scoreColor = '#FF9500';
+    } else {
+        gradientId = "redGradient";
+        scoreColor = '#FF3B30';
+    }
+
+    const d = `M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`;
+
+    return (
+        <View style={styles.gaugeContainer}>
+            <Svg width={size} height={size / 2 + strokeWidth} viewBox={`0 0 ${size} ${size/2 + strokeWidth/2}`}>
+                <Defs>
+                    <SvgLinearGradient id="greenGradient" x1="0" y1="0" x2="1" y2="0">
+                        <Stop offset="0%" stopColor="#4CAF50" />
+                        <Stop offset="100%" stopColor="#8BC34A" />
+                    </SvgLinearGradient>
+                    <SvgLinearGradient id="orangeGradient" x1="0" y1="0" x2="1" y2="0">
+                        <Stop offset="0%" stopColor="#FFC107" />
+                        <Stop offset="100%" stopColor="#FF9800" />
+                    </SvgLinearGradient>
+                    <SvgLinearGradient id="redGradient" x1="0" y1="0" x2="1" y2="0">
+                        <Stop offset="0%" stopColor="#F44336" />
+                        <Stop offset="100%" stopColor="#D32F2F" />
+                    </SvgLinearGradient>
+                </Defs>
+                <Path d={d} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={strokeWidth} strokeLinecap="round" fill="none" />
+                <AnimatedPath
+                    d={d}
+                    stroke={`url(#${gradientId})`}
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                />
+            </Svg>
+            <Text style={[styles.analysisScore, { color: scoreColor }]}>{score}%</Text>
+        </View>
+    );
+};
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -248,7 +326,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
           messages: [
             {
               role: 'system',
-              content: `You are a testosterone optimization assistant. Analyze the user's meal for its impact on testosterone production. Provide a response in JSON format with two keys: "score" (a number from 0 to 100 representing how good this meal is for testosterone optimization) and "text" (a brief, one-sentence analysis explaining why this meal is good or bad for testosterone).`
+              content: `You are a testosterone optimization assistant. Analyze the user's meal for its impact on testosterone production. Provide a response in JSON format with two keys: "score" (a number from 0 to 100 representing how good this meal is for testosterone optimization) and "text" (a brief, one-sentence (15 word max)  analysis explaining why this meal is good or bad for testosterone).`
             },
             {
               role: 'user',
@@ -303,17 +381,23 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
               {isAnalyzing ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : analysis ? (
-                <View style={[styles.analysisResult, analysis.score < 50 && styles.badAnalysisResult]}>
-                  <Text style={styles.analysisText}>{analysis.text}</Text>
-                  <Text style={[styles.analysisScore, analysis.score < 50 && styles.badAnalysisScore]}>{analysis.score}%</Text>
+                <View style={styles.analysisResult}>
+                    <AnalysisGauge score={analysis.score} />
+                    <Text style={styles.analysisText}>{analysis.text}</Text>
                 </View>
               ) : (
                 <TouchableOpacity
-                  style={[styles.analyzeButton, !mealInput && styles.disabledButton]}
                   onPress={handleAnalyze}
                   disabled={!mealInput}
                 >
-                  <Text style={styles.analyzeButtonText}>Analyze Meal</Text>
+                  <LinearGradient
+                    colors={!mealInput ? ['#333', '#222'] : ['#FF8C00', '#B46010']}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={[styles.analyzeButton, !mealInput && styles.disabledButton]}
+                  >
+                    <Text style={styles.analyzeButtonText}>Analyze Meal</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               )}
             </View>
@@ -358,7 +442,13 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                 
                 {renderContent()}
                 
-                <TouchableOpacity style={styles.saveButton} onPress={() => {
+                <TouchableOpacity 
+                  style={[
+                    styles.saveButton, 
+                    (task.type === 'meals' && !analysis) && styles.saveButtonDisabled
+                  ]} 
+                  disabled={task.type === 'meals' && !analysis}
+                  onPress={() => {
                   let saveData = { id: task.id };
                   if (task.type === 'simple' || task.type === 'simple_dont') {
                     saveData.progress = 100;
@@ -397,15 +487,66 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
           visible={showMealHistory}
           meals={task.history}
           onClose={() => setShowMealHistory(false)}
+          onMealDeleted={() => {
+            // This function will be passed down to the MealHistoryModal
+            // and will be called when a meal is deleted.
+            // The parent component (TaskDetailModal) will then update the task.history
+            // and potentially re-render this modal or trigger a re-fetch.
+          }}
         />
       )}
     </Modal>
   );
 };
 
-const MealHistoryModal = ({ visible, meals, onClose }) => {
+const MealHistoryModal = ({ visible, meals, onClose, onMealDeleted }) => {
   const totalScore = meals.reduce((sum, meal) => sum + meal.value, 0);
   const averageScore = meals.length > 0 ? Math.round(totalScore / meals.length) : 0;
+  const [mealHistory, setMealHistory] = useState(meals);
+  const { user, setUser } = useGlobalContext();
+
+  useEffect(() => {
+    setMealHistory(meals);
+  }, [meals]);
+
+  const handleDeleteMeal = async (timestamp, description) => {
+    Alert.alert(
+      "Delete Meal",
+      `Are you sure you want to delete this meal?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const newHistory = mealHistory.filter(meal => meal.timestamp !== timestamp);
+            setMealHistory(newHistory);
+
+            try {
+                const response = await axios.post('https://26e4f9703e03.ngrok-free.app/tasks/meal/delete', {
+                    userId: user._id,
+                    timestamp: timestamp,
+                    taskId: '3', 
+                });
+
+                if (response.data.user) {
+                    setUser(response.data.user);
+                    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+                    onMealDeleted(response.data.user);
+                }
+            } catch (error) {
+                console.log(error);
+                console.error("Failed to delete meal:", error.response ? error.response.data : error.message);
+                setMealHistory(meals);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <Modal
@@ -431,42 +572,83 @@ const MealHistoryModal = ({ visible, meals, onClose }) => {
               </View>
               
               <View style={styles.historyStatsContainer}>
-                <View style={styles.historyStatBox}>
-                  <Text style={styles.historyStatValue}>{meals.length}</Text>
-                  <Text style={styles.historyStatLabel}>Meals Today</Text>
-                </View>
-                <View style={styles.historyStatDivider} />
-                <View style={styles.historyStatBox}>
-                  <Text style={[styles.historyStatValue, averageScore < 0 ? styles.historyStatValueNegative : styles.historyStatValuePositive]}>
-                    {averageScore > 0 ? '+' : ''}{averageScore}%
+                <View style={styles.statsRow}>
+                  <Text style={styles.statsLabel}>Today's Diet</Text>
+                  <Text style={[styles.statsScore, averageScore >= 60 ? { color: '#4CAF50' } : averageScore >= 30 ? { color: '#FF9500' } : { color: '#FF3B30' }]}>
+                    {averageScore >= 60 ? 'Good' : averageScore >= 30 ? 'Average' : 'Bad'}
                   </Text>
-                  <Text style={styles.historyStatLabel}>Avg. Score</Text>
                 </View>
+                
+                <View style={styles.progressBarWrapper}>
+                  <View style={styles.progressBarBg}>
+                    <LinearGradient
+                      colors={
+                        averageScore >= 60 
+                          ? ['#81C784', '#66BB6A', '#4CAF50', '#43A047'] 
+                          : averageScore >= 30 
+                            ? ['#FFD54F', '#FFB74D', '#FF9500', '#FB8C00'] 
+                            : ['#EF5350', '#FF6B6B', '#FF3B30', '#E53935']
+                      }
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[
+                        styles.progressBarFill, 
+                        { 
+                          width: `${Math.min(Math.max(averageScore, 0), 100)}%`,
+                          shadowColor: averageScore >= 60 ? '#4CAF50' : averageScore >= 30 ? '#FF9500' : '#FF3B30',
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.6,
+                          shadowRadius: 6,
+                        }
+                      ]} 
+                    />
+                  </View>
+                </View>
+                
+                <Text style={styles.mealCountText}>{meals.length} {meals.length === 1 ? 'meal' : 'meals'} analyzed</Text>
               </View>
             </View>
             
             <ScrollView contentContainerStyle={styles.historyScrollContent} showsVerticalScrollIndicator={false}>
-              {meals.map((item, index) => (
-                <View key={index} style={styles.historyMealCard}>
-                  <View style={styles.historyMealTop}>
-                    <View style={styles.historyMealLeft}>
-                      <View style={[styles.historyMealDot, item.value < 0 && styles.historyMealDotNegative]} />
-                      <View style={styles.historyMealInfo}>
-                        <Text style={styles.historyMealLabel}>Meal {index + 1}</Text>
-                        <Text style={styles.historyMealTime}>
-                          {new Date(item.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                        </Text>
-                      </View>
+              {mealHistory.map((item, index) => {
+                let scoreColor = '#FF9500';
+                if (item.value >= 75) {
+                    scoreColor = '#4CAF50';
+                } else if (item.value < 40) {
+                    scoreColor = '#FF3B30';
+                }
+                
+                return (
+                    <View key={index} style={styles.historyMealCard}>
+                        <View style={styles.historyMealMainContent}>
+                            <View style={styles.historyMealTextContainer}>
+                                <Text style={styles.historyMealDescription} numberOfLines={1}>
+                                    {item.description || `Meal ${index + 1}`}
+                                </Text>
+                                <Text style={styles.historyMealTime}>
+                                    {new Date(item.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                </Text>
+                            </View>
+                            
+                            <View style={styles.historyMealActions}>
+                                <View style={[styles.historyScorePill, { backgroundColor: scoreColor }]}>
+                                    <Text style={styles.historyScoreText}>
+                                        {item.value > 0 ? `+${item.value}` : item.value}%
+                                    </Text>
+                                </View>
+                                
+                                <TouchableOpacity 
+                                    onPress={() => handleDeleteMeal(item.timestamp, item.description)} 
+                                    style={styles.historyDeleteBtn}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <Ionicons name="trash-outline" size={20} color="#666" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
                     </View>
-                    <View style={[styles.historyScoreBadge, item.value < 0 && styles.historyScoreBadgeNegative]}>
-                      <Text style={[styles.historyScoreText, item.value < 0 && styles.historyScoreTextNegative]}>
-                        {item.value > 0 ? `+${item.value}` : item.value}%
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.historyMealDescription}>{item.description || `Meal ${index + 1}`}</Text>
-                </View>
-              ))}
+                );
+              })}
             </ScrollView>
           </SafeAreaView>
         </LinearGradient>
@@ -546,12 +728,23 @@ const styles = StyleSheet.create({
   analysisContainer: {
     marginTop: 20,
     alignItems: 'center',
+    justifyContent: 'center', // Center content vertically
+    minHeight: 90, // Set a fixed height to prevent layout shifts
   },
   analyzeButton: {
-    backgroundColor: '#4A90E2',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 35,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    shadowColor: '#FF8C00',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 5,
   },
   analyzeButtonText: {
     color: '#FFFFFF',
@@ -559,7 +752,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   disabledButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowOpacity: 0,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   analysisResult: {
     alignItems: 'center',
@@ -568,21 +762,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.4)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  gaugeContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   analysisText: {
     color: '#E0E0E0',
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 8,
+    lineHeight: 22,
+    paddingHorizontal: 10,
   },
   analysisScore: {
-    color: '#4CAF50',
-    fontSize: 22,
+    position: 'absolute',
+    top: '60%',
+    fontSize: 28,
     fontWeight: 'bold',
   },
   badAnalysisResult: {
-    borderColor: 'rgba(255, 107, 107, 0.4)',
+    borderColor: 'rgba(255, 107, 107, 0.2)',
   },
   badAnalysisScore: {
     color: '#FF6B6B',
@@ -626,6 +827,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  saveButtonDisabled: {
+    backgroundColor: '#555',
+  },
   // Meal History Modal Styles
   historyModalContainer: {
     flex: 1,
@@ -668,38 +872,48 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   historyStatsContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
   },
-  historyStatBox: {
-    flex: 1,
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  historyStatValue: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  historyStatValuePositive: {
-    color: '#FFFFFF',
-  },
-  historyStatValueNegative: {
-    color: '#FF6B6B',
-  },
-  historyStatLabel: {
-    color: '#888',
-    fontSize: 13,
+  statsLabel: {
+    fontSize: 15,
+    color: '#999',
     fontWeight: '600',
+    letterSpacing: 0.3,
   },
-  historyStatDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    marginHorizontal: 20,
+  statsScore: {
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  progressBarWrapper: {
+    marginBottom: 10,
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  mealCountText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+    textAlign: 'center',
   },
   historyScrollContent: {
     padding: 20,
@@ -707,73 +921,51 @@ const styles = StyleSheet.create({
   },
   historyMealCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 12,
+    borderRadius: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
-  historyMealTop: {
+  historyMealMainContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
+    padding: 14,
   },
-  historyMealLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  historyMealTextContainer: {
     flex: 1,
-  },
-  historyMealDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FFFFFF',
     marginRight: 12,
   },
-  historyMealDotNegative: {
-    backgroundColor: '#FF6B6B',
-  },
-  historyMealInfo: {
-    flex: 1,
-  },
-  historyMealLabel: {
+  historyMealDescription: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 2,
+    fontWeight: '500',
+    marginBottom: 4,
   },
   historyMealTime: {
     color: '#666',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '400',
   },
-  historyScoreBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  historyMealActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  historyScorePill: {
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    marginLeft: 12,
-  },
-  historyScoreBadgeNegative: {
-    backgroundColor: 'rgba(255, 107, 107, 0.15)',
-    borderColor: 'rgba(255, 107, 107, 0.3)',
+    borderRadius: 12,
   },
   historyScoreText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 'bold',
   },
-  historyScoreTextNegative: {
-    color: '#FF6B6B',
-  },
-  historyMealDescription: {
-    color: '#CCCCCC',
-    fontSize: 15,
-    lineHeight: 22,
+  historyDeleteBtn: {
+    padding: 4,
   },
 });
 
 export default TaskDetailModal;
+
