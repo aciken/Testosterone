@@ -33,4 +33,5 @@ for (let i = 1; i <= 90; i++) {
   };
 }
 
+export { dailyDos, dailyDonts };
 export default programData;

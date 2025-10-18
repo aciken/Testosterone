@@ -19,7 +19,7 @@ const kickerFontSize = Math.max(14, Math.round(width / 18));
 
 export default function WelcomePage() {
   const router = useRouter();
-  const { isLoading, isAuthenticated, isPro } = useGlobalContext();
+  const { isLoading, isAuthenticated, isPro, isNewUserOnboarding } = useGlobalContext();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const [isSplashFinished, setIsSplashFinished] = useState(false);
@@ -28,7 +28,7 @@ export default function WelcomePage() {
     console.log("isLoading", isLoading);
     console.log("isAuthenticated", isAuthenticated);
     console.log("isPro", isPro);
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && !isNewUserOnboarding) {
       console.log("isPro", isPro);
       if (isPro === true) {
         router.replace('/home');
@@ -36,7 +36,7 @@ export default function WelcomePage() {
         router.replace('/utils/Paywall');
       }
     }
-  }, [isLoading, isAuthenticated, isPro]);
+  }, [isLoading, isAuthenticated, isPro, isNewUserOnboarding]);
 
   useEffect(() => {
     if (isSplashFinished) {

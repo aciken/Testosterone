@@ -5,13 +5,14 @@ import Purchases from 'react-native-purchases';
 
 export default function Paywall() {
   const router = useRouter();
-  const { setIsPro } = useGlobalContext();
+  const { setIsPro, setIsNewUserOnboarding } = useGlobalContext();
 
   const handlePurchaseCompleted = async () => {
     try {
       const customerInfo = await Purchases.getCustomerInfo();
       const isPro = customerInfo?.entitlements?.all?.pro?.isActive ?? false;
       setIsPro(isPro);
+      setIsNewUserOnboarding(false);
       router.replace('/home');
     } catch (error) {
       console.error('Error handling purchase completion:', error);
@@ -24,18 +25,21 @@ export default function Paywall() {
       console.log(info, isPro);
       if (isPro) {
         setIsPro(true);
-        router.replace('/home');
       }
+      setIsNewUserOnboarding(false);
+      router.replace('/home');
     } catch (error) {
       console.error('Error handling restore completion:', error);
     }
   };
 
   const handleCloseButton = () => {
+    setIsNewUserOnboarding(false);
     router.replace('/home');
   }
 
   const handleGoBack = () => {
+    setIsNewUserOnboarding(false);
     router.replace('/home');
   }
 

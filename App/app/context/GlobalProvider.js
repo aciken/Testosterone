@@ -22,6 +22,7 @@ export const GlobalProvider = ({ children }) => {
     const [isPro, setIsPro] = useState(false);
     const [streak, setStreak] = useState(0);
     const [newlyUnlockedAchievement, setNewlyUnlockedAchievement] = useState(null);
+    const [isNewUserOnboarding, setIsNewUserOnboarding] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -113,7 +114,7 @@ export const GlobalProvider = ({ children }) => {
     };  
     
     return (
-    <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure, streak, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement, isPro, setIsPro, isLoading }}>
+    <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure, streak, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement, isPro, setIsPro, isLoading, isNewUserOnboarding, setIsNewUserOnboarding }}>
         {children}
     </GlobalContext.Provider>
 );

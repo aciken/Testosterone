@@ -22,8 +22,6 @@ export default function OnboardingLayout() {
       <Stack.Screen name="question10" options={{ headerShown: false }} />
       <Stack.Screen name="question11" options={{ headerShown: false }} />
       <Stack.Screen name="question12" options={{ headerShown: false }} />
-      <Stack.Screen name="calculating" options={{ headerShown: false }} />
-      <Stack.Screen name="results" options={{ headerShown: false }} />
       <Stack.Screen name="declineInfo" options={{ headerShown: false }} />
       <Stack.Screen name="lessOfMan" options={{ headerShown: false }} />
       <Stack.Screen name="weaknessInfo" options={{ headerShown: false }} />
@@ -33,6 +31,11 @@ export default function OnboardingLayout() {
       <Stack.Screen name="journeyGraph" options={{ headerShown: false }} />
       <Stack.Screen name="transformLife" options={{ headerShown: false }} />
       <Stack.Screen name="createAccount" options={{ headerShown: false }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
+      <Stack.Screen name="dosAndDonts" options={{ headerShown: false }} />
+      <Stack.Screen name="programPreview" options={{ headerShown: false }} />
+      <Stack.Screen name="calculating" options={{ headerShown: false }} />
+      <Stack.Screen name="results" options={{ headerShown: false }} />
     </Stack>
   );
 }

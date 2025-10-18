@@ -14,8 +14,10 @@ const googleAuth = async (req, res) => {
     const { name, email, picture } = ticket.getPayload();
 
     let user = await User.findOne({ email });
+    let isNewUser = false;
 
     if (!user) {
+      isNewUser = true;
       user = new User({
         name: onboardingName || name, // Prioritize onboardingName
         email,
@@ -33,6 +35,7 @@ const googleAuth = async (req, res) => {
       message: 'Authentication successful',
       user: user, // Send the full user object
       token: sessionToken,
+      isNewUser: isNewUser,
     });
   } catch (error) {
     console.error('Google authentication error:', error);

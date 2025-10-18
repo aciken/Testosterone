@@ -24,7 +24,7 @@ const AppleSign = async (req, res) => {
             if (updated) {
                 await user.save();
             }
-            return res.status(200).json(user);
+            return res.status(200).json({ message: 'Login successful', user: user, isNewUser: false });
         } else {
             // User does not exist, create a new account
             // Check if email is already in use by another account type
@@ -43,7 +43,7 @@ const AppleSign = async (req, res) => {
                 dateCreated: new Date(),
             });
 
-            return res.status(201).json(newUser);
+            return res.status(201).json({ message: 'User created', user: newUser, isNewUser: true });
         }
     } catch (error) {
         console.error('Apple Sign-In Error:', error);

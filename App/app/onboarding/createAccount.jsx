@@ -13,7 +13,7 @@ import Purchases from 'react-native-purchases';
 
 export default function CreateAccount() {
   const router = useRouter();
-  const { user, setUser, setIsAuthenticated, setIsPro } = useGlobalContext();
+  const { user, setUser, setIsAuthenticated, setIsPro, setIsNewUserOnboarding } = useGlobalContext();
 
   // 451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com
 
@@ -30,12 +30,18 @@ export default function CreateAccount() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        const userData = response.data;
-        await AsyncStorage.setItem('user', JSON.stringify(userData.user));
-        setUser(userData.user);
+        const { user: userData, isNewUser } = response.data;
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
         setIsAuthenticated(true);
+
+        if (isNewUser) {
+          setIsNewUserOnboarding(true);
+          router.push('/onboarding/welcome');
+          return;
+        }
         
-        // Check RevenueCat for pro status
+        // Check RevenueCat for pro status for existing users
         try {
           const customerInfo = await Purchases.getCustomerInfo();
           const isPro = customerInfo.entitlements.active['pro'] !== undefined;
@@ -85,12 +91,18 @@ export default function CreateAccount() {
       console.log('[AppleSignIn] Response from backend:', JSON.stringify(response.data, null, 2));
 
       if (response.status === 200 || response.status === 201) {
-        const userData = response.data;
+        const { user: userData, isNewUser } = response.data;
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
         setIsAuthenticated(true);
+
+        if (isNewUser) {
+          setIsNewUserOnboarding(true);
+          router.push('/onboarding/welcome');
+          return;
+        }
         
-        // Check RevenueCat for pro status
+        // Check RevenueCat for pro status for existing users
         try {
           const customerInfo = await Purchases.getCustomerInfo();
           const isPro = customerInfo.entitlements.active['pro'] !== undefined;
