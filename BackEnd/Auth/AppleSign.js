@@ -1,7 +1,7 @@
 const User = require('../User/User');
 
 const AppleSign = async (req, res) => {
-    const { appleId, email, name } = req.body;
+    const { appleId, email, name, onboardingName } = req.body;
 
     if (!appleId) {
         return res.status(400).json({ message: 'Apple ID is required' });
@@ -38,7 +38,7 @@ const AppleSign = async (req, res) => {
             const newUser = await User.create({
                 appleId,
                 email, // This can be null, and the schema allows it.
-                name: name || 'User', // Ensure name is not null
+                name: onboardingName || name || 'User', // Prioritize onboardingName
                 isApple: true,
                 dateCreated: new Date(),
             });

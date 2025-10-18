@@ -6,6 +6,7 @@ import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import Purchases from 'react-native-purchases';
 
 const SettingOption = ({ icon, text, onPress, isDestructive }) => (
   <TouchableOpacity 
@@ -22,7 +23,7 @@ const SettingOption = ({ icon, text, onPress, isDestructive }) => (
 );
 
 export default function SettingsScreen() {
-  const { setIsAuthenticated, setUser } = useGlobalContext();
+  const { setIsAuthenticated, setUser, setIsPro } = useGlobalContext();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -37,6 +38,10 @@ export default function SettingsScreen() {
             try {
               setIsAuthenticated(false);
               setUser(null);
+              setIsPro(false);
+              await Purchases.logOut();
+              
+
               await AsyncStorage.removeItem('user');
               router.replace('/'); 
             } catch (e) {

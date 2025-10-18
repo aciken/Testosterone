@@ -9,10 +9,11 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from '../context/GlobalProvider';
+import Purchases from 'react-native-purchases';
 
 export default function CreateAccount() {
   const router = useRouter();
-  const { setUser, setIsAuthenticated } = useGlobalContext();
+  const { user, setUser, setIsAuthenticated, setIsPro } = useGlobalContext();
 
   // 451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com
 
@@ -25,6 +26,7 @@ export default function CreateAccount() {
       
       const response = await axios.post('https://26e4f9703e03.ngrok-free.app/auth/google', {
         token: userInfo.data.idToken,
+        onboardingName: user?.name,
       });
 
       if (response.status === 200 || response.status === 201) {
@@ -32,7 +34,22 @@ export default function CreateAccount() {
         await AsyncStorage.setItem('user', JSON.stringify(userData.user));
         setUser(userData.user);
         setIsAuthenticated(true);
-        router.push('/home');
+        
+        // Check RevenueCat for pro status
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          const isPro = customerInfo.entitlements.active['pro'] !== undefined;
+          setIsPro(isPro);
+          
+          if (isPro) {
+            router.push('/home');
+          } else {
+            router.push('/utils/Paywall');
+          }
+        } catch (error) {
+          console.error("Error checking RevenueCat status:", error);
+          router.push('/utils/Paywall'); // Default to paywall on error
+        }
       } else {
         console.error('Google Sign-In failed:', response.data.message);
       }
@@ -62,6 +79,7 @@ export default function CreateAccount() {
         appleId: user,
         email,
         name,
+        onboardingName: user?.name,
       });
 
       console.log('[AppleSignIn] Response from backend:', JSON.stringify(response.data, null, 2));
@@ -71,7 +89,22 @@ export default function CreateAccount() {
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
         setIsAuthenticated(true);
-        router.push('/home'); 
+        
+        // Check RevenueCat for pro status
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          const isPro = customerInfo.entitlements.active['pro'] !== undefined;
+          setIsPro(isPro);
+          
+          if (isPro) {
+            router.push('/home');
+          } else {
+            router.push('/utils/Paywall');
+          }
+        } catch (error) {
+          console.error("Error checking RevenueCat status:", error);
+          router.push('/utils/Paywall'); // Default to paywall on error
+        }
       } else {
         console.error('Apple Sign-In failed with status:', response.status, response.data.message);
       }

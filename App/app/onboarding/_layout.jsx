@@ -29,10 +29,9 @@ export default function OnboardingLayout() {
       <Stack.Screen name="weaknessInfo" options={{ headerShown: false }} />
       <Stack.Screen name="dietExerciseInfo" options={{ headerShown: false }} />
       <Stack.Screen name="guidanceInfo" options={{ headerShown: false }} />
-      <Stack.Screen name="expertTestimonials" options={{ headerShown: false }} />
-      <Stack.Screen name="journeyGraph" options={{ headerShown: false }} />
       <Stack.Screen name="benefitsGraph" options={{ headerShown: false }} />
-      <Stack.Screen name="programResults" options={{ headerShown: false }} />
+      <Stack.Screen name="journeyGraph" options={{ headerShown: false }} />
+      <Stack.Screen name="transformLife" options={{ headerShown: false }} />
       <Stack.Screen name="createAccount" options={{ headerShown: false }} />
     </Stack>
   );

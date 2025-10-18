@@ -26,7 +26,7 @@ export const GlobalProvider = ({ children }) => {
     useEffect(() => {
         const init = async () => {
             if (API_KEY) {
-                Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+                // Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
                 Purchases.configure({ apiKey: API_KEY });
             }
         };
@@ -113,7 +113,7 @@ export const GlobalProvider = ({ children }) => {
     };  
     
     return (
-    <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure, streak, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement, isPro, setIsPro }}>
+    <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup, selectedAdventure, setSelectedAdventure, streak, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement, isPro, setIsPro, isLoading }}>
         {children}
     </GlobalContext.Provider>
 );

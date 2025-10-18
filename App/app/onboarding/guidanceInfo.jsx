@@ -38,13 +38,13 @@ export default function GuidanceInfo() {
             ))}
           </View>
           <TouchableOpacity 
-            style={styles.button} 
+            style={styles.continueButton} 
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push('/onboarding/expertTestimonials');
+              router.push('/onboarding/transformLife');
             }}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={styles.continueButtonText}>I Understand</Text>
             <Ionicons name="chevron-forward-outline" size={24} color="#000" />
           </TouchableOpacity>
         </View>
@@ -130,5 +130,21 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     backgroundColor: '#000000',
+  },
+  continueButton: {
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 35,
+    borderRadius: 30,
+    width: '100%',
+  },
+  continueButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginRight: 5,
   },
 });
