@@ -33,6 +33,8 @@ export default function OnboardingLayout() {
       <Stack.Screen name="createAccount" options={{ headerShown: false }} />
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="dosAndDonts" options={{ headerShown: false }} />
+      <Stack.Screen name="ranksInfo" options={{ headerShown: false }} />
+      <Stack.Screen name="rankCharacters" options={{ headerShown: false }} />
       <Stack.Screen name="programPreview" options={{ headerShown: false }} />
       <Stack.Screen name="calculating" options={{ headerShown: false }} />
       <Stack.Screen name="results" options={{ headerShown: false }} />

@@ -64,15 +64,16 @@ export default function DosAndDonts() {
   }).current;
 
   return (
-    <LinearGradient colors={['#100C06', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#2A1A0A', '#1A1108', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>The Path to Power</Text>
+          <Text style={styles.headerTitle}>Increase Testosterone</Text>
           <Text style={styles.headerSubtitle}>Swipe to discover key habits</Text>
         </View>
 
         <View style={styles.contentContainer}>
           <Animated.FlatList
+            style={{ height: height * 0.55 }} // This centers the carousel
             data={[{id: 'left-spacer'}, ...habits, {id: 'right-spacer'}]}
             renderItem={({ item, index }) => {
               if (item.id === 'left-spacer' || item.id === 'right-spacer') return <View style={{ width: SPACING }} />;
@@ -92,9 +93,20 @@ export default function DosAndDonts() {
 
         <View style={styles.footer}>
           <View style={styles.dotsContainer}>
-            {allHabits.map((_, index) => (
-              <View key={index} style={[styles.dot, index === currentIndex ? styles.activeDot : {}]} />
-            ))}
+            {allHabits.map((_, index) => {
+              const isActive = index === currentIndex;
+              const isOneOfTheLastThree = index >= allHabits.length - 3;
+              return (
+                <View 
+                  key={index} 
+                  style={[
+                    styles.dot, 
+                    isActive ? styles.activeDot : {},
+                    buttonVisible && isOneOfTheLastThree && !isActive ? styles.futureDot : {}
+                  ]} 
+                />
+              );
+            })}
           </View>
           {buttonVisible &&
             <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
@@ -102,7 +114,7 @@ export default function DosAndDonts() {
                 style={styles.continueButton} 
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  router.push('/onboarding/programPreview');
+                  router.push('/onboarding/ranksInfo');
                 }}
               >
                 <Text style={styles.continueButtonText}>I Want More</Text>
@@ -117,22 +129,19 @@ export default function DosAndDonts() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1 },
+  safeArea: { flex: 1, justifyContent: 'space-around' },
   header: { 
     alignItems: 'center', 
-    paddingTop: 20, 
-    paddingBottom: 10 
+    paddingHorizontal: 20,
   },
   headerTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: 'bold' },
   headerSubtitle: { color: 'rgba(255, 255, 255, 0.5)', fontSize: 16, marginTop: 4 },
   contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    // This container now just holds the list, centering is handled by the safeArea
   },
   cardContainer: {
     width: CARD_WIDTH,
-    height: height * 0.55,
+    height: height * 0.5, // Reduced height for better centering
     borderRadius: 30,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -172,10 +181,11 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   footer: { 
-    height: 120, // Fixed height for the footer area
+    minHeight: 120, // Use minHeight to ensure space for the button
     justifyContent: 'center', 
     alignItems: 'center', 
-    paddingBottom: 20 
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
   dotsContainer: {
     flexDirection: 'row',
@@ -191,6 +201,9 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: '#FFFFFF',
     width: 24,
+  },
+  futureDot: {
+    backgroundColor: 'rgba(248, 113, 113, 0.5)',
   },
   continueButton: {
     backgroundColor: '#FFFFFF',
