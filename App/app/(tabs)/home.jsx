@@ -298,63 +298,6 @@ export default function HomeScreen() {
       }
       
       sendTaskUpdate(saveData);
-      checkAndTriggerStreakNotification(saveData);
-    }
-  };
-
-  const checkAndTriggerStreakNotification = async (taskData) => {
-    if (!taskData) return;
-
-    const { id, progress } = taskData;
-    const taskInfo = [...programData[1].dos, ...programData[1].donts].find(t => t.id === id);
-    if (!taskInfo) return;
-
-    // Use a simple progress check: > 0 for dos, any progress for donts is a "break" but we notify on action
-    const isSuccess = taskInfo.type === 'do' ? progress > 0 : progress > 0;
-    if (!isSuccess) return;
-
-    try {
-      const userString = await AsyncStorage.getItem('user');
-      if (!userString) return;
-
-      const user = JSON.parse(userString);
-      const userTasks = user.tasks || [];
-
-      // Filter for logs of this specific task
-      const taskLogs = userTasks.filter(t => t.taskId === id);
-
-      const successTimestamps = new Set();
-      taskLogs.forEach(log => {
-        // Here we just check if a task exists for a day, assuming any entry is a success for streak purposes
-        const date = new Date(log.date);
-        date.setHours(0, 0, 0, 0);
-        successTimestamps.add(date.getTime());
-      });
-      
-      let streak = 0;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Add today's success to the set for calculation
-      successTimestamps.add(today.getTime());
-
-      let currentDate = new Date(today);
-      
-      while (successTimestamps.has(currentDate.getTime())) {
-        streak++;
-        currentDate.setDate(currentDate.getDate() - 1);
-      }
-      
-      if (streak > 0) {
-        setNotification({
-          title: streak === 1 ? 'Streak Started!' : 'Streak Growing!',
-          message: taskInfo.task,
-          streakCount: streak,
-          icon: taskIcons[id],
-        });
-      }
-    } catch (error) {
-      console.error("Failed to check streak:", error);
     }
   };
 
@@ -384,10 +327,22 @@ export default function HomeScreen() {
             setUser(updatedUserFromServer); // Update context with the fresh user object
           }
 
-          // Update streak from server response
-          if (typeof response.data.streak === 'number') {
-            const newStreak = response.data.streak;
-            setStreak(newStreak);
+          // Update streak from server response and show notification if flagged
+          if (response.data.showStreakNotification && response.data.streak && typeof response.data.streak.count === 'number' && response.data.streak.count > 0) {
+            const streakData = response.data.streak;
+            const newStreakCount = streakData.count;
+            
+            // Find task info for the notification message
+            const taskInfo = [...programData[1].dos, ...programData[1].donts].find(t => t.id === streakData.taskId);
+
+            if (taskInfo) {
+              setNotification({
+                title: newStreakCount === 1 ? 'Streak Started!' : 'Streak Growing!',
+                message: taskInfo.task,
+                streakCount: newStreakCount,
+                icon: taskIcons[streakData.taskId],
+              });
+            }
           }
 
           // Check for newly unlocked achievements

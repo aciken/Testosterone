@@ -39,6 +39,15 @@ const userSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    streaks: {
+        type: Map,
+        of: {
+            currentStreak: { type: Number, default: 0 },
+            lastUpdate: { type: Date },
+            lastNotificationDate: { type: Date }
+        },
+        default: {}
+    },
     tasks: [taskSchema],
 });
 

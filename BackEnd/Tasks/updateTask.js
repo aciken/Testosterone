@@ -1,14 +1,31 @@
 const User = require('../User/User');
-const { checkAndAwardAchievements, calculateConsecutiveDays } = require('../Auth/achievementChecker');
+const { checkAndAwardAchievements, calculateStreakForTask } = require('../Auth/achievementChecker');
+
+// This helper function is now redundant as the logic is in achievementChecker.js
+// We will use isTaskQualifyingForStreak from there, but need to check the incoming task body format.
+function isTaskUpdateQualifying(task) {
+  if (!task) return false;
+
+  switch (task.id) {
+    case '1': // Sun Exposure
+      return task.progress >= 50;
+    case '2': // Weight Training
+      return task.progress > 0;
+    case '3': // Eat a meal
+      return task.progress >= 75;
+    case '4': // Sleep
+      return task.progress >= 87.5;
+    case '5': // Supplements
+      return task.checked && task.checked.length === 4;
+    default:
+      return false;
+  }
+}
 
 const updateTask = async (req, res) => {
   const { userId, date, task, dailyNgDl } = req.body;
 
-  if (!userId) {
-    return res.status(400).json({ message: 'User ID is required.' });
-  }
-
-  if (!date || !task || !task.id) {
+  if (!userId || !date || !task || !task.id) {
     return res.status(400).send('Missing required fields.');
   }
 
@@ -28,16 +45,13 @@ const updateTask = async (req, res) => {
     if (existingTaskIndex > -1) {
       // Update existing task
       const taskToUpdate = user.tasks[existingTaskIndex];
-
+      
       if (task.id === '3') { // meals task
-        // For meals, we add to history and update progress to be the sum
-        if (!taskToUpdate.history) {
-          taskToUpdate.history = [];
-        }
-        taskToUpdate.history.push({ value: task.progress, description: task.description });
-        taskToUpdate.progress = taskToUpdate.history.reduce((sum, entry) => sum + entry.value, 0);
+        if (!taskToUpdate.history) taskToUpdate.history = [];
+        taskToUpdate.history.push({ value: task.progress, description: task.description, timestamp: new Date() });
+        // Recalculate progress based on the full history
+        taskToUpdate.progress = taskToUpdate.history.reduce((sum, entry) => sum + (entry.value < 50 ? -(100 - entry.value) : entry.value), 0);
       } else {
-        // For other tasks, we overwrite
         taskToUpdate.progress = task.progress;
       }
 
@@ -51,33 +65,65 @@ const updateTask = async (req, res) => {
         date: taskDate,
         progress: task.progress,
       };
-
-      if (task.id === '3') { // meals task
-        newTask.history = [{ value: task.progress, description: task.description }];
+      if (task.id === '3') {
+        newTask.history = [{ value: task.progress, description: task.description, timestamp: new Date() }];
       }
-
       if (task.checked) {
         newTask.checked = task.checked;
       }
       user.tasks.push(newTask);
     }
-
+    
     user.markModified('tasks');
+
+    // --- New Per-Task Streak Logic ---
+    console.log(`[Streak Debug] --- Starting streak check for task: ${task.id} ---`);
+    const isQualifying = isTaskUpdateQualifying(task);
+    console.log(`[Streak Debug] Is task update qualifying? ${isQualifying}`);
+
+    const newStreakCount = calculateStreakForTask(user.tasks, task.id);
+    console.log(`[Streak Debug] Calculated new streak count: ${newStreakCount}`);
+    
+    let showStreakNotification = false;
+    const today = new Date().toDateString();
+    console.log(`[Streak Debug] Today's date string: ${today}`);
+
+    // Get the streak data for the current task from the map
+    const taskStreakData = user.streaks.get(task.id) || {
+      currentStreak: 0,
+      lastUpdate: null,
+      lastNotificationDate: null
+    };
+
+    const lastNotificationDate = taskStreakData.lastNotificationDate ? new Date(taskStreakData.lastNotificationDate).toDateString() : null;
+    console.log(`[Streak Debug] Last notification date string: ${lastNotificationDate}`);
+
+    const shouldShowNotification = isQualifying && newStreakCount > 0 && today !== lastNotificationDate;
+    console.log(`[Streak Debug] Should show notification? ${shouldShowNotification} (isQualifying: ${isQualifying}, newStreakCount: ${newStreakCount}, today !== lastNotificationDate: ${today !== lastNotificationDate})`);
+
+    if (shouldShowNotification) {
+      showStreakNotification = true;
+      taskStreakData.lastNotificationDate = new Date();
+    }
+    
+    taskStreakData.currentStreak = newStreakCount;
+    taskStreakData.lastUpdate = new Date();
+    user.streaks.set(task.id, taskStreakData);
+    user.markModified('streaks');
+    
     await user.save();
 
-    // Check for new achievements
-    console.log(`[updateTask] Triggering achievement check for userId: ${userId}`);
+    // Check for new achievements (which no longer handles streaks)
     const achievementResult = await checkAndAwardAchievements(userId, dailyNgDl);
-    console.log('[updateTask] Achievement check result:', JSON.stringify(achievementResult, null, 2));
 
-    // Fetch the user again to get the most up-to-date document after modifications
     const updatedUser = await User.findById(userId);
 
     res.status(200).send({
       message: 'Task updated successfully.',
-      user: updatedUser, // Send the full updated user object back
+      user: updatedUser,
       newAchievements: achievementResult ? achievementResult.newAchievements : [],
-      streak: achievementResult ? achievementResult.streak : 0,
+      streak: { taskId: task.id, count: newStreakCount }, // Send task-specific streak
+      showStreakNotification,
     });
   } catch (error) {
     console.error('Error updating task:', error);

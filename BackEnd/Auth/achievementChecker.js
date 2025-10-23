@@ -36,7 +36,7 @@ function calculateSleepDays(tasks) {
   }
   
   // The task 'Sleep' has id: '4'. A good sleep is considered >= 7 hours.
-  const sleepTaskLogs = tasks.filter(t => t.taskId === '4' && t.progress >= 7);
+  const sleepTaskLogs = tasks.filter(t => t.taskId === '4' && t.progress >= 87.5);
   
   const uniqueDays = new Set();
   sleepTaskLogs.forEach(task => {
@@ -47,14 +47,38 @@ function calculateSleepDays(tasks) {
   return uniqueDays.size;
 }
 
-function calculateConsecutiveDays(tasks) {
+/**
+ * Checks if a task is "meaningfully completed" to qualify for advancing a streak.
+ * @param {object} task - The task object from the database.
+ * @returns {boolean} - True if the task qualifies for a streak.
+ */
+function isTaskQualifyingForStreak(task) {
+  if (!task) return false;
+
+  switch (task.taskId) {
+    case '1': // Sun Exposure: Must be at least 15 minutes (goal is 30, so 50% progress)
+      return task.progress >= 50;
+    case '2': // Weight Training: Any progress counts.
+      return task.progress > 0;
+    case '3': // Eat a meal: Must have at least one healthy meal (score >= 75)
+      return task.history && task.history.some(meal => meal.value >= 75);
+    case '4': // Sleep: Must be at least 7 hours (goal is 8, so >= 87.5% progress)
+      return task.progress >= 87.5;
+    case '5': // Supplements: All 4 must be checked.
+      return task.checked && task.checked.length === 4;
+    default:
+      return false;
+  }
+}
+
+function calculateStreakForTask(tasks, taskId) {
   if (!tasks || tasks.length === 0) {
     return 0;
   }
 
-  // Filter for tasks with progress and sort by date descending
+  // Filter for tasks that are for the specific taskId, are meaningfully completed, and sort by date descending
   const sortedTasks = tasks
-    .filter(t => t.progress > 0 || (t.checked && t.checked.length > 0))
+    .filter(t => t.taskId === taskId && isTaskQualifyingForStreak(t))
     .map(t => new Date(t.date))
     .sort((a, b) => b - a);
     
@@ -168,14 +192,12 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
 
 
     const newAchievements = [];
-    const streak = calculateConsecutiveDays(user.tasks);
     const exerciseDays = calculateExerciseDays(user.tasks);
     const totalSunMinutes = calculateTotalSunExposure(user.tasks);
     const sleepDays = calculateSleepDays(user.tasks);
     const dietDays = calculateDietDays(user.tasks);
     const supplementationDays = calculateSupplementationDays(user.tasks);
     const currentTScore = calculateCurrentTScore(user);
-    console.log(`[achievementChecker] Calculated streak: ${streak}`);
     console.log(`[achievementChecker] Calculated exercise days: ${exerciseDays}`);
     console.log(`[achievementChecker] Calculated total sun exposure: ${totalSunMinutes} minutes`);
     console.log(`[achievementChecker] Calculated sleep days: ${sleepDays}`);
@@ -184,12 +206,11 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
     for (const key in achievements) {
       const achievement = achievements[key];
 
-      // Handle streak-based achievements
+      // Handle streak-based achievements - NOTE: This might need adjustment with per-task streaks
       if (achievement.criteria.type === 'streak') {
-        if (streak >= achievement.criteria.days && !user.unlockedAchievements.includes(achievement.id)) {
-          user.unlockedAchievements.push(achievement.id);
-          newAchievements.push(achievement);
-        }
+        // This logic is now likely incorrect as streaks are per-task.
+        // For now, this part of the check is effectively disabled.
+        // A new mechanism will be needed if global streak achievements are desired.
       }
 
       // Handle the "first task" achievement
@@ -305,11 +326,11 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
     }
     
     console.log('[achievementChecker] --- Finished checking. New achievements found:', JSON.stringify(newAchievements, null, 2));
-    return { newAchievements, streak, exerciseDays, totalSunMinutes, sleepDays, dietDays, supplementationDays };
+    return { newAchievements, exerciseDays, totalSunMinutes, sleepDays, dietDays, supplementationDays };
   } catch (error) {
     console.error('Error checking achievements:', error);
     return null;
   }
 };
 
-module.exports = { checkAndAwardAchievements, calculateConsecutiveDays };
+module.exports = { checkAndAwardAchievements, calculateStreakForTask, isTaskQualifyingForStreak };
