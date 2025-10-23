@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#8A95B6',
+    color: 'rgba(255, 255, 255, 0.7)', // Changed from bluish color
     textAlign: 'center',
     marginBottom: 40,
     paddingHorizontal: 10,

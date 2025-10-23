@@ -35,8 +35,8 @@ function calculateSleepDays(tasks) {
     return 0;
   }
   
-  // The task 'Sleep' has id: '3' (assuming this is the sleep task ID)
-  const sleepTaskLogs = tasks.filter(t => t.taskId === '3' && (t.progress > 0 || (t.checked && t.checked.length > 0)));
+  // The task 'Sleep' has id: '4'. A good sleep is considered >= 7 hours.
+  const sleepTaskLogs = tasks.filter(t => t.taskId === '4' && t.progress >= 7);
   
   const uniqueDays = new Set();
   sleepTaskLogs.forEach(task => {
@@ -116,6 +116,44 @@ function calculateConsecutiveDays(tasks) {
   return streak;
 }
 
+const calculateDietDays = (tasks) => {
+  const uniqueDays = new Set();
+  const healthyMealThreshold = 75; // Score for a meal to be considered healthy
+
+  if (tasks && tasks.length > 0) {
+    tasks.forEach(task => {
+      // Check for a meal task
+      if (task.taskId === '3' && task.history && task.history.length > 0) {
+        // Check if there is at least one healthy meal on this day
+        const hasHealthyMeal = task.history.some(meal => meal.value >= healthyMealThreshold);
+        
+        if (hasHealthyMeal) {
+          // Use the task's main date, as individual meals don't have timestamps
+          const date = new Date(task.date).toISOString().split('T')[0];
+          uniqueDays.add(date);
+        }
+      }
+    });
+  }
+  return uniqueDays.size;
+};
+
+function calculateSupplementationDays(tasks) {
+  const uniqueDays = new Set();
+  if (tasks && tasks.length > 0) {
+    // The task 'Take your supplements' has id: '5'
+    const supplementationTasks = tasks.filter(t => t.taskId === '5');
+
+    supplementationTasks.forEach(task => {
+      // A day is complete if the 'checked' array contains all 4 supplement IDs.
+      if (task.checked && task.checked.length === 4) {
+        const date = new Date(task.date).toISOString().split('T')[0];
+        uniqueDays.add(date);
+      }
+    });
+  }
+  return uniqueDays.size;
+}
 
 const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
   try {
@@ -134,6 +172,8 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
     const exerciseDays = calculateExerciseDays(user.tasks);
     const totalSunMinutes = calculateTotalSunExposure(user.tasks);
     const sleepDays = calculateSleepDays(user.tasks);
+    const dietDays = calculateDietDays(user.tasks);
+    const supplementationDays = calculateSupplementationDays(user.tasks);
     const currentTScore = calculateCurrentTScore(user);
     console.log(`[achievementChecker] Calculated streak: ${streak}`);
     console.log(`[achievementChecker] Calculated exercise days: ${exerciseDays}`);
@@ -231,6 +271,32 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
           newAchievements.push(achievement);
         }
       }
+
+      // Handle diet achievements
+      if (achievement.criteria.type === 'diet') {
+        console.log(`[achievementChecker] Checking 'diet' achievement: ${achievement.name}`);
+        const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
+        console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
+        
+        if (dietDays >= achievement.criteria.days && !hasUnlocked) {
+          console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
+          user.unlockedAchievements.push(achievement.id);
+          newAchievements.push(achievement);
+        }
+      }
+
+      // Handle supplementation achievements
+      if (achievement.criteria.type === 'supplementation') {
+        console.log(`[achievementChecker] Checking 'supplementation' achievement: ${achievement.name}`);
+        const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
+        console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
+        
+        if (supplementationDays >= achievement.criteria.days && !hasUnlocked) {
+          console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
+          user.unlockedAchievements.push(achievement.id);
+          newAchievements.push(achievement);
+        }
+      }
     }
 
     if (newAchievements.length > 0) {
@@ -239,7 +305,7 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
     }
     
     console.log('[achievementChecker] --- Finished checking. New achievements found:', JSON.stringify(newAchievements, null, 2));
-    return { newAchievements, streak, exerciseDays };
+    return { newAchievements, streak, exerciseDays, totalSunMinutes, sleepDays, dietDays, supplementationDays };
   } catch (error) {
     console.error('Error checking achievements:', error);
     return null;

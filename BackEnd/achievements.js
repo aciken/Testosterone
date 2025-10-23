@@ -58,7 +58,7 @@ const achievements = {
     description: 'Complete 10 days of exercise.',
     criteria: {
       type: 'exercise',
-      days: 1,
+      days: 10,
     },
   },
   '10': {
@@ -112,7 +112,7 @@ const achievements = {
     description: 'Complete 10 days of sleep.',
     criteria: {
       type: 'sleep',
-      days: 1,
+      days: 10,
     },
   },
   '16': {
@@ -130,6 +130,60 @@ const achievements = {
     description: 'Complete 60 days of sleep.',
     criteria: {
       type: 'sleep',
+      days: 60,
+    },
+  },
+  '18': {
+    id: '18',
+    name: 'Diet Bronze',
+    description: 'Complete 10 days of healthy diet',
+    criteria: {
+      type: 'diet',
+      days: 10,
+    },
+  },
+  '19': {
+    id: '19',
+    name: 'Diet Gold',
+    description: 'Complete 30 days of healthy diet',
+    criteria: {
+      type: 'diet',
+      days: 30,
+    },
+  },
+  '20': {
+    id: '20',
+    name: 'Diet Diamond',
+    description: 'Complete 60 days of healthy diet',
+    criteria: {
+      type: 'diet',
+      days: 60,
+    },
+  },
+  '21': {
+    id: '21',
+    name: 'Supplementation Bronze',
+    description: 'Complete 10 days of taking supplements',
+    criteria: {
+      type: 'supplementation',
+      days: 10,
+    },
+  },
+  '22': {
+    id: '22',
+    name: 'Supplementation Gold',
+    description: 'Complete 30 days of taking supplements',
+    criteria: {
+      type: 'supplementation',
+      days: 30,
+    },
+  },
+  '23': {
+    id: '23',
+    name: 'Supplementation Diamond',
+    description: 'Complete 60 days of taking supplements',
+    criteria: {
+      type: 'supplementation',
       days: 60,
     },
   },

@@ -126,20 +126,7 @@ const JourneyGraph = () => {
             <AnimatedCircle cx="340" cy="40" r="6" fill="#FF5733" opacity={orangeDotAnim} />
 
             {/* Labels */}
-            <G x="220" y="165">
-                <Rect x="-10" y="-15" width="140" height="24" rx="12" fill="rgba(217, 4, 41, 0.3)" />
-                <SvgText fill="#FFFFFF" fontSize="12" fontWeight="bold">Conventional Methods</SvgText>
-            </G>
-
-            <G x="250" y="25">
-                <Rect x="-10" y="-15" width="100" height="24" rx="12" fill="rgba(255, 87, 51, 0.3)" />
-                <SvgText fill="#FFFFFF" fontSize="12" fontWeight="bold">With Boost</SvgText>
-            </G>
             
-            {/* Axis Labels */}
-            <SvgText x="30" y={graphHeight - 5} fill="#8A95B6" fontSize="12">Week 1</SvgText>
-            <SvgText x={graphWidth / 2 - 20} y={graphHeight - 5} fill="#8A95B6" fontSize="12">Week 6</SvgText>
-            <SvgText x={graphWidth - 60} y={graphHeight - 5} fill="#8A95B6" fontSize="12">Week 12</SvgText>
           </Svg>
           <AnimatedImage
             source={require('../../assets/RocketImage2.png')}
@@ -169,6 +156,21 @@ const JourneyGraph = () => {
                 }
             ]}
           />
+          <View style={[styles.graphLabel, { top: 5, right: 20 }]}>
+            <View style={[styles.labelDot, { backgroundColor: '#FF5733' }]} />
+            <Text style={styles.graphLabelText}>With Boost</Text>
+          </View>
+          <View style={[styles.graphLabel, { bottom: 30, right: 0 }]}>
+            <View style={[styles.labelDot, { backgroundColor: '#E53935' }]} />
+            <Text style={styles.graphLabelText}>Conventional Methods</Text>
+          </View>
+        </View>
+
+        {/* Labels for the x-axis */}
+        <View style={styles.labelsContainer}>
+          <Text style={styles.labelText}>Day 1</Text>
+          <Text style={styles.labelText}>Day 60</Text>
+          <Text style={styles.labelText}>Day 90</Text>
         </View>
       </View>
 
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#8A95B6',
+    color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
     marginBottom: 40,
   },
@@ -220,6 +222,28 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: -25, // Center the image on the path
     top: -25, // Center the image on the path
+  },
+  graphLabel: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  labelDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  graphLabelText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   footer: {
     paddingHorizontal: 20,
@@ -251,6 +275,16 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     backgroundColor: '#FFFFFF',
+  },
+  labelsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: graphWidth,
+    marginTop: -15, // Moved up even more
+  },
+  labelText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
   },
 });
 

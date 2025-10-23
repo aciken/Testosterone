@@ -6,11 +6,44 @@ import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 
 const ranksData = [
-  { name: 'Bronze', characterImage: require('../../assets/BroneGuy.png'), badgeImage: require('../../assets/BronzeRank.png'), color: '#E6A66A' },
-  { name: 'Silver', characterImage: require('../../assets/SilverGuy.png'), badgeImage: require('../../assets/SilverRank.png'), color: '#C0C0C0' },
-  { name: 'Gold', characterImage: require('../../assets/GoldGuy.png'), badgeImage: require('../../assets/GoldRank.png'), color: '#FFD700' },
-  { name: 'Diamond', characterImage: require('../../assets/DiamondGuy.png'), badgeImage: require('../../assets/DiamondRank.png'), color: '#E5E4E2' },
+  { name: 'Bronze', minScore: 250, characterImage: require('../../assets/BroneGuy.png'), badgeImage: require('../../assets/BronzeRank.png'), color: '#E6A66A' },
+  { name: 'Silver', minScore: 351, characterImage: require('../../assets/SilverGuy.png'), badgeImage: require('../../assets/SilverRank.png'), color: '#C0C0C0' },
+  { name: 'Gold', minScore: 601, characterImage: require('../../assets/GoldGuy.png'), badgeImage: require('../../assets/GoldRank.png'), color: '#FFD700' },
+  { name: 'Diamond', minScore: 751, characterImage: require('../../assets/DiamondGuy.png'), badgeImage: require('../../assets/DiamondRank.png'), color: '#E5E4E2' },
 ];
+
+const ScoreProgressBar = ({ score, maxScore = 1000 }) => {
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: (score / maxScore) * 100,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+  }, [score]);
+
+  const widthInterpolation = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={styles.progressContainer}>
+      <Text style={styles.scoreText}>{score} ng/dl</Text>
+      <View style={styles.progressBar}>
+        <Animated.View style={[styles.progressFill, { width: widthInterpolation }]}>
+          <LinearGradient
+            colors={['#FFD700', '#FFA500']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.progressGradient}
+          />
+        </Animated.View>
+      </View>
+    </View>
+  );
+};
 
 const RankBadge = ({ badgeImage, isActive, index, rankColor }) => {
   const scaleAnim = useRef(new Animated.Value(isActive ? 1.2 : 1)).current;
@@ -97,16 +130,19 @@ export default function RankCharacters() {
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.navButton} onPress={() => cycleRank(-1)}>
-            <Text style={styles.navButtonText}>Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => cycleRank(1)}>
-            <LinearGradient colors={['#FFC300', '#FF8C00']} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={styles.continueButton}>
-              <Text style={styles.continueButtonText}>
-                {currentIndex === ranksData.length - 1 ? "Start" : "Next"}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          <ScoreProgressBar score={ranksData[currentIndex].minScore} />
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.navButton} onPress={() => cycleRank(-1)}>
+              <Text style={styles.navButtonText}>Back</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => cycleRank(1)}>
+              <LinearGradient colors={['#FFC300', '#FF8C00']} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={styles.continueButton}>
+                <Text style={styles.continueButtonText}>
+                  {currentIndex === ranksData.length - 1 ? "Start" : "Next"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -141,7 +177,7 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'contain',
     position: 'absolute',
-    bottom: '25%',
+    bottom: '15%',
     zIndex: 10,
   },
   portalImage: {
@@ -149,7 +185,7 @@ const styles = StyleSheet.create({
     height: '50%',
     resizeMode: 'contain',
     position: 'absolute',
-    bottom: '10%',
+    bottom: '-3%',
     zIndex: 1,
   },
   badgesColumn: {
@@ -174,11 +210,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
   },
   footer: {
+    paddingHorizontal: 30,
+    paddingVertical: 20,
+  },
+  progressContainer: {
+    marginBottom: 20,
+  },
+  scoreText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+  },
+  progressGradient: {
+    flex: 1,
+    shadowColor: '#FFA500',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 5,
+  },
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 30,
-    paddingVertical: 20,
   },
   navButton: {
     paddingVertical: 18,

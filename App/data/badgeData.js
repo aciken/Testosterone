@@ -16,7 +16,12 @@ export const allBadges = [
     { id: '15', name: 'Sleep Bronze', image: require('../assets/SleepBronze.png'), unlocked: false, description: 'Complete 10 days of sleep.', primaryColor: '#1F1F1F', secondaryColor: '#854d0e', glowColor: '#fb923c' },
     { id: '16', name: 'Sleep Gold', image: require('../assets/SleepGold.png'), unlocked: false, description: 'Complete 30 days of sleep.', primaryColor: '#1F1F1F', secondaryColor: '#eab308', glowColor: '#fde68a' },
     { id: '17', name: 'Sleep Diamond', image: require('../assets/SleepDiamond.png'), unlocked: false, description: 'Complete 60 days of sleep.', primaryColor: '#1F1F1F', secondaryColor: '#075985', glowColor: '#0ea5e9' },
-
+    { id: '18', name: 'Diet Bronze', image: require('../assets/FoodBronze.png'), unlocked: false, description: 'Complete 10 days of healthy diet', primaryColor: '#1F1F1F', secondaryColor: '#854d0e', glowColor: '#fb923c' },
+    { id: '19', name: 'Diet Gold', image: require('../assets/FoodGold.png'), unlocked: false, description: 'Complete 30 days of healthy diet', primaryColor: '#1F1F1F', secondaryColor: '#eab308', glowColor: '#fde68a' },
+    { id: '20', name: 'Diet Diamond', image: require('../assets/FoodDiamond.png'), unlocked: false, description: 'Complete 60 days of healthy diet', primaryColor: '#1F1F1F', secondaryColor: '#075985', glowColor: '#0ea5e9' },
+    { id: '21', name: 'Supplementation Bronze', image: require('../assets/SupplementsBronze.png'), unlocked: false, description: 'Complete 10 days of taking supplements', primaryColor: '#1F1F1F', secondaryColor: '#854d0e', glowColor: '#fb923c' },
+    { id: '22', name: 'Supplementation Gold', image: require('../assets/SupplementsGold.png'), unlocked: false, description: 'Complete 30 days of taking supplements', primaryColor: '#1F1F1F', secondaryColor: '#eab308', glowColor: '#fde68a' },
+    { id: '23', name: 'Supplementation Diamond', image: require('../assets/SupplementsDiamond.png'), unlocked: false, description: 'Complete 60 days of taking supplements', primaryColor: '#1F1F1F', secondaryColor: '#075985', glowColor: '#0ea5e9' },
 
 
 ]
