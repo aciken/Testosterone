@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv').config();
 
-mongoose.connect('mongodb://localhost:27017/Testosterone')
-    .then(() => console.log('mongodb://localhost:27017/Testosterone'))
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.log(err));
 
 const taskSchema = new mongoose.Schema({

@@ -24,7 +24,7 @@ export default function CreateAccount() {
       console.log('Google User Info:', userInfo);
       console.log(userInfo.data.idToken)
       
-      const response = await axios.post('https://26e4f9703e03.ngrok-free.app/auth/google', {
+      const response = await axios.post('https://testosterone.onrender.com/auth/google', {
         token: userInfo.data.idToken,
         onboardingName: user?.name,
       });
@@ -81,7 +81,7 @@ export default function CreateAccount() {
       const name = fullName ? `${fullName.givenName} ${fullName.familyName}` : 'User';
       
       console.log(`[AppleSignIn] Sending to backend: appleId=${user}, email=${email}, name=${name}`);
-      const response = await axios.post('https://26e4f9703e03.ngrok-free.app/auth/apple', {
+      const response = await axios.post('https://testosterone.onrender.com/auth/apple', {
         appleId: user,
         email,
         name,

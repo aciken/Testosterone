@@ -317,7 +317,7 @@ export default function HomeScreen() {
         };
         console.log(updatePayload)
 
-        const response = await axios.post('https://26e4f9703e03.ngrok-free.app/tasks/update', updatePayload);
+        const response = await axios.post('https://testosterone.onrender.com/tasks/update', updatePayload);
 
         if (response.data) {
           // The server now sends back the full user object, which is the source of truth

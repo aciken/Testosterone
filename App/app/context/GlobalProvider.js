@@ -66,7 +66,7 @@ export const GlobalProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post('https://0ba0-109-245-204-138.ngrok-free.app/signin', { email, password });
+            const response = await axios.post('https://testosterone.onrender.com/signin', { email, password });
             if(response.status === 200) {
                 await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
                 setIsAuthenticated(true);   
