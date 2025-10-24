@@ -1,6 +1,6 @@
 const programData = require('../data/programData');
 
-const BASELINE_TESTOSTERONE = 800;
+const BASELINE_TESTOSTERONE = 290;
 
 function calculateCurrentTScore(user) {
     if (!user || !user.tasks || user.tasks.length === 0) {

@@ -14,7 +14,7 @@ import { allBadges } from '../../data/badgeData';
 import { useGlobalContext } from '../context/GlobalProvider';
 
 const screenWidth = Dimensions.get('window').width;
-const BASELINE_TESTOSTERONE = 300;
+const BASELINE_TESTOSTERONE = 290;
 
 const ranks = [
     { name: 'Bronze', minScore: 250, maxScore: 350, image: require('../../assets/BronzeRank.png'), color: '#E6A66A' },

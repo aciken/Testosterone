@@ -39,9 +39,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
       <GlobalProvider>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#000000' } }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
           <Stack.Screen name="allBadges" options={{ headerShown: false }} />
           <Stack.Screen name="badgeDetails" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="rankTimeline" options={{ headerShown: false }} />
@@ -54,7 +54,7 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="modal" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" />
           <Stack.Screen
             name="utils/Paywall"
             options={{
