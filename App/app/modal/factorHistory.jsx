@@ -8,21 +8,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import programData from '../../data/programData';
 import { taskIcons } from '../../data/icons';
 
-const getDisplayValue = (task, progress) => {
-    if (!task) return `${progress}%`;
+const getDisplayValue = (task, loggedTask) => {
+    if (!task) return `${loggedTask.progress}%`;
 
     switch (task.type) {
         case 'slider':
-            const value = (progress / 100) * task.goal;
+            const value = (loggedTask.progress / 100) * task.goal;
             const roundedValue = Math.round(value / task.step) * task.step;
             const finalValue = Number.isInteger(roundedValue) ? roundedValue : roundedValue.toFixed(1);
             return `${finalValue}${task.unit ? ` ${task.unit}` : ''}`;
+        case 'checklist':
+            const takenCount = loggedTask.checked ? loggedTask.checked.length : 0;
+            return `${takenCount} of 4`;
         case 'simple':
         case 'meals':
-        case 'checklist':
-            return progress >= 95 ? 'Completed' : 'Incomplete';
+            return loggedTask.progress >= 95 ? 'Completed' : 'Incomplete';
         default:
-            return `${progress}%`;
+            return `${loggedTask.progress}%`;
     }
 };
 
@@ -114,7 +116,7 @@ export default function FactorHistoryModal() {
                         else if (loggedTask.progress > 5) status = 'partial';
                         else status = 'missed';
                     }
-                    displayValue = getDisplayValue(foundTask, loggedTask.progress);
+                    displayValue = getDisplayValue(foundTask, loggedTask);
                 }
                 
                 fullHistory.push({
@@ -151,8 +153,8 @@ export default function FactorHistoryModal() {
             {isLoading ? <ActivityIndicator size="large" color="#FFFFFF" />
             : history && history.length > 0 ? (
                 <ScrollView contentContainerStyle={styles.historyList}>
-                    {history.map(item => (
-                        <HistoryItem key={item.key} {...item} />
+                    {history.map(({ key, ...rest }) => (
+                        <HistoryItem key={key} {...rest} />
                     ))}
                 </ScrollView>
             ) : (

@@ -146,9 +146,14 @@ const RocketAnimation = ({ onAnimationFinish }) => {
       {stars}
       
       <Animated.View style={[styles.contentContainer, { transform: [{ translateY: hoverAnim }] }]}>
-        <Animated.View style={[styles.glow, { opacity: glowOpacity }]} />
+        <Animated.View style={[styles.glow, { opacity: glowOpacity }]}>
+          <LinearGradient
+            colors={['#d97706', '#f59e0b']}
+            style={styles.gradient}
+          />
+        </Animated.View>
         <Animated.Image
-          source={require('../assets/RocketImage2.png')}
+          source={require('../assets/RocketWhite.png')}
           style={[
             styles.rocket,
             {
@@ -185,13 +190,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 250,
     height: 250,
-    backgroundColor: '#A54207',
     borderRadius: 125,
-    shadowColor: '#A54207',
+    shadowColor: '#FFC300',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 100,
     elevation: 20, // for Android
+  },
+  gradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 125,
   },
   rocket: {
     width: 200,
@@ -201,13 +210,13 @@ const styles = StyleSheet.create({
   logoText: {
     position: 'absolute',
     bottom: height * 0.2,
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 36,
-    fontWeight: 'bold',
-    letterSpacing: 8,
-    textShadowColor: 'rgba(255, 255, 255, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 15,
+    color: '#E0E0E0', // Fallback color
+    fontSize: 42,
+    fontWeight: '700', // A slightly bolder weight
+    letterSpacing: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 3,
   },
 });
 
