@@ -112,6 +112,17 @@ export default function HomeScreen() {
   const currentDos = currentDayData.dos || [];
   const currentDonts = currentDayData.donts || [];
 
+  // CRITICAL FIX: If data for the current day isn't loaded, show a loading screen.
+  if (!currentDayData || !currentDayData.dos) {
+    return (
+      <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
   const positiveProgress = currentDos.reduce((sum, todo) => sum + Math.min(todo.progress || 0, 100), 0);
   const negativeProgress = currentDonts.reduce((sum, todo) => sum + (todo.progress || 0), 0);
   const totalPossiblePositive = currentDos.length * 100;
@@ -282,6 +293,12 @@ export default function HomeScreen() {
     if (saveData) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
+      // Ensure currentDay data exists before processing
+      if (!todosByDay[currentDay]) {
+        console.error("Current day data is missing, cannot save task");
+        return;
+      }
+
       const isDo = (todosByDay[currentDay].dos || []).some(t => t.id === saveData.id);
 
       if (isDo) {
@@ -346,8 +363,11 @@ export default function HomeScreen() {
             const streakData = response.data.streak;
             const newStreakCount = streakData.count;
             
-            // Find task info for the notification message
-            const taskInfo = [...programData[1].dos, ...programData[1].donts].find(t => t.id === streakData.taskId);
+            // Find task info for the notification message - with defensive checks
+            const allProgramTasks = (programData[1] && programData[1].dos && programData[1].donts)
+              ? [...programData[1].dos, ...programData[1].donts]
+              : [];
+            const taskInfo = allProgramTasks.find(t => t.id === streakData.taskId);
 
             if (taskInfo) {
               setNotification({
