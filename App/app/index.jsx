@@ -105,13 +105,13 @@ export default function WelcomePage() {
                 </TouchableOpacity>
               </Link>
               
-              <Link href="/onboarding/createAccount" asChild>
+              {/* <Link href="/onboarding/createAccount" asChild>
                 <TouchableOpacity>
                   <Text style={styles.signInText}>
                     Already have an account? Sign In
                   </Text>
                 </TouchableOpacity>
-              </Link>
+              </Link> */}
             </View>
           </Animated.View>
         </SafeAreaView>

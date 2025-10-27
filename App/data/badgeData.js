@@ -1,6 +1,6 @@
 export const allBadges = [
-    { id: '1', name: 'First Victory', image: require('../assets/Badge1.png'), unlocked: false, description: 'Complete your first task.', primaryColor: '#1F1F1F', secondaryColor: '#f54f20', glowColor: '#d9770_6' },
-    { id: '2', name: '300', image: require('../assets/Badge5.png'), unlocked: false, description: 'Reach a testosterone score of 300.', primaryColor: '#3A3A5A', secondaryColor: '#12122A', glowColor: '#8A2BE2' },
+    { id: '1', name: 'First Victory', image: require('../assets/Badge1.png'), unlocked: false, description: 'Complete your first task.', primaryColor: '#1F1F1F', secondaryColor: '#f54f20', glowColor: '#fed7aa' },
+    { id: '2', name: '300', image: require('../assets/Badge5.png'), unlocked: false, description: 'Reach a testosterone score of 300.', primaryColor: '#1F1F1F', secondaryColor: '#fbbf24', glowColor: '#fde68a' },
     { id: '3', name: '500', image: require('../assets/reward.png'), unlocked: false, description: 'Reach a testosterone score of 500.', primaryColor: '#1F1F1F', secondaryColor: '#ea580c', glowColor: '#fdba74' },
     { id: '4', name: '1000', image: require('../assets/Badge3.png'), unlocked: false, description: 'Reach a testosterone score of 1000.', primaryColor: '#1F1F1F', secondaryColor: '#7f1d1d', glowColor: '#ef4444' },
     { id: '5', name: 'Streak Beginner', image: require('../assets/Badge2.png'), unlocked: false, description: 'Reach a 3-day streak.', primaryColor: '#1F1F1F', secondaryColor: '#ea580c', glowColor: '#2563eb' },

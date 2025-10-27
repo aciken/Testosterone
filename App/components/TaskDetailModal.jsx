@@ -259,7 +259,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   
   const renderSimpleTask = () => (
     <View style={styles.contentContainer}>
-      <Ionicons name="barbell-outline" size={48} color="#8A95B6" style={{ marginBottom: 16 }}/>
+      <Ionicons name="barbell-outline" size={48} color="#737373" style={{ marginBottom: 16 }}/>
       <Text style={styles.taskTitle}>
         {task.task === 'High-intensity workout'
           ? 'Did you do an intensive weightlifting workout today?'
@@ -270,8 +270,8 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
 
   const renderSimpleDontTask = () => (
     <View style={styles.contentContainer}>
-      <Ionicons name="shield-checkmark-outline" size={48} color="#8A95B6" style={{ marginBottom: 16 }}/>
-      <Text style={styles.taskTitle}>Did you successfully {task.task.toLowerCase()}?</Text>
+      <Ionicons name="close" size={48} color="#ef4444" style={{ marginBottom: 16 }}/>
+      <Text style={styles.taskTitle}>Did you Masturbate?</Text>
     </View>
   );
 
@@ -411,6 +411,8 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   };
 
   const renderContent = () => {
+    if (!task) return null;
+  
     switch (task.type) {
       case 'slider':
         return renderSliderTask();
@@ -418,24 +420,28 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         return renderChecklistTask();
       case 'meals':
         return renderMealsTask();
-      case 'simple_dont':
-        return renderSimpleDontTask();
+      case 'simple':
+        return task.inverted ? renderSimpleDontTask() : renderSimpleTask();
       default:
-        return renderSimpleTask();
+        // Fallback for any other types, or if inverted is used on other types
+        return task.inverted ? renderSimpleDontTask() : renderSimpleTask();
     }
   };
 
   if (!task) return null;
 
-  const isSimpleTask = task.type === 'simple' || task.type === 'simple_dont';
+  const isSimpleTask = task.type === 'simple';
   const isCompleted = isSimpleTask && task.progress > 0;
 
   const getButtonText = () => {
-    if (isCompleted) {
-      return task.type === 'simple' ? 'Undo Workout' : "I Didn't Avoid It";
+    if (isSimpleTask) {
+      if (isCompleted) {
+        return "Undo";
+      } else {
+        return task.inverted ? "I did it" : "Mark as Complete";
+      }
     }
-    if (task.type === 'simple') return 'Mark as Complete';
-    if (task.type === 'simple_dont') return 'I Avoided It';
+    // Fallback for other task types
     return 'Save Progress';
   };
 

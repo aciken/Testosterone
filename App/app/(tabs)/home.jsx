@@ -122,7 +122,14 @@ export default function HomeScreen() {
 
   // Calculate daily ng/dl impact
   const calculateDailyNgDl = () => {
-    const allTasks = [...programData[1].dos, ...programData[1].donts];
+    const allTasks = (programData[1] && programData[1].dos && programData[1].donts) 
+      ? [...programData[1].dos, ...programData[1].donts] 
+      : [];
+      
+    if (allTasks.length === 0) {
+      return 0; // No tasks defined, so no impact
+    }
+
     const taskMap = allTasks.reduce((map, task) => {
       map[task.id] = { ...task };
       return map;
@@ -184,10 +191,17 @@ export default function HomeScreen() {
       totalNegative += contribution;
     });
 
-    const totalPossiblePositiveImpact = programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0);
+    const totalPossiblePositiveImpact = (programData[1] && programData[1].dos) 
+      ? programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0)
+      : 0;
+
     const totalPossibleNegativeImpact = 
-      programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) +
-      programData[1].dos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0);
+      ((programData[1] && programData[1].donts) ? programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) : 0) +
+      ((programData[1] && programData[1].dos) ? programData[1].dos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0) : 0);
+      
+    if (totalPossiblePositiveImpact === 0 || totalPossibleNegativeImpact === 0) {
+      return 0; // Avoid division by zero
+    }
 
     const normalizedPositive = (totalPositive / totalPossiblePositiveImpact) * 8;
     const normalizedNegative = (totalNegative / totalPossibleNegativeImpact) * 3;
