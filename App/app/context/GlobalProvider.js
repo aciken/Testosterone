@@ -36,30 +36,49 @@ export const GlobalProvider = ({ children }) => {
 
     useEffect(() => {
         const checkAuthAndLoginRevenueCat = async () => {
+            console.log('[CRASH_DEBUG] GlobalProvider: Starting auth check.');
             setIsLoading(true);
-            const storedUser = await AsyncStorage.getItem('user');
-            if (storedUser) {
-                const parsedUser = JSON.parse(storedUser);
-                setIsAuthenticated(true);
-                setUser(parsedUser);
-                
-                if (API_KEY) {
-                    try {
-                        const loginResult = await Purchases.logIn(parsedUser._id);
-                        
-                        // Check if user has active entitlements
-                        const customerInfo = await Purchases.getCustomerInfo();
-                        const isProUser = customerInfo.entitlements.active['pro'] !== undefined;
-                        setIsPro(isProUser);
-                    } catch (e) {
-                        console.error("RevenueCat login error:", e);
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                console.log(`[CRASH_DEBUG] GlobalProvider: Fetched from AsyncStorage: ${storedUser ? 'User Found' : 'No User'}`);
+
+                if (storedUser) {
+                    const parsedUser = JSON.parse(storedUser);
+                    console.log(`[CRASH_DEBUG] GlobalProvider: User parsed successfully. User ID: ${parsedUser?._id}`);
+                    setIsAuthenticated(true);
+                    setUser(parsedUser);
+                    
+                    if (API_KEY) {
+                        try {
+                            console.log('[CRASH_DEBUG] GlobalProvider: Logging into RevenueCat...');
+                            const loginResult = await Purchases.logIn(parsedUser._id);
+                            console.log('[CRASH_DEBUG] GlobalProvider: RevenueCat login successful.');
+                            
+                            // Check if user has active entitlements
+                            const customerInfo = await Purchases.getCustomerInfo();
+                            console.log('[CRASH_DEBUG] GlobalProvider: RevenueCat customer info fetched.');
+                            const isProUser = customerInfo.entitlements.active['pro'] !== undefined;
+                            setIsPro(isProUser);
+                            console.log(`[CRASH_DEBUG] GlobalProvider: User isPro status: ${isProUser}`);
+                        } catch (e) {
+                            console.error("[CRASH_DEBUG] GlobalProvider: RevenueCat login/fetch error!", e);
+                        }
                     }
+                } else {
+                    console.log('[CRASH_DEBUG] GlobalProvider: No stored user, setting auth to false.');
+                    setIsAuthenticated(false);
+                    setUser(null);
                 }
-            } else {
+            } catch (error) {
+                console.error('[CRASH_DEBUG] GlobalProvider: CRITICAL ERROR during auth check!', error);
+                // If storage is corrupt, clear it
+                await AsyncStorage.removeItem('user');
                 setIsAuthenticated(false);
                 setUser(null);
+            } finally {
+                setIsLoading(false);
+                console.log('[CRASH_DEBUG] GlobalProvider: Auth check finished.');
             }
-            setIsLoading(false);
         };
         checkAuthAndLoginRevenueCat();
     }, []);

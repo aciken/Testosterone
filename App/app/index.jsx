@@ -25,16 +25,23 @@ export default function WelcomePage() {
   const [isSplashFinished, setIsSplashFinished] = useState(false);
 
   useEffect(() => {
-    console.log("isLoading", isLoading);
-    console.log("isAuthenticated", isAuthenticated);
-    console.log("isPro", isPro);
-    if (!isLoading && isAuthenticated && !isNewUserOnboarding) {
-      console.log("isPro", isPro);
-      if (isPro === true) {
-        router.replace('/home');
-      } else if (isPro === false) {
-        router.replace('/utils/Paywall');
+    try {
+      console.log(`[CRASH_DEBUG] Index: useEffect triggered. isLoading: ${isLoading}, isAuthenticated: ${isAuthenticated}, isPro: ${isPro}, isNewUserOnboarding: ${isNewUserOnboarding}`);
+      
+      if (!isLoading && isAuthenticated && !isNewUserOnboarding) {
+        console.log(`[CRASH_DEBUG] Index: Conditions met for navigation. isPro: ${isPro}`);
+        if (isPro === true) {
+          console.log('[CRASH_DEBUG] Index: User is PRO. Replacing route with /home');
+          router.replace('/home');
+        } else if (isPro === false) {
+          console.log('[CRASH_DEBUG] Index: User is NOT PRO. Replacing route with /utils/Paywall');
+          router.replace('/utils/Paywall');
+        }
+      } else {
+        console.log('[CRASH_DEBUG] Index: Conditions for navigation NOT met. Doing nothing.');
       }
+    } catch (error) {
+      console.error('[CRASH_DEBUG] Index: CRITICAL ERROR in navigation useEffect!', error);
     }
   }, [isLoading, isAuthenticated, isPro, isNewUserOnboarding]);
 

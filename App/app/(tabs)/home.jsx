@@ -17,7 +17,153 @@ import { allBadges } from '../../data/badgeData';
 import { useGlobalContext } from '../context/GlobalProvider';
 import { useRouter, useFocusEffect } from 'expo-router';
 
+// Error Boundary-like component for catching render errors
+const HomeContent = (props) => {
+  try {
+    // All original content of HomeScreen goes here
+    return (
+      <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+          <ScrollView contentContainerStyle={styles.scrollView}>
+            <View style={styles.header}>
+              <View style={styles.dayNavigator}>
+                <TouchableOpacity onPress={() => handleDayChange(-1)} style={styles.arrowButton}>
+                  <Ionicons name="chevron-back" size={32} color="#FFFFFF" />
+                </TouchableOpacity>
+                <View style={styles.dayDisplay}>
+                  <Text style={styles.dayLabel}>DAY</Text>
+                  <Text style={styles.dayNumber}>{currentDay}</Text>
+                  <View style={styles.todayButtonContainer}>
+                    {currentDay !== programDay ? (
+                      <TouchableOpacity onPress={() => setCurrentDay(programDay)} style={styles.todayButton}>
+                        <Text style={styles.todayText}>RETURN TO TODAY</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={styles.isTodayText}>TODAY</Text>
+                    )}
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => handleDayChange(1)}
+                  style={[styles.arrowButton, currentDay >= programDay && styles.arrowButtonDisabled]}
+                  disabled={currentDay >= programDay}
+                >
+                  <Ionicons name="chevron-forward" size={32} color={currentDay >= programDay ? '#555555' : '#FFFFFF'} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.progressContainer}>
+                <Animated.View style={[styles.negativeProgressBar, { width: negativeWidth }]} />
+                <Animated.View style={[styles.progressBar, { width: positiveWidth }]} />
+                <Text style={[styles.progressText, { 
+                  color: (() => {
+                    const ngDlValue = dailyNgDl;
+                    let progressPercent;
+                    if (ngDlValue < 0) {
+                      progressPercent = (ngDlValue / 3) * 100;
+                    } else {
+                      progressPercent = (ngDlValue / 8) * 100;
+                    }
+                    return progressPercent >= 45 && progressPercent > 0 ? '#101010' : '#FFFFFF';
+                  })()
+                }]}>
+                  {dailyNgDl >= 0 ? `+${dailyNgDl.toFixed(1)}` : dailyNgDl.toFixed(1)} ng/dl
+                </Text>
+              </View>
+            </View>
+            
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>DO'S</Text>
+            </View>
+  
+            <View style={styles.listContainer}>
+              {isDayChanging ? (
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              ) : (
+                <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
+                  {currentDos.map(todo => (
+                    <TodoCard 
+                      key={todo.id}
+                      todo={todo}
+                      onPress={() => handleTaskPress(todo)}
+                      isEditable={currentDay === programDay}
+                    />
+                  ))}
+                </Animated.View>
+              )}
+            </View>
+  
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>DON'TS</Text>
+            </View>
+  
+            <View style={styles.listContainer}>
+               {isDayChanging ? (
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              ) : (
+                <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
+                  {currentDonts.map(todo => (
+                    <TodoCard 
+                      key={todo.id}
+                      todo={todo}
+                      onPress={() => handleTaskPress(todo)}
+                      isEditable={currentDay === programDay}
+                    />
+                  ))}
+                </Animated.View>
+              )}
+            </View>
+  
+          </ScrollView>
+        </SafeAreaView>
+        {selectedTask && (
+          <TaskDetailModal
+            isVisible={modalVisible}
+            task={selectedTask}
+            onClose={handleModalClose}
+          />
+        )}
+        {notification && (
+          <Animated.View style={[styles.notificationContainer, { top: notificationAnim }]}>
+              <StreakNotification
+                  title={notification.title}
+                  message={notification.message}
+                  streakCount={notification.streakCount}
+                  icon={notification.icon}
+              />
+          </Animated.View>
+        )}
+        {showBadgeNotification && newlyUnlockedAchievement && (
+          <BadgeNotification 
+            badge={allBadges.find(b => b.id === newlyUnlockedAchievement.id)} 
+            onDismiss={() => {
+              setShowBadgeNotification(false);
+              setNewlyUnlockedAchievement(null);
+            }}
+          />
+        )}
+      </LinearGradient>
+    );
+  } catch (error) {
+    console.error('[CRASH_DEBUG] HomeScreen: CRITICAL RENDER ERROR!', error);
+    return (
+      <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <Text style={{ color: 'red', fontSize: 18, textAlign: 'center', padding: 20 }}>
+            An error occurred while rendering the home screen. Check the logs for details.
+          </Text>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+};
+
+
 export default function HomeScreen() {
+  console.log('[CRASH_DEBUG] HomeScreen: Component rendering started.');
+  const { user, setUser, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement } = useGlobalContext();
+  console.log(`[CRASH_DEBUG] HomeScreen: User from context: ${user ? `ID: ${user._id}` : 'null'}`);
+
+
   const [programDay, setProgramDay] = useState(1);
   const [currentDay, setCurrentDay] = useState(1);
   const [todosByDay, setTodosByDay] = useState(programData);
@@ -34,7 +180,7 @@ export default function HomeScreen() {
   const listAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
 
-  const { user, setUser, setStreak, newlyUnlockedAchievement, setNewlyUnlockedAchievement } = useGlobalContext();
+  
   const router = useRouter();
   const [showBadgeNotification, setShowBadgeNotification] = useState(false);
 
@@ -51,9 +197,13 @@ export default function HomeScreen() {
   useEffect(() => {
     const getProgramDay = async () => {
       try {
-        // Now, we can rely on the user object from the context,
-        // which is guaranteed to be up-to-date.
+        console.log('[CRASH_DEBUG] HomeScreen: getProgramDay useEffect started.');
+        
+        // Always start with a fresh deep copy of the program data
+        const newTodosByDay = JSON.parse(JSON.stringify(programData)); 
+
         if (user && user.dateCreated) {
+          console.log(`[CRASH_DEBUG] HomeScreen: User and dateCreated exist. Date: ${user.dateCreated}`);
           const dateCreated = new Date(user.dateCreated);
           const today = new Date();
           
@@ -63,14 +213,15 @@ export default function HomeScreen() {
 
           const diffTime = Math.abs(today - dateCreated);
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          console.log(`[CRASH_DEBUG] HomeScreen: Calculated program day: ${diffDays}`);
           
           setProgramDay(diffDays);
           setCurrentDay(diffDays);
           
-          // Load saved tasks from user and merge with programData
+          // If the user has saved tasks, merge them into our fresh copy
           if (user.tasks && user.tasks.length > 0) {
-            const newTodosByDay = JSON.parse(JSON.stringify(programData)); // Deep copy to avoid mutation
-
+            console.log('[CRASH_DEBUG] HomeScreen: User has tasks. Merging...');
+            
             user.tasks.forEach(savedTask => {
               const taskDate = new Date(savedTask.date);
               const startDate = new Date(dateCreated);
@@ -97,23 +248,34 @@ export default function HomeScreen() {
                 findAndupdateTask(newTodosByDay[dayIndex].donts);
               }
             });
-            setTodosByDay(newTodosByDay);
+            console.log('[CRASH_DEBUG] HomeScreen: Task merge complete.');
+          } else {
+            console.log('[CRASH_DEBUG] HomeScreen: User has no tasks to merge.');
           }
+        } else {
+            console.log('[CRASH_DEBUG] HomeScreen: User object or user.dateCreated is missing.');
         }
+
+        // Set the state with the potentially merged data
+        setTodosByDay(newTodosByDay);
+
       } catch (error) {
-        console.error("Failed to load user data:", error);
+        console.error("[CRASH_DEBUG] HomeScreen: CRITICAL ERROR in getProgramDay useEffect!", error);
       }
     };
 
     getProgramDay();
   }, [user]); // Add user as a dependency
 
+  console.log(`[CRASH_DEBUG] HomeScreen: Preparing to render. currentDay: ${currentDay}`);
   const currentDayData = todosByDay[currentDay] || { dos: [], donts: [] };
+  console.log(`[CRASH_DEBUG] HomeScreen: currentDayData is ${currentDayData ? 'defined' : 'undefined'}. Dos length: ${currentDayData?.dos?.length || 'N/A'}`);
   const currentDos = currentDayData.dos || [];
   const currentDonts = currentDayData.donts || [];
 
   // CRITICAL FIX: If data for the current day isn't loaded, show a loading screen.
   if (!currentDayData || !currentDayData.dos) {
+    console.log('[CRASH_DEBUG] HomeScreen: Data not ready, showing loading spinner.');
     return (
       <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
         <SafeAreaView style={styles.safeArea}>
@@ -122,6 +284,7 @@ export default function HomeScreen() {
       </LinearGradient>
     );
   }
+  console.log('[CRASH_DEBUG] HomeScreen: Data is ready. Proceeding to calculate progress.');
 
   const positiveProgress = currentDos.reduce((sum, todo) => sum + Math.min(todo.progress || 0, 100), 0);
   const negativeProgress = currentDonts.reduce((sum, todo) => sum + (todo.progress || 0), 0);
@@ -133,94 +296,101 @@ export default function HomeScreen() {
 
   // Calculate daily ng/dl impact
   const calculateDailyNgDl = () => {
-    const allTasks = (programData[1] && programData[1].dos && programData[1].donts) 
-      ? [...programData[1].dos, ...programData[1].donts] 
-      : [];
+    try {
+      const allTasks = (programData[1] && programData[1].dos && programData[1].donts) 
+        ? [...programData[1].dos, ...programData[1].donts] 
+        : [];
       
-    if (allTasks.length === 0) {
-      return 0; // No tasks defined, so no impact
-    }
+      if (allTasks.length === 0) {
+        return 0; // No tasks defined, so no impact
+      }
 
-    const taskMap = allTasks.reduce((map, task) => {
-      map[task.id] = { ...task };
-      return map;
-    }, {});
+      const taskMap = allTasks.reduce((map, task) => {
+        map[task.id] = { ...task };
+        return map;
+      }, {});
 
-    let totalPositive = 0;
-    let totalNegative = 0;
+      let totalPositive = 0;
+      let totalNegative = 0;
 
-    // Calculate for current dos
-    currentDos.forEach(todo => {
-      const taskInfo = taskMap[todo.id];
-      if (!taskInfo) return;
+      // Calculate for current dos
+      currentDos.forEach(todo => {
+        const taskInfo = taskMap[todo.id];
+        if (!taskInfo) return;
 
-      let contribution;
-      if (taskInfo.id === 'sleep') {
-        const hoursSlept = ((todo.progress || 0) / 100) * taskInfo.goal;
-        let impactMultiplier;
-        if (hoursSlept < 7) {
-          const deficit = 7 - hoursSlept;
-          impactMultiplier = -Math.min(deficit / 3, 1);
-        } else if (hoursSlept < 8) {
-          impactMultiplier = 0;
+        let contribution;
+        if (taskInfo.id === 'sleep') {
+          const hoursSlept = ((todo.progress || 0) / 100) * taskInfo.goal;
+          let impactMultiplier;
+          if (hoursSlept < 7) {
+            const deficit = 7 - hoursSlept;
+            impactMultiplier = -Math.min(deficit / 3, 1);
+          } else if (hoursSlept < 8) {
+            impactMultiplier = 0;
+          } else {
+            const surplus = hoursSlept - 8;
+            impactMultiplier = Math.min(surplus / 2, 1);
+          }
+          contribution = impactMultiplier * taskInfo.impact;
+        } else if (taskInfo.type === 'slider' && !taskInfo.inverted) {
+          const actualValue = ((todo.progress || 0) / 100) * taskInfo.goal;
+          const impactMultiplier = taskInfo.goal > 0 ? Math.min(actualValue / taskInfo.goal, 2) : 0;
+          contribution = impactMultiplier * taskInfo.impact;
+        } else if (taskInfo.type === 'meals') {
+          if ((todo.progress || 0) < 0) {
+            contribution = (todo.progress || 0) * taskInfo.impact / 100;
+          } else {
+            contribution = ((todo.progress || 0) / 100) * taskInfo.impact;
+          }
         } else {
-          const surplus = hoursSlept - 8;
-          impactMultiplier = Math.min(surplus / 2, 1);
+          const progressPercent = (todo.progress || 0) / 100;
+          contribution = taskInfo.inverted 
+            ? -1 * progressPercent * taskInfo.impact
+            : progressPercent * taskInfo.impact;
         }
-        contribution = impactMultiplier * taskInfo.impact;
-      } else if (taskInfo.type === 'slider' && !taskInfo.inverted) {
-        const actualValue = ((todo.progress || 0) / 100) * taskInfo.goal;
-        const impactMultiplier = taskInfo.goal > 0 ? Math.min(actualValue / taskInfo.goal, 2) : 0;
-        contribution = impactMultiplier * taskInfo.impact;
-      } else if (taskInfo.type === 'meals') {
-        if ((todo.progress || 0) < 0) {
-          contribution = (todo.progress || 0) * taskInfo.impact / 100;
+
+        if (contribution > 0) {
+          totalPositive += contribution;
         } else {
-          contribution = ((todo.progress || 0) / 100) * taskInfo.impact;
+          totalNegative += contribution;
         }
-      } else {
+      });
+
+      // Calculate for current donts
+      currentDonts.forEach(todo => {
+        const taskInfo = taskMap[todo.id];
+        if (!taskInfo) return;
+
         const progressPercent = (todo.progress || 0) / 100;
-        contribution = taskInfo.inverted 
-          ? -1 * progressPercent * taskInfo.impact
-          : progressPercent * taskInfo.impact;
-      }
-
-      if (contribution > 0) {
-        totalPositive += contribution;
-      } else {
+        const contribution = -1 * progressPercent * taskInfo.impact;
         totalNegative += contribution;
+      });
+
+      const totalPossiblePositiveImpact = (programData[1] && programData[1].dos) 
+        ? programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0)
+        : 0;
+
+      const totalPossibleNegativeImpact = 
+        ((programData[1] && programData[1].donts) ? programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) : 0) +
+        ((programData[1] && programData[1].dos) ? programData[1].dos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0) : 0);
+        
+      if (totalPossiblePositiveImpact === 0 || totalPossibleNegativeImpact === 0) {
+        return 0; // Avoid division by zero
       }
-    });
 
-    // Calculate for current donts
-    currentDonts.forEach(todo => {
-      const taskInfo = taskMap[todo.id];
-      if (!taskInfo) return;
-
-      const progressPercent = (todo.progress || 0) / 100;
-      const contribution = -1 * progressPercent * taskInfo.impact;
-      totalNegative += contribution;
-    });
-
-    const totalPossiblePositiveImpact = (programData[1] && programData[1].dos) 
-      ? programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0)
-      : 0;
-
-    const totalPossibleNegativeImpact = 
-      ((programData[1] && programData[1].donts) ? programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) : 0) +
-      ((programData[1] && programData[1].dos) ? programData[1].dos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0) : 0);
+      const normalizedPositive = (totalPositive / totalPossiblePositiveImpact) * 8;
+      const normalizedNegative = (totalNegative / totalPossibleNegativeImpact) * 3;
       
-    if (totalPossiblePositiveImpact === 0 || totalPossibleNegativeImpact === 0) {
-      return 0; // Avoid division by zero
+      return normalizedPositive + normalizedNegative;
+    } catch (error) {
+        console.error('[CRASH_DEBUG] HomeScreen: CRITICAL ERROR in calculateDailyNgDl!', error);
+        return 0; // Return a safe value on error
     }
-
-    const normalizedPositive = (totalPositive / totalPossiblePositiveImpact) * 8;
-    const normalizedNegative = (totalNegative / totalPossibleNegativeImpact) * 3;
-    
-    return normalizedPositive + normalizedNegative;
   };
 
+  console.log('[CRASH_DEBUG] HomeScreen: Running calculateDailyNgDl...');
   const dailyNgDl = calculateDailyNgDl();
+  console.log(`[CRASH_DEBUG] HomeScreen: dailyNgDl calculated: ${dailyNgDl}`);
 
   useEffect(() => {
     // Use the ng/dl calculation to drive the progress bar
@@ -295,7 +465,6 @@ export default function HomeScreen() {
       
       // Ensure currentDay data exists before processing
       if (!todosByDay[currentDay]) {
-        console.error("Current day data is missing, cannot save task");
         return;
       }
 
@@ -336,9 +505,7 @@ export default function HomeScreen() {
     try {
       const userString = await AsyncStorage.getItem('user');
       if (userString) {
-        console.log(userString)
         const user = JSON.parse(userString);
-        console.log(user.user)
         const dailyNgDl = calculateDailyNgDl(); // Calculate the value before sending
         const updatePayload = {
           userId: user._id,
@@ -346,7 +513,6 @@ export default function HomeScreen() {
           task: taskData,
           dailyNgDl: dailyNgDl, // Add the score to the payload
         };
-        console.log(updatePayload)
 
         const response = await axios.post('https://testosterone.onrender.com/tasks/update', updatePayload);
 
@@ -445,128 +611,148 @@ export default function HomeScreen() {
     extrapolate: 'clamp',
   });
 
-  return (
-    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <View style={styles.header}>
-            <View style={styles.dayNavigator}>
-              <TouchableOpacity onPress={() => handleDayChange(-1)} style={styles.arrowButton}>
-                <Ionicons name="chevron-back" size={32} color="#FFFFFF" />
-              </TouchableOpacity>
-              <View style={styles.dayDisplay}>
-                <Text style={styles.dayLabel}>DAY</Text>
-                <Text style={styles.dayNumber}>{currentDay}</Text>
-                <View style={styles.todayButtonContainer}>
-                  {currentDay !== programDay ? (
-                    <TouchableOpacity onPress={() => setCurrentDay(programDay)} style={styles.todayButton}>
-                      <Text style={styles.todayText}>RETURN TO TODAY</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <Text style={styles.isTodayText}>TODAY</Text>
-                  )}
+  try {
+    console.log('[CRASH_DEBUG] HomeScreen: Starting main render.');
+    return (
+      <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+          <ScrollView contentContainerStyle={styles.scrollView}>
+            <View style={styles.header}>
+              <View style={styles.dayNavigator}>
+                <TouchableOpacity onPress={() => handleDayChange(-1)} style={styles.arrowButton}>
+                  <Ionicons name="chevron-back" size={32} color="#FFFFFF" />
+                </TouchableOpacity>
+                <View style={styles.dayDisplay}>
+                  <Text style={styles.dayLabel}>DAY</Text>
+                  <Text style={styles.dayNumber}>{currentDay}</Text>
+                  <View style={styles.todayButtonContainer}>
+                    {currentDay !== programDay ? (
+                      <TouchableOpacity onPress={() => setCurrentDay(programDay)} style={styles.todayButton}>
+                        <Text style={styles.todayText}>RETURN TO TODAY</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={styles.isTodayText}>TODAY</Text>
+                    )}
+                  </View>
                 </View>
+                <TouchableOpacity
+                  onPress={() => handleDayChange(1)}
+                  style={[styles.arrowButton, currentDay >= programDay && styles.arrowButtonDisabled]}
+                  disabled={currentDay >= programDay}
+                >
+                  <Ionicons name="chevron-forward" size={32} color={currentDay >= programDay ? '#555555' : '#FFFFFF'} />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={() => handleDayChange(1)}
-                style={[styles.arrowButton, currentDay >= programDay && styles.arrowButtonDisabled]}
-                disabled={currentDay >= programDay}
-              >
-                <Ionicons name="chevron-forward" size={32} color={currentDay >= programDay ? '#555555' : '#FFFFFF'} />
-              </TouchableOpacity>
+              <View style={styles.progressContainer}>
+                <Animated.View style={[styles.negativeProgressBar, { width: negativeWidth }]} />
+                <Animated.View style={[styles.progressBar, { width: positiveWidth }]} />
+                <Text style={[styles.progressText, { 
+                  color: (() => {
+                    const ngDlValue = dailyNgDl;
+                    let progressPercent;
+                    if (ngDlValue < 0) {
+                      progressPercent = (ngDlValue / 3) * 100;
+                    } else {
+                      progressPercent = (ngDlValue / 8) * 100;
+                    }
+                    return progressPercent >= 45 && progressPercent > 0 ? '#101010' : '#FFFFFF';
+                  })()
+                }]}>
+                  {dailyNgDl >= 0 ? `+${dailyNgDl.toFixed(1)}` : dailyNgDl.toFixed(1)} ng/dl
+                </Text>
+              </View>
             </View>
-            <View style={styles.progressContainer}>
-              <Animated.View style={[styles.negativeProgressBar, { width: negativeWidth }]} />
-              <Animated.View style={[styles.progressBar, { width: positiveWidth }]} />
-              <Text style={[styles.progressText, { 
-                color: (() => {
-                  const ngDlValue = dailyNgDl;
-                  let progressPercent;
-                  if (ngDlValue < 0) {
-                    progressPercent = (ngDlValue / 3) * 100;
-                  } else {
-                    progressPercent = (ngDlValue / 8) * 100;
-                  }
-                  return progressPercent >= 45 && progressPercent > 0 ? '#101010' : '#FFFFFF';
-                })()
-              }]}>
-                {dailyNgDl >= 0 ? `+${dailyNgDl.toFixed(1)}` : dailyNgDl.toFixed(1)} ng/dl
-              </Text>
+            
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>DO'S</Text>
             </View>
-          </View>
-          
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>DO'S</Text>
-          </View>
-
-          <View style={styles.listContainer}>
-            {isDayChanging ? (
-              <ActivityIndicator size="large" color="#FFFFFF" />
-            ) : (
-              <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
-                {currentDos.map(todo => (
-                  <TodoCard 
-                    key={todo.id}
-                    todo={todo}
-                    onPress={() => handleTaskPress(todo)}
-                    isEditable={currentDay === programDay}
-                  />
-                ))}
-              </Animated.View>
-            )}
-          </View>
-
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>DON'TS</Text>
-          </View>
-
-          <View style={styles.listContainer}>
-             {isDayChanging ? (
-              <ActivityIndicator size="large" color="#FFFFFF" />
-            ) : (
-              <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
-                {currentDonts.map(todo => (
-                  <TodoCard 
-                    key={todo.id}
-                    todo={todo}
-                    onPress={() => handleTaskPress(todo)}
-                    isEditable={currentDay === programDay}
-                  />
-                ))}
-              </Animated.View>
-            )}
-          </View>
-
-        </ScrollView>
-      </SafeAreaView>
-      {selectedTask && (
-        <TaskDetailModal
-          isVisible={modalVisible}
-          task={selectedTask}
-          onClose={handleModalClose}
-        />
-      )}
-      {notification && (
-        <Animated.View style={[styles.notificationContainer, { top: notificationAnim }]}>
-            <StreakNotification
-                title={notification.title}
-                message={notification.message}
-                streakCount={notification.streakCount}
-                icon={notification.icon}
-            />
-        </Animated.View>
-      )}
-      {showBadgeNotification && newlyUnlockedAchievement && (
-        <BadgeNotification 
-          badge={allBadges.find(b => b.id === newlyUnlockedAchievement.id)} 
-          onDismiss={() => {
-            setShowBadgeNotification(false);
-            setNewlyUnlockedAchievement(null);
-          }}
-        />
-      )}
-    </LinearGradient>
-  );
+  
+            <View style={styles.listContainer}>
+              {isDayChanging ? (
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              ) : (
+                <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
+                  {currentDos.map((todo, index) => {
+                    console.log(`[CRASH_DEBUG] Rendering DO card index: ${index}, id: ${todo.id}`);
+                    return (
+                      <TodoCard 
+                        key={todo.id}
+                        todo={todo}
+                        onPress={() => handleTaskPress(todo)}
+                        isEditable={currentDay === programDay}
+                      />
+                    );
+                  })}
+                </Animated.View>
+              )}
+            </View>
+  
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>DON'TS</Text>
+            </View>
+  
+            <View style={styles.listContainer}>
+               {isDayChanging ? (
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              ) : (
+                <Animated.View style={{ opacity: listOpacity, transform: [{ scale: listScale }] }}>
+                  {currentDonts.map((todo, index) => {
+                    console.log(`[CRASH_DEBUG] Rendering DONT card index: ${index}, id: ${todo.id}`);
+                    return (
+                      <TodoCard 
+                        key={todo.id}
+                        todo={todo}
+                        onPress={() => handleTaskPress(todo)}
+                        isEditable={currentDay === programDay}
+                      />
+                    );
+                  })}
+                </Animated.View>
+              )}
+            </View>
+  
+          </ScrollView>
+        </SafeAreaView>
+        {selectedTask && (
+          <TaskDetailModal
+            isVisible={modalVisible}
+            task={selectedTask}
+            onClose={handleModalClose}
+          />
+        )}
+        {notification && (
+          <Animated.View style={[styles.notificationContainer, { top: notificationAnim }]}>
+              <StreakNotification
+                  title={notification.title}
+                  message={notification.message}
+                  streakCount={notification.streakCount}
+                  icon={notification.icon}
+              />
+          </Animated.View>
+        )}
+        {showBadgeNotification && newlyUnlockedAchievement && (
+          <BadgeNotification 
+            badge={allBadges.find(b => b.id === newlyUnlockedAchievement.id)} 
+            onDismiss={() => {
+              setShowBadgeNotification(false);
+              setNewlyUnlockedAchievement(null);
+            }}
+          />
+        )}
+      </LinearGradient>
+    );
+  } catch (error) {
+    console.error('[CRASH_DEBUG] HomeScreen: CRITICAL RENDER ERROR!', error);
+    return (
+      <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <Text style={{ color: 'red', fontSize: 18, textAlign: 'center', padding: 20 }}>
+            An error occurred while rendering the home screen. Check the logs for details.
+          </Text>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
