@@ -21,8 +21,6 @@ export default function CreateAccount() {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      console.log('Google User Info:', userInfo);
-      console.log(userInfo.data.idToken)
       
       const response = await axios.post('https://testosterone.onrender.com/auth/google', {
         token: userInfo.data.idToken,
@@ -66,7 +64,6 @@ export default function CreateAccount() {
 
   const handleAppleSignIn = async () => {
     try {
-      console.log('[AppleSignIn] Starting Apple Sign-In process...');
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -74,13 +71,10 @@ export default function CreateAccount() {
         ],
       });
       
-      console.log('[AppleSignIn] Credential received from Apple:');
-      console.log(JSON.stringify(credential, null, 2));
 
       const { user, email, fullName } = credential;
       const name = fullName ? `${fullName.givenName} ${fullName.familyName}` : 'User';
       
-      console.log(`[AppleSignIn] Sending to backend: appleId=${user}, email=${email}, name=${name}`);
       const response = await axios.post('https://testosterone.onrender.com/auth/apple', {
         appleId: user,
         email,
@@ -88,7 +82,6 @@ export default function CreateAccount() {
         onboardingName: user?.name,
       });
 
-      console.log('[AppleSignIn] Response from backend:', JSON.stringify(response.data, null, 2));
 
       if (response.status === 200 || response.status === 201) {
         const { user: userData, isNewUser } = response.data;
@@ -124,7 +117,6 @@ export default function CreateAccount() {
     } catch (e) {
       console.error('--- [AppleSignIn] CRITICAL ERROR CAUGHT ---');
       if (e.code === 'ERR_REQUEST_CANCELED') {
-        console.log('User canceled Apple Sign-In.');
       } else {
         console.error('Apple Sign-In error object:', JSON.stringify(e, null, 2));
       }

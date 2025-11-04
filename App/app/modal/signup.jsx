@@ -152,7 +152,6 @@ export default function Signup() {
     }
 
     // --- If all validation passes, proceed with API call ---
-    console.log("Validation passed, attempting sign up...");
     try {
       const response = await axios.put('https://f95b31457302.ngrok-free.app/signup', { // Ensure URL is correct
         name: name.trim(), // Send trimmed name
@@ -160,8 +159,6 @@ export default function Signup() {
         password // Send original password
       });
 
-      console.log("API Response Status:", response.status);
-      console.log("API Response Data:", JSON.stringify(response.data, null, 2));
 
       if(response.status === 200) { // Check for user object
           await AsyncStorage.setItem('user', JSON.stringify(response.data));

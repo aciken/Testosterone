@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   text: {
-    color: '#8A95B6',
+    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 22,
     marginTop: 20,
   },

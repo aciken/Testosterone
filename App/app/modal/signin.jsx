@@ -56,7 +56,6 @@ export default function Signin() {
 
   useEffect(() => {
     if(isAuthenticated) {
-      console.log("sending to home");
       router.replace('/home');
     }
   }, [isAuthenticated]);
@@ -69,7 +68,6 @@ export default function Signin() {
     }
 
 
-    console.log(email, password);
       axios.post('https://f95b31457302.ngrok-free.app/signin', { email, password })
       .then((response) => {
         if(response.status === 200) {

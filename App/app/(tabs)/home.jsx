@@ -228,13 +228,20 @@ export default function HomeScreen() {
               startDate.setHours(0, 0, 0, 0);
               taskDate.setHours(0, 0, 0, 0);
 
-              const dayIndex = Math.ceil((taskDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+              const timeDiff = taskDate - startDate;
+              const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+              // Handle edge case: if user's dateCreated is in the future (bad data/timezone issue),
+              // treat all tasks as Day 1
+              const dayIndex = daysDiff < 0 ? 1 : daysDiff + 1;
+
+              console.log(`[MERGE_DEBUG] Processing task: ${savedTask.taskId}, progress: ${savedTask.progress}, taskDate: ${taskDate.toDateString()}, startDate: ${startDate.toDateString()}, daysDiff: ${daysDiff}, dayIndex: ${dayIndex}`);
 
               if (newTodosByDay[dayIndex]) {
                 const findAndupdateTask = (taskArray) => {
                   if (!taskArray) return;
                   const taskIndex = taskArray.findIndex(t => t.id === savedTask.taskId);
                   if (taskIndex > -1) {
+                    console.log(`[MERGE_DEBUG] Found task ${savedTask.taskId} at index ${taskIndex}, updating progress to ${savedTask.progress}`);
                     taskArray[taskIndex].progress = savedTask.progress;
                     if (savedTask.checked) {
                       taskArray[taskIndex].checked = savedTask.checked;
@@ -242,10 +249,14 @@ export default function HomeScreen() {
                     if (savedTask.history) {
                         taskArray[taskIndex].history = savedTask.history;
                     }
+                  } else {
+                    console.log(`[MERGE_DEBUG] Task ${savedTask.taskId} NOT FOUND in array`);
                   }
                 };
                 findAndupdateTask(newTodosByDay[dayIndex].dos);
                 findAndupdateTask(newTodosByDay[dayIndex].donts);
+              } else {
+                console.log(`[MERGE_DEBUG] Day ${dayIndex} not found in newTodosByDay`);
               }
             });
             console.log('[CRASH_DEBUG] HomeScreen: Task merge complete.');
@@ -463,7 +474,7 @@ export default function HomeScreen() {
     if (saveData) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
-      // Ensure currentDay data exists before processing
+      // Optimistic update: show progress instantly
       if (!todosByDay[currentDay]) {
         return;
       }
@@ -474,7 +485,6 @@ export default function HomeScreen() {
         const newDos = (todosByDay[currentDay].dos || []).map(todo => {
           if (todo.id === saveData.id) {
             if (saveData.id === '3') { // meals task
-              // For meals, accumulate progress and history on the frontend for immediate feedback
               const newProgress = (todo.progress || 0) + saveData.progress;
               const newHistory = [...(todo.history || []), { value: saveData.progress, description: saveData.description, timestamp: new Date() }];
               return { ...todo, progress: newProgress, history: newHistory };

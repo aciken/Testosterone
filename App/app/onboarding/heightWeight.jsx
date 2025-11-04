@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     description: {
-        color: '#8A95B6',
+        color: 'rgba(255, 255, 255, 0.7)',
         fontSize: 16,
         textAlign: 'center',
         marginBottom: 40,

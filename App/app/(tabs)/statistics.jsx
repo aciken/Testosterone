@@ -132,7 +132,10 @@ export default function StatisticsScreen() {
 
                         const taskDate = new Date(savedTask.date);
                         taskDate.setHours(0,0,0,0);
-                        const dayIndex = Math.round((taskDate - dateCreated) / (1000 * 60 * 60 * 24));
+                        const timeDiff = taskDate - dateCreated;
+                        const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                        // Handle edge case: if user's dateCreated is in the future, treat as day 0
+                        const dayIndex = daysDiff < 0 ? 0 : daysDiff;
                         
                         let contribution;
                         if (taskInfo.id === 'sleep') {
