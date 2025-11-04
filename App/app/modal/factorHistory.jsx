@@ -13,7 +13,8 @@ const getDisplayValue = (task, loggedTask) => {
 
     switch (task.type) {
         case 'slider':
-            const value = (loggedTask.progress / 100) * task.goal;
+            const maxValue = task.inverted ? task.maxValue : task.goal;
+            const value = (loggedTask.progress / 100) * maxValue;
             const roundedValue = Math.round(value / task.step) * task.step;
             const finalValue = Number.isInteger(roundedValue) ? roundedValue : roundedValue.toFixed(1);
             return `${finalValue}${task.unit ? ` ${task.unit}` : ''}`;
@@ -21,8 +22,16 @@ const getDisplayValue = (task, loggedTask) => {
             const takenCount = loggedTask.checked ? loggedTask.checked.length : 0;
             return `${takenCount} of 4`;
         case 'simple':
-        case 'meals':
             return loggedTask.progress >= 95 ? 'Completed' : 'Incomplete';
+        case 'meals':
+            if (loggedTask.history && loggedTask.history.length > 0) {
+                const totalScore = loggedTask.history.reduce((sum, meal) => sum + meal.value, 0);
+                const averageScore = Math.round(totalScore / loggedTask.history.length);
+                if (averageScore >= 60) return 'Good';
+                if (averageScore >= 30) return 'Average';
+                return 'Bad';
+            }
+            return 'Incomplete';
         default:
             return `${loggedTask.progress}%`;
     }
@@ -109,14 +118,23 @@ export default function FactorHistoryModal() {
                 let displayValue = 'Not Logged';
 
                 if (loggedTask) {
-                    if (foundTask.inverted) {
+                    displayValue = getDisplayValue(foundTask, loggedTask);
+
+                    if (foundTask.id === '3') { // meals
+                        if (displayValue === 'Good') {
+                            status = 'completed';
+                        } else if (displayValue === 'Average') {
+                            status = 'partial';
+                        } else {
+                            status = 'missed';
+                        }
+                    } else if (foundTask.inverted) {
                         status = loggedTask.progress < 50 ? 'completed' : 'missed';
                     } else {
                         if (loggedTask.progress >= 95) status = 'completed';
                         else if (loggedTask.progress > 5) status = 'partial';
                         else status = 'missed';
                     }
-                    displayValue = getDisplayValue(foundTask, loggedTask);
                 }
                 
                 fullHistory.push({

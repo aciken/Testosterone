@@ -10,8 +10,8 @@ const dailyDos = [
 
 const dailyDonts = [
   { id: 'd1', task: 'Masturbation', type: 'simple', inverted: true, image: require('../assets/Masturbation.png'), progress: 0, impact: 70 },
-  { id: 'd2', task: 'Stress Level', type: 'slider', inverted: true, goal: 0, unit: 'level', maxValue: 10, step: 1, progress: 0, image: require('../assets/Stress.png'), impact: 25 },
-  { id: 'd3', task: 'Alcohol Consumption', type: 'slider', inverted: true, goal: 0, unit: 'drinks', maxValue: 10, step: 1, progress: 0, image: require('../assets/Alcohol.png'), impact: 40 },
+  { id: 'd2', task: 'Stress Level', type: 'slider', inverted: true, goal: 3, unit: 'level', maxValue: 5, step: 1, progress: 0, image: require('../assets/Stress.png'), impact: 25 },
+  { id: 'd3', task: 'Alcohol Consumption', type: 'slider', inverted: true, goal: 1, unit: 'drinks', maxValue: 5, step: 1, progress: 0, image: require('../assets/Alcohol.png'), impact: 40 },
 
 ];
 

@@ -297,8 +297,13 @@ export default function StatisticsScreen() {
                             if (taskId === 'sleep') {
                                 const hoursSlept = (log.progress / 100) * taskInfo.goal;
                                 isSuccess = hoursSlept >= 8;
-                            } else {
-                                isSuccess = taskInfo.inverted ? log.progress < 50 : log.progress >= 50;
+                            } else if (taskInfo.inverted) {
+                                // For inverted tasks, convert progress back to raw value and check against goal
+                                const rawValue = (log.progress / 100) * taskInfo.maxValue;
+                                isSuccess = rawValue < taskInfo.goal;
+                            }
+                            else {
+                                isSuccess = log.progress >= 50;
                             }
                             
                             if (isSuccess) {

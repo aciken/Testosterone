@@ -30,34 +30,44 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
     }
     // --- End of Crash Proofing ---
 
-    const isCompleted = todo.progress >= 100;
+    const isFailed = todo.inverted && (() => {
+      if (todo.type === 'slider') {
+        const rawValue = (todo.progress / 100) * todo.maxValue;
+        return rawValue >= todo.goal;
+      }
+      // For simple inverted tasks, failure is when progress is 100%
+      return todo.progress >= 100;
+    })();
+
+    const isCompleted = !todo.inverted && todo.progress >= 100;
     const isNegative = todo.progress < 0;
-    const animation = useRef(new Animated.Value(isCompleted ? 1 : 0)).current;
+    const animation = useRef(new Animated.Value((isCompleted || isFailed) ? 1 : 0)).current;
     const progressAnim = useRef(new Animated.Value(Math.abs(todo.progress || 0))).current;
 
     const getGoalText = () => {
-      switch (todo.type) {
-        case 'slider':
-          return todo.inverted ? `Goal: < ${todo.maxValue / 2} ${todo.unit}` : `Goal: ${todo.goal} ${todo.unit}`;
-        case 'checklist':
-          return `Goal: ${todo.checklist.length} items`;
-        case 'meals':
-          return `Goal: ${todo.meals.length} meals`;
-        case 'simple':
-          return 'Goal: Complete';
-        default:
-          return '';
-      }
+        if (!todo) return '';
+        switch (todo.type) {
+            case 'slider':
+                return todo.inverted ? `Goal: < ${todo.goal} ${todo.unit}` : `Goal: ${todo.goal} ${todo.unit}`;
+            case 'checklist':
+                return `Goal: ${todo.checklist.length} items`;
+            case 'meals':
+                return `Goal: ${todo.meals.length} meals`;
+            case 'simple':
+                return 'Goal: Complete';
+            default:
+                return '';
+        }
     };
 
     useEffect(() => {
       Animated.timing(animation, {
-        toValue: isCompleted ? 1 : 0,
+        toValue: (isCompleted || isFailed) ? 1 : 0,
         duration: 500,
         easing: Easing.out(Easing.ease),
         useNativeDriver: false,
       }).start();
-    }, [isCompleted]);
+    }, [isCompleted, isFailed]);
 
     useEffect(() => {
       Animated.timing(progressAnim, {
@@ -75,7 +85,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
       }),
       borderColor: animation.interpolate({
         inputRange: [0, 1],
-        outputRange: ['rgba(255, 255, 255, 0.2)', (todo.inverted || isNegative) ? 'rgba(255, 107, 107, 0.9)' : 'rgba(255, 255, 255, 0.9)'],
+        outputRange: ['rgba(255, 255, 255, 0.2)', (isFailed || isNegative) ? 'rgba(255, 107, 107, 0.9)' : 'rgba(255, 255, 255, 0.9)'],
       }),
     };
 
@@ -103,17 +113,17 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
       >
         <ImageBackground source={todo.image} style={styles.imageBackground} imageStyle={styles.imageStyle}>
           <Animated.View style={{...StyleSheet.absoluteFillObject, opacity: blurOpacity }}>
-            {isCompleted && <BlurView intensity={30} tint={(todo.inverted || isNegative) ? "dark" : "light"} style={StyleSheet.absoluteFill} />}
+            {(isCompleted || isFailed) && <BlurView intensity={30} tint={(isFailed || isNegative) ? "dark" : "light"} style={StyleSheet.absoluteFill} />}
           </Animated.View>
           <LinearGradient
-            colors={isCompleted ? ((todo.inverted || isNegative) ? ['rgba(150,0,0,0.5)', 'rgba(50,0,0,0.5)'] : ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)']) : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
+            colors={(isCompleted || isFailed) ? ((isFailed || isNegative) ? ['rgba(150,0,0,0.5)', 'rgba(50,0,0,0.5)'] : ['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)']) : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
             style={styles.gradient}
           >
             <View style={{ height: 28 }}>
               <Animated.View style={{ opacity: doneOpacity, position: 'absolute' }}>
-                <View style={[styles.badgeContainer, isCompleted && (todo.inverted || isNegative) ? styles.failedBadge : styles.completedBadge]}>
-                  <Ionicons name={isCompleted && (todo.inverted || isNegative) ? "warning-outline" : "checkmark-sharp"} size={16} color="#FFFFFF" />
-                  <Text style={styles.completedText}>{isCompleted && (todo.inverted || isNegative) ? "FAILED" : "DONE"}</Text>
+                <View style={[styles.badgeContainer, (isFailed || isNegative) ? styles.failedBadge : styles.completedBadge]}>
+                  <Ionicons name={(isFailed || isNegative) ? "warning-outline" : "checkmark-sharp"} size={16} color="#FFFFFF" />
+                  <Text style={styles.completedText}>{(isFailed || isNegative) ? "FAILED" : "DONE"}</Text>
                 </View>
               </Animated.View>
             </View>
@@ -126,7 +136,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
                     <Animated.View style={[
                       styles.cardProgressBarFill, 
                       { width: animatedProgressWidth },
-                      (todo.inverted || isNegative) && { backgroundColor: '#FF6B6B' }
+                      (isFailed || isNegative) && { backgroundColor: '#FF6B6B' }
                     ]} />
                   </View>
                 </View>

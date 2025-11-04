@@ -1,10 +1,12 @@
 const User = require('../User/User');
 const { checkAndAwardAchievements, calculateStreakForTask } = require('../Auth/achievementChecker');
+const { taskMap } = require('../data/programData');
 
-// This helper function is now redundant as the logic is in achievementChecker.js
-// We will use isTaskQualifyingForStreak from there, but need to check the incoming task body format.
 function isTaskUpdateQualifying(task) {
-  if (!task) return false;
+  if (!task || !task.id) return false;
+  
+  const taskDefinition = taskMap[task.id];
+  if (!taskDefinition) return false;
 
   switch (task.id) {
     case '1': // Sun Exposure
@@ -17,6 +19,17 @@ function isTaskUpdateQualifying(task) {
       return task.progress >= 87.5;
     case '5': // Supplements
       return task.checked && task.checked.length === 4;
+    
+    // Inverted Tasks (Dont's)
+    case 'd1': // Masturbation
+      return task.progress < 50; // Qualifies if they did NOT do it
+    case 'd2': // Stress Level
+      const stressValue = (task.progress / 100) * taskDefinition.maxValue;
+      return stressValue < taskDefinition.goal;
+    case 'd3': // Alcohol Consumption
+      const alcoholValue = (task.progress / 100) * taskDefinition.maxValue;
+      return alcoholValue < taskDefinition.goal;
+      
     default:
       return false;
   }

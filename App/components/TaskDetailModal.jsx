@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, TouchableWithoutFeedback, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Easing, TouchableWithoutFeedback, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -168,9 +168,9 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
       // Reset state based on task type
       switch (task.type) {
         case 'slider':
-          const initialValue = task.inverted
-            ? (task.progress / 100) * (task.maxValue || 10)
-            : (task.progress / 100) * (task.goal || 1);
+          // Convert saved progress (percentage) back to the slider's raw value for initialization
+          const maxValue = task.maxValue || task.goal * 1.5;
+          const initialValue = (task.progress / 100) * maxValue;
           setCurrentValue(initialValue);
           setSliderKey(prev => prev + 1); // Force complete remount of slider
           setChecklistItems([]);
@@ -259,11 +259,9 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   
   const renderSimpleTask = () => (
     <View style={styles.contentContainer}>
-      <Ionicons name="barbell-outline" size={48} color="#737373" style={{ marginBottom: 16 }}/>
+      <Image source={task.image} style={styles.taskImage} />
       <Text style={styles.taskTitle}>
-        {task.task === 'High-intensity workout'
-          ? 'Did you do an intensive weightlifting workout today?'
-          : task.task}
+        Did you complete: {task.task}?
       </Text>
     </View>
   );
@@ -284,8 +282,8 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         key={sliderKey}
         min={0}
         max={task.maxValue || task.goal * 1.5}
-        initialValue={currentValue}
-        onValueChange={setCurrentValue}
+        initialValue={currentValue} // `currentValue` is now the raw value
+        onValueChange={setCurrentValue} // `onValueChange` from slider gives raw value
         unit={task.unit}
         step={task.step || 1}
       />
@@ -456,9 +454,10 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
       saveData.progress = 100;
       saveData.checked = ['done'];
     } else if (task.type === 'slider') {
-      saveData.progress = task.inverted
-        ? Math.min(Math.round((currentValue / (task.maxValue / 2)) * 100), 100)
-        : Math.round((currentValue / task.goal) * 100);
+      // For sliders, `currentValue` is the raw value from the slider component.
+      // We convert it to a percentage of the task's max value to store as progress.
+      const maxValue = task.maxValue || task.goal * 1.5;
+      saveData.progress = Math.round((currentValue / maxValue) * 100);
     } else if (task.type === 'checklist') {
       const doneCount = checklistItems.filter(item => item.done).length;
       saveData.progress = Math.round((doneCount / checklistItems.length) * 100);
@@ -558,7 +557,7 @@ const MealHistoryModal = ({ visible, meals, onClose, onMealDeleted }) => {
             setMealHistory(newHistory);
 
             try {
-                const response = await axios.post('https://26e4f9703e03.ngrok-free.app/tasks/meal/delete', {
+                const response = await axios.post('https://testosterone.onrender.com/tasks/meal/delete', {
                     userId: user._id,
                     timestamp: timestamp,
                     taskId: '3', 
@@ -996,6 +995,13 @@ const styles = StyleSheet.create({
   },
   historyDeleteBtn: {
     padding: 4,
+  },
+  taskImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 15,
+    marginBottom: 10,
+    resizeMode: 'contain',
   },
 });
 

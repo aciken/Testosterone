@@ -1,6 +1,7 @@
 const User = require('../User/User');
 const achievements = require('../achievements');
 const { calculateCurrentTScore } = require('../logic/scoreCalculator');
+const { taskMap } = require('../data/programData');
 
 function calculateExerciseDays(tasks) {
   if (!tasks || tasks.length === 0) {
@@ -53,7 +54,10 @@ function calculateSleepDays(tasks) {
  * @returns {boolean} - True if the task qualifies for a streak.
  */
 function isTaskQualifyingForStreak(task) {
-  if (!task) return false;
+  if (!task || !task.taskId) return false;
+  
+  const taskDefinition = taskMap[task.taskId];
+  if (!taskDefinition) return false;
 
   switch (task.taskId) {
     case '1': // Sun Exposure: Must be at least 15 minutes (goal is 30, so 50% progress)
@@ -66,6 +70,17 @@ function isTaskQualifyingForStreak(task) {
       return task.progress >= 87.5;
     case '5': // Supplements: All 4 must be checked.
       return task.checked && task.checked.length === 4;
+    
+    // Inverted Tasks (Dont's)
+    case 'd1': // Masturbation
+      return task.progress < 50; // Qualifies if they did NOT do it
+    case 'd2': // Stress Level
+      const stressValue = (task.progress / 100) * taskDefinition.maxValue;
+      return stressValue < taskDefinition.goal;
+    case 'd3': // Alcohol Consumption
+      const alcoholValue = (task.progress / 100) * taskDefinition.maxValue;
+      return alcoholValue < taskDefinition.goal;
+      
     default:
       return false;
   }
