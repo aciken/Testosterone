@@ -73,13 +73,19 @@ export default function CreateAccount() {
       
 
       const { user, email, fullName } = credential;
-      const name = fullName ? `${fullName.givenName} ${fullName.familyName}` : 'User';
-      
+      let name = null;
+      if (fullName && fullName.givenName) {
+        name = `${fullName.givenName}${fullName.familyName ? ` ${fullName.familyName}` : ''}`;
+      }
+
+      // Retrieve the name entered during onboarding
+      const onboardingName = await AsyncStorage.getItem('onboardingName');
+
       const response = await axios.post('https://testosterone.onrender.com/auth/apple', {
         appleId: user,
         email,
-        name,
-        onboardingName: user?.name,
+        name, // This is the name from Apple (often null)
+        onboardingName: onboardingName, // This is the name from our input screen
       });
 
 

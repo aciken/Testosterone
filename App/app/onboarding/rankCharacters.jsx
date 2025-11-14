@@ -46,11 +46,11 @@ const ScoreProgressBar = ({ score, maxScore = 1000 }) => {
 };
 
 const RankBadge = ({ badgeImage, isActive, index, rankColor }) => {
-  const scaleAnim = useRef(new Animated.Value(isActive ? 1.2 : 1)).current;
+  const scaleAnim = useRef(new Animated.Value(isActive ? 1.1 : 1)).current;
   const opacityAnim = useRef(new Animated.Value(isActive ? 1 : 0.5)).current;
 
   useEffect(() => {
-    Animated.spring(scaleAnim, { toValue: isActive ? 1.2 : 1, friction: 5, useNativeDriver: true }).start();
+    Animated.spring(scaleAnim, { toValue: isActive ? 1.1 : 1, friction: 5, useNativeDriver: true }).start();
     Animated.timing(opacityAnim, { toValue: isActive ? 1 : 0.5, duration: 300, useNativeDriver: true }).start();
   }, [isActive]);
 
@@ -102,7 +102,7 @@ export default function RankCharacters() {
     <LinearGradient colors={['#2A1A0A', '#1A1108', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <BlurView intensity={50} tint="dark" style={styles.titleContainer}>
-          <Text style={styles.headerTitle}>Which legend will you become?</Text>
+          <Text style={styles.headerTitle}>Who will you rise to become?</Text>
         </BlurView>
 
         <View style={styles.content}>

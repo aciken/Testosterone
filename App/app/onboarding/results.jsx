@@ -7,8 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function Results() {
   const router = useRouter();
-  const userScore = 38;
-  const averageScore = 62;
+  const userScore = 29;
+  const averageScore = 41;
   const userHeightAnim = useRef(new Animated.Value(0)).current;
   const averageHeightAnim = useRef(new Animated.Value(0)).current;
 

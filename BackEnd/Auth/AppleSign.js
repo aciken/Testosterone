@@ -17,7 +17,11 @@ const AppleSign = async (req, res) => {
                 user.email = email;
                 updated = true;
             }
-            if (name && (!user.name || user.name === 'User')) {
+            // Only update the name if it's provided AND the current name is a default
+            if (onboardingName && (!user.name || user.name === 'User')) {
+                user.name = onboardingName;
+                updated = true;
+            } else if (name && (!user.name || user.name === 'User')) {
                 user.name = name;
                 updated = true;
             }
@@ -38,7 +42,7 @@ const AppleSign = async (req, res) => {
             const newUser = await User.create({
                 appleId,
                 email, // This can be null, and the schema allows it.
-                name: onboardingName || name || 'User', // Prioritize onboardingName
+                name: onboardingName || name || 'User', // Prioritize onboardingName, then Apple's name, then 'User'
                 isApple: true,
                 dateCreated: new Date(),
             });

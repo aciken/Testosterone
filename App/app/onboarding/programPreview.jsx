@@ -42,7 +42,7 @@ const ProgramGraph = () => (
 export default function ProgramPreview() {
   const router = useRouter();
   const completionDate = new Date();
-  completionDate.setDate(completionDate.getDate() + 66);
+  completionDate.setDate(completionDate.getDate() + 90);
   const formattedDate = completionDate.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -55,8 +55,8 @@ export default function ProgramPreview() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Ionicons name="checkmark-circle-outline" size={40} color="#FFA500" style={styles.mainIcon} />
           
-          <Text style={styles.mainTitle}>In 66 days, you shall become the legend you were meant to be.</Text>
-          <Text style={styles.subtitle}>Your destiny awaits. You shall unlock your true potential by:</Text>
+          <Text style={styles.mainTitle}>In just 90 days, you'll take your first real step toward becoming a real man.</Text>
+          <Text style={styles.subtitle}>Your journey to true manhood begins now. These are the milestones that await you:</Text>
 
           <View style={styles.dateChip}>
             <Text style={styles.dateText}>{formattedDate}</Text>

@@ -169,8 +169,13 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
       switch (task.type) {
         case 'slider':
           // Convert saved progress (percentage) back to the slider's raw value for initialization
-          const maxValue = task.maxValue || task.goal * 1.5;
-          const initialValue = (task.progress / 100) * maxValue;
+          let initialValue;
+          if (task.inverted) {
+            const maxValue = task.maxValue || task.goal * 1.5;
+            initialValue = (task.progress / 100) * maxValue;
+          } else {
+            initialValue = (task.progress / 100) * task.goal;
+          }
           setCurrentValue(initialValue);
           setSliderKey(prev => prev + 1); // Force complete remount of slider
           setChecklistItems([]);
@@ -454,10 +459,14 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
       saveData.progress = 100;
       saveData.checked = ['done'];
     } else if (task.type === 'slider') {
-      // For sliders, `currentValue` is the raw value from the slider component.
-      // We convert it to a percentage of the task's max value to store as progress.
-      const maxValue = task.maxValue || task.goal * 1.5;
-      saveData.progress = Math.round((currentValue / maxValue) * 100);
+      if (task.inverted) {
+        // For inverted sliders, progress is a percentage of the max value.
+        const maxValue = task.maxValue || task.goal * 1.5;
+        saveData.progress = Math.round((currentValue / maxValue) * 100);
+      } else {
+        // For "do" sliders, progress is a percentage of the goal.
+        saveData.progress = Math.round((currentValue / task.goal) * 100);
+      }
     } else if (task.type === 'checklist') {
       const doneCount = checklistItems.filter(item => item.done).length;
       saveData.progress = Math.round((doneCount / checklistItems.length) * 100);

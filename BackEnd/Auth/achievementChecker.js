@@ -60,8 +60,8 @@ function isTaskQualifyingForStreak(task) {
   if (!taskDefinition) return false;
 
   switch (task.taskId) {
-    case '1': // Sun Exposure: Must be at least 15 minutes (goal is 30, so 50% progress)
-      return task.progress >= 50;
+    case '1': // Sun Exposure: Must reach the goal.
+      return task.progress >= 100;
     case '2': // Weight Training: Any progress counts.
       return task.progress > 0;
     case '3': // Eat a meal: Must have at least one healthy meal (score >= 75)

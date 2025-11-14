@@ -6,7 +6,7 @@ export default function Question2() {
     <OnboardingQuestion
       questionNumber={2}
       question="How much do you sleep per night?"
-      answers={['Less than 5 hours', '5-6 hours', '7-8 hours', 'More than 8 hours']}
+      answers={['Less than 5 hours', '5-7 hours', '7-8 hours', 'More than 8 hours']}
       nextPage="/onboarding/question3"
     />
   );

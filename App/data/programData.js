@@ -1,7 +1,7 @@
 const programData = {};
 
 const dailyDos = [
-  { id: '1', task: 'Time spent in the sun', type: 'slider', goal: 30, unit: 'minutes', maxValue: 480, step: 15, image: require('../assets/Sunrise.png'), progress: 0, impact: 15 },
+  { id: '1', task: 'Time spent in the sun', type: 'slider', goal: 30, unit: 'minutes', maxValue: 90, step: 15, image: require('../assets/Sunrise.png'), progress: 0, impact: 15 },
   { id: '2', task: 'Weight Training', type: 'simple', image: require('../assets/Workout.png'), progress: 0, impact: 40 },
   { id: '3', task: 'Eat a meal', type: 'meals', image: require('../assets/Meal.png'), progress: 0, meals: [], impact: 25 },
   { id: '4', task: 'Sleep', type: 'slider', goal: 8, unit: 'hours', maxValue: 12, step: 1, image: require('../assets/Sleep.png'), progress: 0, impact: 35 },
