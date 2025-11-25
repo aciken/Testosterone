@@ -121,7 +121,7 @@ const ChecklistItem = ({ item, onToggle }) => {
       <View style={styles.checkboxContainer}>
         <Ionicons name="ellipse-outline" size={28} color="#888888" style={{ position: 'absolute' }} />
         <Animated.View style={{ transform: [{ scale: anim }] }}>
-          <Ionicons name="checkmark-circle" size={28} color="#FFFFFF" />
+          <Ionicons name="checkmark-circle" size={28} color="#FF9500" />
         </Animated.View>
       </View>
       <View>
@@ -157,7 +157,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         return '55%';
       case 'simple_dont':
       case 'simple':
-        return '35%';
+        return '45%'; // Increased height for better spacing
       default:
         return '55%';
     }
@@ -264,17 +264,23 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   
   const renderSimpleTask = () => (
     <View style={styles.contentContainer}>
-      <Image source={task.image} style={styles.taskImage} />
+      <View style={styles.taskImageContainer}>
+        <Image source={task.image} style={styles.taskImage} />
+      </View>
       <Text style={styles.taskTitle}>
-        Did you complete: {task.task}?
+        {task.task}
       </Text>
+      <Text style={styles.taskSubtitle}>Did you complete this task?</Text>
     </View>
   );
 
   const renderSimpleDontTask = () => (
     <View style={styles.contentContainer}>
-      <Ionicons name="close" size={48} color="#ef4444" style={{ marginBottom: 16 }}/>
-      <Text style={styles.taskTitle}>Did you Masturbate?</Text>
+      <View style={[styles.taskImageContainer, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+        <Ionicons name="close" size={48} color="#ef4444"/>
+      </View>
+      <Text style={styles.taskTitle}>Avoid Masturbation</Text>
+      <Text style={styles.taskSubtitle}>Did you stay disciplined today?</Text>
     </View>
   );
 
@@ -283,15 +289,17 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
       <Text style={styles.taskTitle}>
         {task.inverted ? `Rate your ${task.task.toLowerCase()}` : `How much ${task.task.toLowerCase()}?`}
       </Text>
-      <CustomSlider 
-        key={sliderKey}
-        min={0}
-        max={task.maxValue || task.goal * 1.5}
-        initialValue={currentValue} // `currentValue` is now the raw value
-        onValueChange={setCurrentValue} // `onValueChange` from slider gives raw value
-        unit={task.unit}
-        step={task.step || 1}
-      />
+      <View style={styles.sliderWrapper}>
+        <CustomSlider 
+            key={sliderKey}
+            min={0}
+            max={task.maxValue || task.goal * 1.5}
+            initialValue={currentValue} // `currentValue` is now the raw value
+            onValueChange={setCurrentValue} // `onValueChange` from slider gives raw value
+            unit={task.unit}
+            step={task.step || 1}
+        />
+      </View>
     </View>
   );
 
@@ -306,7 +314,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
 
     return (
       <View style={styles.contentContainer}>
-        <Text style={styles.taskTitle}>Which supplements did you take?</Text>
+        <Text style={styles.taskTitle}>Daily Supplements</Text>
         <View style={styles.checklistContainer}>
           {checklistItems.map(item => (
             <ChecklistItem
@@ -362,7 +370,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.contentContainer}>
-            <Text style={styles.taskTitle}>What did you eat today?</Text>
+            <Text style={styles.taskTitle}>Nutrition Log</Text>
             
             {task.history && task.history.length > 0 && (
               <TouchableOpacity 
@@ -378,14 +386,14 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
             <TextInput
               style={styles.mealTextInput}
               placeholder="e.g., Steak, eggs, and spinach..."
-              placeholderTextColor="#555"
+              placeholderTextColor="#666"
               value={mealInput}
               onChangeText={setMealInput}
               multiline
             />
             <View style={styles.analysisContainer}>
               {isAnalyzing ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color="#FF9500" size="large" />
               ) : analysis ? (
                 <View style={styles.analysisResult}>
                     <AnalysisGauge score={analysis.score} />
@@ -395,14 +403,16 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                 <TouchableOpacity
                   onPress={handleAnalyze}
                   disabled={!mealInput}
+                  style={{ width: '100%' }}
                 >
                   <LinearGradient
-                    colors={!mealInput ? ['#333', '#222'] : ['#FF8C00', '#B46010']}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
+                    colors={!mealInput ? ['#333', '#222'] : ['#FF9500', '#FF5E00']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={[styles.analyzeButton, !mealInput && styles.disabledButton]}
                   >
-                    <Text style={styles.analyzeButtonText}>Analyze Meal</Text>
+                    <Text style={styles.analyzeButtonText}>Analyze Meal Impact</Text>
+                    <Ionicons name="analytics" size={20} color="#FFF" style={{ marginLeft: 8 }} />
                   </LinearGradient>
                 </TouchableOpacity>
               )}
@@ -439,9 +449,9 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   const getButtonText = () => {
     if (isSimpleTask) {
       if (isCompleted) {
-        return "Undo";
+        return "Undo Completion";
       } else {
-        return task.inverted ? "I did it" : "Mark as Complete";
+        return task.inverted ? "I Resisted" : "Mark as Complete";
       }
     }
     // Fallback for other task types
@@ -496,9 +506,10 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         <AnimatedBlurView intensity={blurAnim} tint="dark" style={styles.modalOverlay}>
           <TouchableWithoutFeedback>
             <Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }], height: getModalHeight() }]}>
-              <LinearGradient colors={['#181818', '#0A0A0A']} style={styles.gradientContainer}>
+              <LinearGradient colors={['#1A1A1A', '#000000']} style={styles.gradientContainer}>
+                <View style={styles.dragIndicator} />
                 <TouchableOpacity style={styles.closeButton} onPress={() => handleClose()}>
-                  <Ionicons name="close-circle" size={30} color="#555555" />
+                  <Ionicons name="close" size={24} color="#888" />
                 </TouchableOpacity>
                 
                 {renderContent()}
@@ -510,10 +521,18 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
                   ]} 
                   disabled={task.type === 'meals' && !analysis}
                   onPress={handleButtonPress}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.saveButtonText}>
-                    {getButtonText()}
-                  </Text>
+                  <LinearGradient
+                    colors={isCompleted ? ['#333', '#222'] : ['#FFFFFF', '#E0E0E0']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.saveButtonGradient}
+                  >
+                    <Text style={[styles.saveButtonText, isCompleted && { color: '#FFFFFF' }, !isCompleted && { color: '#000000' }]}>
+                        {getButtonText()}
+                    </Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </LinearGradient>
             </Animated.View>
@@ -703,35 +722,66 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     overflow: 'hidden',
+    width: '100%',
   },
   gradientContainer: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     justifyContent: 'space-between',
   },
+  dragIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
   closeButton: {
-    alignSelf: 'flex-end',
     position: 'absolute',
-    top: 20,
-    right: 20,
+    top: 24,
+    right: 24,
     zIndex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 20,
+    padding: 4,
   },
   contentContainer: {
     flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 20,
+    width: '100%',
+  },
+  taskImageContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 25,
-    paddingBottom: 20, // Pushes content up from the save button
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  taskImage: {
+    width: '80%',
+    height: '80%',
+    resizeMode: 'contain',
   },
   viewHistoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
+    borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -747,20 +797,32 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   taskTitle: {
-    color: '#E0E0E0',
-    fontSize: 22,
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  taskSubtitle: {
+    color: '#888',
+    fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
     marginBottom: 30,
+  },
+  sliderWrapper: {
+    width: '100%',
+    marginTop: 20,
   },
   mealTextInput: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     padding: 18,
-    borderRadius: 15,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     minHeight: 120,
     textAlignVertical: 'top',
     width: '100%',
@@ -768,53 +830,53 @@ const styles = StyleSheet.create({
   analysisContainer: {
     marginTop: 20,
     alignItems: 'center',
-    justifyContent: 'center', // Center content vertically
-    minHeight: 90, // Set a fixed height to prevent layout shifts
+    justifyContent: 'center', 
+    minHeight: 90,
+    width: '100%',
   },
   analyzeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 30,
+    borderRadius: 25,
     paddingVertical: 16,
-    paddingHorizontal: 35,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#FF8C00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
+    width: '100%',
+    shadowColor: '#FF9500',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 5,
   },
   analyzeButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   disabledButton: {
     shadowOpacity: 0,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    opacity: 0.5,
   },
   analysisResult: {
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
     width: '100%',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 15,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   gaugeContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   analysisText: {
     color: '#E0E0E0',
     fontSize: 16,
     textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 10,
+    lineHeight: 24,
+    fontWeight: '500',
   },
   analysisScore: {
     position: 'absolute',
@@ -822,31 +884,28 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
   },
-  badAnalysisResult: {
-    borderColor: 'rgba(255, 107, 107, 0.2)',
-  },
-  badAnalysisScore: {
-    color: '#FF6B6B',
-  },
   checklistContainer: {
     width: '100%',
     alignItems: 'flex-start',
+    marginTop: 10,
   },
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 16,
     width: '100%',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   checkboxContainer: {
-    width: 30,
-    height: 30,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 16,
   },
   checklistText: {
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: '600',
   },
   strikethrough: {
@@ -856,19 +915,28 @@ const styles = StyleSheet.create({
     top: '50%',
   },
   saveButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 20,
-    alignItems: 'center',
     width: '100%',
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  saveButtonGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   saveButtonText: {
-    color: '#0A0A0A',
+    color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   saveButtonDisabled: {
-    backgroundColor: '#555',
+    opacity: 0.5,
   },
   // Meal History Modal Styles
   historyModalContainer: {
@@ -877,7 +945,7 @@ const styles = StyleSheet.create({
   },
   historyBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   historyContent: {
     flex: 1,
@@ -1005,14 +1073,6 @@ const styles = StyleSheet.create({
   historyDeleteBtn: {
     padding: 4,
   },
-  taskImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 15,
-    marginBottom: 10,
-    resizeMode: 'contain',
-  },
 });
 
 export default TaskDetailModal;
-

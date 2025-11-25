@@ -29,48 +29,49 @@ const badges = allBadges.slice(0, 6);
 const KeyFactorItem = ({ icon, name, totalImpact, color, maxValue, onPress, streak }) => {
     const hasStreak = streak > 0;
 
-    // The glow effect will radiate from the right, getting stronger with the streak
-    const glowOpacity = hasStreak ? Math.min(0.05 + streak * 0.03, 0.5) : 0;
-    const nonStreakBg = 'rgba(255, 255, 255, 0.05)';
-    const streakGlowColor = `rgba(255, 149, 0, ${glowOpacity})`;
+    // Use cleaner colors and simpler effects
+    const nonStreakBg = 'rgba(255, 255, 255, 0.03)';
+    const streakBg = 'rgba(255, 149, 0, 0.1)';
     
     const gradientColors = hasStreak
-        ? [streakGlowColor, nonStreakBg]
+        ? [streakBg, streakBg]
         : [nonStreakBg, nonStreakBg];
     
-    // The border and shadow will also reflect the streak's intensity
-    const borderOpacity = hasStreak ? Math.min(0.2 + streak * 0.04, 0.8) : 0.1;
-    const borderColor = hasStreak ? `rgba(255, 149, 0, ${borderOpacity})` : 'rgba(255, 255, 255, 0.1)';
+    const borderColor = hasStreak ? '#FF9500' : 'rgba(255, 255, 255, 0.08)';
+    const borderWidth = hasStreak ? 1.5 : 1;
     
-    const shadowColor = hasStreak ? '#FF9500' : '#000';
-    const shadowOpacity = hasStreak ? 0.7 : 0.3;
-    const shadowRadius = hasStreak ? 20 : 12;
-
     const currentIcon = hasStreak ? (taskIcons[icon] || icon) : (taskIconsGrayscale[icon] || icon);
 
     return (
-        <TouchableOpacity onPress={onPress} style={[styles.keyFactorTouchable, { shadowColor, shadowOpacity, shadowRadius }]}>
+        <TouchableOpacity onPress={onPress} style={styles.keyFactorTouchable}>
             <LinearGradient
                 colors={gradientColors}
-                start={{ x: 1, y: 0.5 }}
-                end={{ x: 0, y: 0.5 }}
-                style={[styles.keyFactorItem, { borderColor }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.keyFactorItem, { borderColor, borderWidth }]}
             >
-                <View style={styles.keyFactorIconContainer}>
+                <View style={[styles.keyFactorIconContainer, hasStreak && styles.activeIconContainer]}>
                     {typeof currentIcon === 'string' ? (
-                        <Ionicons name={currentIcon} size={24} color={color} />
+                        <Ionicons name={currentIcon} size={22} color={hasStreak ? '#FF9500' : '#666'} />
                     ) : (
-                        <Image source={currentIcon} style={styles.keyFactorImage} />
+                        <Image source={currentIcon} style={[styles.keyFactorImage, !hasStreak && { opacity: 0.5 }]} />
                     )}
                 </View>
+                
                 <View style={styles.keyFactorDetails}>
-                    <Text style={styles.keyFactorName}>{name}</Text>
+                    <Text style={[styles.keyFactorName, hasStreak && styles.activeKeyFactorName]}>{name}</Text>
+                    <Text style={[styles.keyFactorSubtitle, hasStreak && styles.activeKeyFactorSubtitle]}>{hasStreak ? 'Active Streak' : 'No active streak'}</Text>
                 </View>
+                
                 <View style={styles.keyFactorValueContainer}>
-                    <Image source={streak > 0 ? require('../../assets/StreakImage3.png') : require('../../assets/StreakImage4.png')} style={[styles.streakImage, { opacity: streak > 0 ? 1 : 0.7 }]} />
-                    <Text style={[styles.keyFactorValue, { color: streak > 0 ? '#FFFFFF' : '#888' }]}>
-                        {streak}
-                    </Text>
+                    {hasStreak && (
+                        <View style={styles.streakBadge}>
+                            <Ionicons name="flame" size={14} color="#FF9500" />
+                            <Text style={styles.keyFactorValue}>
+                                {streak}
+                            </Text>
+                        </View>
+                    )}
                 </View>
             </LinearGradient>
         </TouchableOpacity>
@@ -715,51 +716,61 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
     keyFactorTouchable: {
+        marginBottom: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 8,
-        marginBottom: 15,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
     },
     keyFactorItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 28,
-        padding: 20,
-        borderWidth: 1.5,
+        borderRadius: 32,
+        padding: 18,
+        borderWidth: 1,
     },
     keyFactorIconContainer: {
-        width: 40,
-        height: 40,
+        width: 52,
+        height: 52,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 15,
+        marginRight: 18,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: 26,
     },
-    keyFactorIcon: {
-        marginRight: 15,
+    activeIconContainer: {
+        backgroundColor: 'rgba(255, 149, 0, 0.15)',
     },
-    keyFactorDetails: { flex: 1, },
-    keyFactorName: { color: '#E0E0E0', fontSize: 17, fontWeight: '700', },
+    keyFactorDetails: { flex: 1, justifyContent: 'center' },
+    keyFactorName: { color: '#999', fontSize: 16, fontWeight: '600', marginBottom: 2 },
+    activeKeyFactorName: { color: '#FFFFFF' },
+    keyFactorSubtitle: { color: '#555', fontSize: 12, fontWeight: '500' },
+    activeKeyFactorSubtitle: { color: '#CC7700', fontWeight: '500' },
     keyFactorImage: {
-        width: 36,
-        height: 36,
-    },
-    streakImage: {
-        width: 26,
-        height: 26,
+        width: 24,
+        height: 24,
+        resizeMode: 'contain',
     },
     keyFactorValueContainer: {
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+    },
+    streakBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginLeft: 15,
-        width: 50,
-        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(255, 149, 0, 0.15)',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 149, 0, 0.3)',
     },
     keyFactorValue: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 4,
+        fontSize: 14,
+        fontWeight: '800',
+        marginLeft: 6,
+        color: '#FF9500',
     },
     noDataContainer: { marginTop: 60, alignItems: 'center', opacity: 0.5 },
     noDataText: { color: '#8A95B6', marginTop: 20, fontSize: 16, textAlign: 'center' },

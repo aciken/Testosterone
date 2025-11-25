@@ -782,73 +782,90 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 25, // Increased margin
   },
   arrowButton: {
     padding: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)', // Subtle background for touch target
+    borderRadius: 20,
   },
   arrowButtonDisabled: {
     opacity: 0.3,
+    backgroundColor: 'transparent',
   },
   dayDisplay: {
     alignItems: 'center',
   },
   dayLabel: {
-    color: '#C5C5C5',
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 3,
+    color: '#888', // Darker grey for subtitle
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 4,
+    marginBottom: -5, // Tighter spacing
   },
   dayNumber: {
     color: '#FFFFFF',
-    fontSize: 72,
-    fontWeight: 'bold',
-    lineHeight: 80,
+    fontSize: 76, // Slightly larger
+    fontWeight: '900', // Maximum weight
+    lineHeight: 84,
+    textShadowColor: 'rgba(255, 255, 255, 0.1)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
   },
   todayButtonContainer: {
-    height: 26,
-    marginTop: 4,
+    height: 30,
+    marginTop: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   todayButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 149, 0, 0.15)', // Orange tint
+    borderColor: 'rgba(255, 149, 0, 0.3)',
     borderWidth: 1,
-    borderRadius: 13,
-    paddingVertical: 5,
-    paddingHorizontal: 15,
+    borderRadius: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
   },
   todayText: {
-    color: '#FFFFFF',
+    color: '#FF9500', // Brand orange
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '800',
     letterSpacing: 1,
   },
   isTodayText: {
-    color: '#C5C5C5',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: '#FF9500', // Brand orange instead of grey
+    fontSize: 13,
+    fontWeight: '800',
     letterSpacing: 2,
+    textShadowColor: 'rgba(255, 149, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   progressContainer: {
     width: '100%',
-    height: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    marginTop: 15,
-    position: 'relative', // Added for positioning bars
+    height: 28, // Slightly taller
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 14,
+    marginTop: 10,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    overflow: 'hidden',
   },
   sectionHeader: {
     width: '100%',
     marginBottom: 15,
-    marginTop: 10,
+    marginTop: 15, // Increased spacing
+    paddingLeft: 5,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF9500', // Orange accent line
   },
   sectionTitle: {
-    color: '#C5C5C5',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: '#FFFFFF', // Brighter white
+    fontSize: 14,
+    fontWeight: '800',
     letterSpacing: 2,
+    marginLeft: 10,
   },
   listContainer: {
     minHeight: 100,
