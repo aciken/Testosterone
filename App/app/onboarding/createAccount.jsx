@@ -16,11 +16,14 @@ export default function CreateAccount() {
   const { user, setUser, setIsAuthenticated, setIsPro, setIsNewUserOnboarding } = useGlobalContext();
 
   // 451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com
+  let userName =  user?.name;
 
   const handleGoogleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
+
+      console.log(user?.name);
       
       const response = await axios.post('https://testosterone.onrender.com/auth/google', {
         token: userInfo.data.idToken,
@@ -71,21 +74,20 @@ export default function CreateAccount() {
         ],
       });
       
+ 
 
       const { user, email, fullName } = credential;
-      let name = null;
-      if (fullName && fullName.givenName) {
-        name = `${fullName.givenName}${fullName.familyName ? ` ${fullName.familyName}` : ''}`;
-      }
+ 
 
       // Retrieve the name entered during onboarding
       const onboardingName = await AsyncStorage.getItem('onboardingName');
 
+      console.log(userName);
+
       const response = await axios.post('https://testosterone.onrender.com/auth/apple', {
         appleId: user,
         email,
-        name, // This is the name from Apple (often null)
-        onboardingName: onboardingName, // This is the name from our input screen
+        onboardingName: userName,// This is the name from Apple (often null)
       });
 
 

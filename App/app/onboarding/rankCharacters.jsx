@@ -94,7 +94,7 @@ export default function RankCharacters() {
       Animated.timing(characterAnims[currentIndex], { toValue: 0, duration: 400, useNativeDriver: true }).start();
       setCurrentIndex(nextIndex);
     } else if (direction > 0 && nextIndex >= ranksData.length) {
-      router.push('/onboarding/programPreview');
+      router.push('/onboarding/yourRank');
     }
   };
 
@@ -138,7 +138,7 @@ export default function RankCharacters() {
             <TouchableOpacity onPress={() => cycleRank(1)}>
               <LinearGradient colors={['#FFC300', '#FF8C00']} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={styles.continueButton}>
                 <Text style={styles.continueButtonText}>
-                  {currentIndex === ranksData.length - 1 ? "Start" : "Next"}
+                  {currentIndex === ranksData.length - 1 ? "See My Rank" : "Next"}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

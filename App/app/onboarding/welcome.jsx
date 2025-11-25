@@ -29,7 +29,7 @@ export default function Welcome() {
         charTimeout = setTimeout(() => typeChar(index + 1), 50);
       } else {
         setTimeout(() => {
-          router.push('/onboarding/dosAndDonts');
+          router.push('/onboarding/programPreview');
         }, 1000); // Wait a second before navigating
       }
     };

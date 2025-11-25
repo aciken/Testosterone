@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Purchases from 'react-native-purchases';
+import * as WebBrowser from 'expo-web-browser';
 
 const SettingOption = ({ icon, text, onPress, isDestructive }) => (
   <TouchableOpacity 
@@ -23,7 +24,7 @@ const SettingOption = ({ icon, text, onPress, isDestructive }) => (
 );
 
 export default function SettingsScreen() {
-  const { setIsAuthenticated, setUser, setIsPro } = useGlobalContext();
+  const { user, setIsAuthenticated, setUser, setIsPro } = useGlobalContext();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -53,6 +54,10 @@ export default function SettingsScreen() {
     );
   };
 
+  const openLink = (url) => {
+    WebBrowser.openBrowserAsync(url);
+  };
+
   return (
     <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -67,10 +72,15 @@ export default function SettingsScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greetingText}>Hello, {user?.name || 'User'}</Text>
+          </View>
+
           <View style={styles.section}>
-            <SettingOption icon="person-outline" text="Account" onPress={() => {}} />
-            <SettingOption icon="notifications-outline" text="Notifications" onPress={() => {}} />
-            <SettingOption icon="shield-checkmark-outline" text="Privacy Policy" onPress={() => {}} />
+            <SettingOption icon="document-text-outline" text="Privacy Policy" onPress={() => openLink('https://www.yourapp.com/privacy')} />
+            <SettingOption icon="reader-outline" text="Terms of Conditions" onPress={() => openLink('https://www.yourapp.com/terms')} />
+            <SettingOption icon="globe-outline" text="Website" onPress={() => openLink('https://www.yourapp.com')} />
+            <SettingOption icon="mail-outline" text="Contact Us" onPress={() => openLink('mailto:support@yourapp.com')} />
           </View>
 
           <View style={styles.section}>
@@ -117,6 +127,16 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     padding: 20,
+  },
+  greetingContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+    paddingVertical: 10,
+  },
+  greetingText: {
+    color: '#E0E0E0',
+    fontSize: 26,
+    fontWeight: 'bold',
   },
   section: {
     backgroundColor: '#1C1C1E',

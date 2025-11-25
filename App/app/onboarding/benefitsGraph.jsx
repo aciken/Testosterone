@@ -82,7 +82,7 @@ const BenefitsGraph = () => {
     if (currentDayIndex < dayKeys.length - 1) {
       setCurrentDayIndex(currentDayIndex + 1);
     } else {
-      router.push('/onboarding/createAccount');
+      router.push('/onboarding/dosAndDonts');
     }
   };
 

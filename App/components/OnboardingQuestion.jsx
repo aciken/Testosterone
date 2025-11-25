@@ -5,11 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import ProgressBar from './ProgressBar';
+import { useOnboardingContext } from '../app/context/OnboardingContext';
 
 const TOTAL_QUESTIONS = 13;
 
 const OnboardingQuestion = ({ questionNumber, question, answers, nextPage, isLastQuestion = false }) => {
   const router = useRouter();
+  const { saveAnswer } = useOnboardingContext();
   const [selected, setSelected] = useState(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const answerAnims = useRef(answers.map(() => new Animated.Value(0))).current;
@@ -33,6 +35,7 @@ const OnboardingQuestion = ({ questionNumber, question, answers, nextPage, isLas
   const handleAnswerSelect = (answer) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelected(answer);
+    saveAnswer(questionNumber, answer);
     setTimeout(() => {
       if (isLastQuestion) {
         router.replace('/onboarding/calculating');
