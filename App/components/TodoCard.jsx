@@ -52,7 +52,7 @@ const TodoCard = ({ todo, onPress, isEditable }) => {
             case 'checklist':
                 return `Goal: ${todo.checklist.length} items`;
             case 'meals':
-                return `Goal: ${todo.meals.length} meals`;
+                return 'Goal: Healthy';
             case 'simple':
                 return 'Goal: Complete';
             default:

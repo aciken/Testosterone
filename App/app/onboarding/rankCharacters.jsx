@@ -18,7 +18,7 @@ const ScoreProgressBar = ({ score, maxScore = 1000 }) => {
   useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: (score / maxScore) * 100,
-      duration: 400,
+      duration: 600,
       useNativeDriver: false,
     }).start();
   }, [score]);
@@ -30,11 +30,14 @@ const ScoreProgressBar = ({ score, maxScore = 1000 }) => {
 
   return (
     <View style={styles.progressContainer}>
-      <Text style={styles.scoreText}>{score} ng/dl</Text>
-      <View style={styles.progressBar}>
+      <View style={styles.scoreInfoContainer}>
+        <Text style={styles.scoreLabel}>REQUIRED TESTOSTERONE</Text>
+        <Text style={styles.scoreValue}>{score} ng/dL</Text>
+      </View>
+      <View style={styles.trackContainer}>
         <Animated.View style={[styles.progressFill, { width: widthInterpolation }]}>
           <LinearGradient
-            colors={['#FFD700', '#FFA500']}
+            colors={['#FFC300', '#FF8C00']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.progressGradient}
@@ -214,30 +217,43 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   progressContainer: {
-    marginBottom: 20,
+    marginBottom: 30,
+    width: '100%',
   },
-  scoreText: {
-    color: 'white',
+  scoreInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  scoreLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  scoreValue: {
+    color: '#FFC300',
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
+    fontWeight: '800',
+    textShadowColor: 'rgba(255, 195, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
-  progressBar: {
-    height: 10,
+  trackContainer: {
+    height: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 5,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
+    borderRadius: 3,
   },
   progressGradient: {
     flex: 1,
-    shadowColor: '#FFA500',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 5,
+    borderRadius: 3,
   },
   buttonRow: {
     flexDirection: 'row',

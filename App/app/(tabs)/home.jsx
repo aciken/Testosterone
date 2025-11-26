@@ -223,7 +223,10 @@ export default function HomeScreen() {
             console.log('[CRASH_DEBUG] HomeScreen: User has tasks. Merging...');
             
             user.tasks.forEach(savedTask => {
-              const taskDate = new Date(savedTask.date);
+              // Fix: Server stores date as UTC midnight. Convert to local date by adding offset to prevent 'previous day' shift
+              const rawDate = new Date(savedTask.date);
+              const taskDate = new Date(rawDate.valueOf() + rawDate.getTimezoneOffset() * 60000);
+              
               const startDate = new Date(dateCreated);
               startDate.setHours(0, 0, 0, 0);
               taskDate.setHours(0, 0, 0, 0);
@@ -232,7 +235,20 @@ export default function HomeScreen() {
               const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
               // Handle edge case: if user's dateCreated is in the future (bad data/timezone issue),
               // treat all tasks as Day 1
-              const dayIndex = daysDiff < 0 ? 1 : daysDiff + 1;
+              let dayIndex = daysDiff < 0 ? 1 : daysDiff + 1;
+
+              // CRITICAL FIX: If the task date matches 'today', FORCE it to be on the current program day (diffDays).
+              // This overcomes any subtle timezone mismatches between 'dateCreated' and 'taskDate' that
+              // might otherwise shift the task to Yesterday or Tomorrow.
+              if (taskDate.getDate() === today.getDate() && 
+                  taskDate.getMonth() === today.getMonth() && 
+                  taskDate.getFullYear() === today.getFullYear()) {
+                  
+                  if (dayIndex !== diffDays) {
+                    console.log(`[MERGE_DEBUG] CORRECTING DRIFT for Task ${savedTask.taskId}: Changed dayIndex from ${dayIndex} to ${diffDays}`);
+                    dayIndex = diffDays;
+                  }
+              }
 
               console.log(`[MERGE_DEBUG] Processing task: ${savedTask.taskId}, progress: ${savedTask.progress}, taskDate: ${taskDate.toDateString()}, startDate: ${startDate.toDateString()}, daysDiff: ${daysDiff}, dayIndex: ${dayIndex}`);
 

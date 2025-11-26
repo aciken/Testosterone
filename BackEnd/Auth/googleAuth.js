@@ -5,7 +5,7 @@ const User = require('../User/User'); // Assuming User model is in User/User.js
 const client = new OAuth2Client('451475688741-ilikls36p28187o7vl665e9vocmha5nd.apps.googleusercontent.com');
 
 const googleAuth = async (req, res) => {
-  const { token, onboardingName } = req.body;
+  const { token, onboardingName, baselineTestosterone } = req.body;
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
@@ -24,6 +24,7 @@ const googleAuth = async (req, res) => {
         profilePicture: picture,
         googleId: ticket.getUserId(),
         dateCreated: new Date(),
+        baselineTestosterone: baselineTestosterone || 290,
       });
       await user.save();
     }

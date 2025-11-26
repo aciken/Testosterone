@@ -14,7 +14,6 @@ import { allBadges } from '../../data/badgeData';
 import { useGlobalContext } from '../context/GlobalProvider';
 
 const screenWidth = Dimensions.get('window').width;
-const BASELINE_TESTOSTERONE = 290;
 
 const ranks = [
     { name: 'Bronze', minScore: 250, maxScore: 350, image: require('../../assets/BronzeRank.png'), color: '#E6A66A' },
@@ -83,7 +82,8 @@ export default function StatisticsScreen() {
     const { user } = useGlobalContext(); // Get user from global context
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [currentTScore, setCurrentTScore] = useState(BASELINE_TESTOSTERONE);
+    // Use user's baseline if available, otherwise default to 290
+    const [currentTScore, setCurrentTScore] = useState(user?.baselineTestosterone || 290);
     const [viewMode, setViewMode] = useState('score');
 
     useFocusEffect(
@@ -94,15 +94,17 @@ export default function StatisticsScreen() {
                     if (!userString) { setIsLoading(false); return; }
 
                     const user = JSON.parse(userString);
+                    const baseline = user.baselineTestosterone || 290;
+
                     if (!user.tasks || user.tasks.length === 0) { 
                         setStats({ 
-                            chartData: [BASELINE_TESTOSTERONE], 
+                            chartData: [baseline], 
                             chartLabels: ['Today'], 
                             streakingFactors: [], 
                             nonStreakingFactors: [], 
                             maxImpact: 1 
                         });
-                        setCurrentTScore(BASELINE_TESTOSTERONE);
+                        setCurrentTScore(baseline);
                         setIsLoading(false); 
                         return; 
                     }
@@ -198,7 +200,7 @@ export default function StatisticsScreen() {
                         const netChange = scaledPositive + scaledNegative;
                         
                         if (i === 0) {
-                            dailyContributions[i] = BASELINE_TESTOSTERONE + netChange;
+                            dailyContributions[i] = baseline + netChange;
                         } else {
                             dailyContributions[i] = dailyContributions[i-1] + netChange;
                         }
@@ -349,8 +351,18 @@ export default function StatisticsScreen() {
                     const maxImpact = Math.max(...impactsArray.map(t => Math.abs(t.totalImpact)), 1);
                     
                     const finalTodayScore = Math.round(rawChartData[rawChartData.length - 1]);
+                    const startScore = finalChartData[0];
+                    const trendPercentage = startScore > 0 ? ((finalTodayScore - startScore) / startScore) * 100 : 0;
+
                     setCurrentTScore(finalTodayScore);
-                    setStats({ chartData: finalChartData, chartLabels, streakingFactors, nonStreakingFactors: sortedNonStreakingFactors, maxImpact });
+                    setStats({ 
+                        chartData: finalChartData, 
+                        chartLabels, 
+                        streakingFactors, 
+                        nonStreakingFactors: sortedNonStreakingFactors, 
+                        maxImpact,
+                        trend: trendPercentage
+                    });
 
                 } catch (error) {
                     console.error("Failed to calculate stats:", error);
@@ -388,15 +400,6 @@ export default function StatisticsScreen() {
                             >
                                 <Text style={[styles.toggleButtonText, viewMode === 'rank' && styles.toggleButtonTextActive]}>Rank</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.toggleButton, viewMode === 'graph' && styles.toggleButtonActive]} 
-                                onPress={() => {
-                                    setViewMode('graph');
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                }}
-                            >
-                                <Text style={[styles.toggleButtonText, viewMode === 'graph' && styles.toggleButtonTextActive]}>Graph</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                     {isLoading ? <ActivityIndicator size="large" color="#FFFFFF" style={{ marginTop: 50 }} />
@@ -407,59 +410,44 @@ export default function StatisticsScreen() {
 
                                 {viewMode === 'rank' && (() => {
                                     const currentRank = ranks.find(r => currentTScore >= r.minScore && currentTScore <= r.maxScore) || ranks[0];
+                                    const nextRank = ranks.find(r => r.minScore > currentTScore) || currentRank;
                                     const progress = Math.max(0, (currentTScore - currentRank.minScore) / (currentRank.maxScore - currentRank.minScore));
+                                    const pointsToNext = Math.max(0, currentRank.maxScore - currentTScore + 1); // +1 to cross threshold
 
                                     return (
-                                        <TouchableOpacity onPress={() => router.push({ pathname: '/rankTimeline', params: { currentTScore } })}>
+                                        <TouchableOpacity onPress={() => router.push({ pathname: '/rankTimeline', params: { currentTScore } })} activeOpacity={0.9}>
                                             <View style={styles.rankContainer}>
-                                                <View style={[styles.rankImageContainer, { shadowColor: currentRank.color }]}>
+                                                <View style={styles.rankImageWrapper}>
+                                                    <View style={[styles.rankGlow, { shadowColor: currentRank.color }]} />
                                                     <Image source={currentRank.image || require('../../assets/BronzeRank.png')} style={styles.rankImage} />
                                                 </View>
-                                                <Text style={[styles.rankText, { color: currentRank.color }]}>{currentRank.name} Tier</Text>
-                                                <View style={styles.progressContainer}>
-                                                    <Text style={styles.progressText}>{currentTScore} / {currentRank.maxScore} ng/dl</Text>
-                                                    <View style={styles.progressBar}>
-                                                        <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: currentRank.color }]} />
+                                                
+                                                <View style={styles.rankInfoContainer}>
+                                                    <Text style={styles.rankLabel}>CURRENT STATUS</Text>
+                                                    <Text style={[styles.rankTitle, { color: currentRank.color }]}>{currentRank.name.toUpperCase()}</Text>
+                                                </View>
+
+                                                <View style={styles.rankProgressWrapper}>
+                                                    <View style={styles.rankProgressLabels}>
+                                                        <Text style={styles.rankProgressText}>{currentTScore} ng/dl</Text>
+                                                        <Text style={styles.rankProgressText}>{currentRank.maxScore} ng/dl</Text>
                                                     </View>
+                                                    <View style={styles.rankProgressBarBg}>
+                                                        <LinearGradient
+                                                            colors={[currentRank.color, currentRank.color]}
+                                                            start={{ x: 0, y: 0 }}
+                                                            end={{ x: 1, y: 0 }}
+                                                            style={[styles.rankProgressBarFill, { width: `${Math.min(100, Math.max(0, progress * 100))}%` }]}
+                                                        />
+                                                    </View>
+                                                    <Text style={styles.pointsToNextText}>
+                                                        {pointsToNext > 0 ? `${pointsToNext} POINTS TO ${nextRank !== currentRank ? nextRank.name.toUpperCase() : 'MAX RANK'}` : 'MAX RANK ACHIEVED'}
+                                                    </Text>
                                                 </View>
                                             </View>
                                         </TouchableOpacity>
                                     );
                                 })()}
-                                
-                                {viewMode === 'graph' && (
-                                    <View style={styles.chartContainer}>
-                                        <Text style={styles.sectionTitle}>PERFORMANCE TIMELINE</Text>
-                                        <LineChart
-                                            data={{ labels: stats.chartLabels, datasets: [{ data: stats.chartData, strokeWidth: 2.5 }] }}
-                                            width={screenWidth}
-                                            height={240}
-                                            chartConfig={chartConfig}
-                                            withShadow={true}
-                                            withInnerLines={true}
-                                            withOuterLines={false}
-                                            withVerticalLabels={true}
-                                            withHorizontalLabels={true}
-                                            bezier
-                                            style={styles.chart}
-                                            renderDotContent={({x, y, index, indexData}) => {
-                                                if (index === 1 || index === stats.chartData.length - 1) {
-                                                    const isStart = index === 1;
-                                                    const labelY = y;
-                                                    const labelX = isStart ? x + 5 : x - 45;
-                                                    const labelOffset = y > 100 ? -35 : 15;
-                                        
-                                                    return (
-                                                        <View key={index} style={[styles.chartLabelContainer, { top: labelY + labelOffset, left: labelX }]}>
-                                                            <Text style={styles.chartLabelText}>{Math.round(indexData)}</Text>
-                                                        </View>
-                                                    );
-                                                }
-                                                return null;
-                                            }}
-                                        />
-                                    </View>
-                                )}
                             </View>
 
                             <View style={styles.badgesContainer}>
@@ -483,8 +471,9 @@ export default function StatisticsScreen() {
                                     {Array.from({ length: Math.max(0, 4 - unlockedBadges.length) }).map((_, index) => (
                                         <View key={`placeholder-${index}`} style={styles.badgeItem}>
                                             <View style={styles.badgePlaceholder}>
-                                                <Ionicons name="add" size={30} color="rgba(255, 255, 255, 0.2)" />
+                                                <Ionicons name="lock-closed" size={20} color="rgba(255, 255, 255, 0.1)" />
                                             </View>
+                                            <Text style={styles.badgeNameLocked}>Locked</Text>
                                         </View>
                                     ))}
                                 </ScrollView>
@@ -512,22 +501,26 @@ export default function StatisticsScreen() {
 }
 
 const chartConfig = {
-    backgroundGradientFrom: "#101010",
+    backgroundGradientFrom: "#1A1A1A",
     backgroundGradientFromOpacity: 0,
-    backgroundGradientTo: "#000000",
+    backgroundGradientTo: "#0F0F0F",
     backgroundGradientToOpacity: 0,
-    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`, // Orange line
+    labelColor: (opacity = 1) => `rgba(120, 120, 120, ${opacity})`, // Lighter grey labels
     strokeWidth: 3,
-    propsForDots: { r: "0" },
-    fillShadowGradientFrom: '#FFFFFF',
-    fillShadowGradientFromOpacity: 0.1,
-    fillShadowGradientTo: '#FFFFFF',
-    fillShadowGradientToOpacity: 0,
+    propsForDots: { 
+        r: "0", 
+        strokeWidth: "0", 
+    },
+    fillShadowGradientFrom: '#FF9500',
+    fillShadowGradientFromOpacity: 0.5, 
+    fillShadowGradientTo: '#FF9500',
+    fillShadowGradientToOpacity: 0.1, 
     decimalPlaces: 0,
     linejoinType: 'round',
     propsForBackgroundLines: {
-        stroke: 'rgba(255, 255, 255, 0.1)',
-        strokeDasharray: '0',
+        stroke: 'rgba(255, 255, 255, 0.03)', 
+        strokeDasharray: '0', // Solid lines
     },
 };
 
@@ -571,55 +564,155 @@ const styles = StyleSheet.create({
     rankContainer: {
         alignItems: 'center',
         justifyContent: 'center',
+        width: '100%',
     },
-    rankImageContainer: {
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.8,
-        shadowRadius: 25,
+    rankImageWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 10,
+    },
+    rankGlow: {
+        position: 'absolute',
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        shadowOpacity: 0.6,
+        shadowRadius: 40,
+        elevation: 20,
     },
     rankImage: {
-        width: 220,
-        height: 220,
+        width: 180,
+        height: 180,
         resizeMode: 'contain',
+        zIndex: 10,
     },
-    rankText: {
-        color: '#E6A66A',
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginTop: 20,
-        letterSpacing: 1.5,
-        textShadowColor: 'rgba(0, 0, 0, 0.5)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
-    },
-    progressContainer: {
-        width: '80%',
+    rankInfoContainer: {
         alignItems: 'center',
-        marginTop: 20,
+        marginBottom: 15,
     },
-    progressText: {
-        color: '#E0E0E0',
-        fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 8,
+    rankLabel: {
+        color: '#666',
+        fontSize: 10,
+        fontWeight: 'bold',
+        letterSpacing: 2,
+        marginBottom: 4,
     },
-    progressBar: {
-        width: '100%',
-        height: 12,
-        backgroundColor: '#1A1A1A',
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+    rankTitle: {
+        fontSize: 32,
+        fontWeight: '900',
+        letterSpacing: 1,
+        textShadowColor: 'rgba(0,0,0,0.8)',
+        textShadowRadius: 10,
+    },
+    rankProgressWrapper: {
+        width: '85%',
+    },
+    rankProgressLabels: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 6,
+    },
+    rankProgressText: {
+        color: '#888',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    rankProgressBarBg: {
+        height: 6,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 3,
         overflow: 'hidden',
     },
-    progressBarFill: {
+    rankProgressBarFill: {
         height: '100%',
+        borderRadius: 3,
     },
-    headerTitle: {
-        color: '#E0E0E0',
-        fontSize: 24,
-        fontWeight: 'bold',
+    pointsToNextText: {
+        color: '#666',
+        fontSize: 10,
+        fontWeight: '600',
+        letterSpacing: 1,
+        marginTop: 8,
         textAlign: 'center',
+    },
+    chartContainer: {
+        width: '100%',
+        paddingHorizontal: 20,
+        marginBottom: 20,
+    },
+    chartCard: {
+        borderRadius: 24,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    chartHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 20,
+        paddingHorizontal: 4,
+    },
+    chartTitle: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+        marginBottom: 4,
+    },
+    chartSubtitle: {
+        color: '#666',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    trendBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(76, 175, 80, 0.2)',
+    },
+    trendText: {
+        color: '#4CAF50',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginLeft: 4,
+    },
+    chart: {
+        borderRadius: 16,
+        marginVertical: 8,
+        marginLeft: -20, // Compensate for left padding to center content
+    },
+    currentScoreBubble: {
+        backgroundColor: '#FF9500',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 20,
+        shadowColor: '#FF9500',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 10,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.4)',
+        minWidth: 60,
+        alignItems: 'center',
+    },
+    currentScoreText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '900',
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
     },
     sectionTitle: { color: '#C5C5C5', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, textAlign: 'center' },
     sectionHeader: {
@@ -632,24 +725,6 @@ const styles = StyleSheet.create({
     seeAllButton: {
         color: '#FFFFFF',
         fontWeight: '600',
-    },
-    chartContainer: {
-        width: '100%',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        paddingVertical: 20,
-    },
-    chart: { marginLeft: -15, paddingRight: 20 },
-    chartLabelContainer: {
-        position: 'absolute',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        paddingVertical: 3,
-        paddingHorizontal: 8,
-        borderRadius: 6,
-    },
-    chartLabelText: {
-        color: '#000000',
-        fontWeight: 'bold',
-        fontSize: 12,
     },
     keyFactorsContainer: { width: '100%', marginTop: 40, paddingHorizontal: 20, },
     badgesContainer: {
@@ -687,13 +762,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 10,
-        borderWidth: 2,
-        borderColor: '#C0C0C0',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.15)',
         shadowColor: '#FFFFFF',
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.6,
+        shadowOpacity: 0.25,
         shadowRadius: 12,
-        elevation: 10,
+        elevation: 6,
     },
     badgeLocked: {
         borderColor: 'rgba(255, 255, 255, 0.2)',

@@ -9,12 +9,14 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from '../context/GlobalProvider';
+import { useOnboardingContext } from '../context/OnboardingContext';
 import Purchases from 'react-native-purchases';
 
 export default function CreateAccount() {
   const router = useRouter();
   const { user, setUser, setIsAuthenticated, setIsPro, setIsNewUserOnboarding } = useGlobalContext();
-
+  const { score } = useOnboardingContext(); // Get calculated score from context
+  
   // 451475688741-f88vp91ttocl4of0lv8ja22m7d9ttqip.apps.googleusercontent.com
   let userName =  user?.name;
 
@@ -28,6 +30,7 @@ export default function CreateAccount() {
       const response = await axios.post('https://testosterone.onrender.com/auth/google', {
         token: userInfo.data.idToken,
         onboardingName: user?.name,
+        baselineTestosterone: score * 10, // Send calculated score as baseline
       });
 
       if (response.status === 200 || response.status === 201) {
@@ -88,6 +91,7 @@ export default function CreateAccount() {
         appleId: user,
         email,
         onboardingName: userName,// This is the name from Apple (often null)
+        baselineTestosterone: score * 10, // Send calculated score as baseline
       });
 
 

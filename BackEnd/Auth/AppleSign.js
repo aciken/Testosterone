@@ -1,7 +1,7 @@
 const User = require('../User/User');
 
 const AppleSign = async (req, res) => {
-    const { appleId, email, name, onboardingName } = req.body;
+    const { appleId, email, name, onboardingName, baselineTestosterone } = req.body;
 
     if (!appleId) {
         return res.status(400).json({ message: 'Apple ID is required' });
@@ -41,6 +41,7 @@ const AppleSign = async (req, res) => {
                 name: onboardingName || name || 'User', // Prioritize onboardingName
                 isApple: true,
                 dateCreated: new Date(),
+                baselineTestosterone: baselineTestosterone || 290,
             });
 
             return res.status(201).json({ message: 'User created', user: newUser, isNewUser: true });

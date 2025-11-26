@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
     appleId: String,
     isApple: {type: Boolean, default: false},
     verification: String,
+    baselineTestosterone: {
+        type: Number,
+        default: 290
+    },
     dateCreated: {
         type: Date,
         default: Date.now

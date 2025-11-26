@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    paddingBottom: 20,
   },
   scoreContainer: {
       alignItems: 'center',
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
   labelContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 25,
+      marginTop: 15,
       backgroundColor: 'rgba(255,255,255,0.05)',
       paddingHorizontal: 12,
       paddingVertical: 6,

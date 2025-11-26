@@ -149,7 +149,7 @@ export default function Results() {
   const { answers, setScore } = useOnboardingContext();
   const [userScore, setUserScore] = useState(29);
   const [step, setStep] = useState(1); // 1 = Analysis, 2 = Potential
-  const averageScore = 41;
+  const averageScore = 50;
   
   // Refs for animations
   const userHeightAnim = useRef(new Animated.Value(0)).current;
