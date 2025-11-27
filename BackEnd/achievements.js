@@ -40,18 +40,18 @@ const achievements = {
     description: 'Reach a 10-day streak.',
     criteria: {
       type: 'streak',
-      days: 10,
+      days: 3,
     },
   },
-  // '8': {
-  //   id: '8',
-  //   name: 'Peak Performance',
-  //   description: 'Reach +8 ng/dl in a single day.',
-  //   criteria: {
-  //     type: 'ngdl_score',
-  //     score: 8,
-  //   },
-  // },
+  '8': {
+    id: '8',
+    name: 'Peak Performance',
+    description: 'Reach +8 ng/dl in a single day.',
+    criteria: {
+      type: 'ngdl_score',
+      score: 8,
+    },
+  },
   '9': {
     id: '9',
     name: 'Exercise Bronze',
