@@ -231,7 +231,27 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
       // Handle the "first task" achievement
       if (achievement.criteria.type === 'first_task') {
         console.log(`[achievementChecker] Checking 'first_task' achievement: ${achievement.name}`);
-        const hasCompletedTask = user.tasks.some(t => t.progress > 0 || (t.checked && t.checked.length > 0));
+        
+        // Check for any task with progress > 0 OR checklist > 0
+        // Also need to check if the user has completed any inverted task successfully (e.g. progress < 50 for inverted)
+        const hasCompletedTask = user.tasks.some(t => {
+            const taskDef = taskMap[t.taskId];
+            if (!taskDef) return false;
+
+            if (taskDef.inverted) {
+                // For inverted tasks, usually progress < goal is success, but here we just want to see if they logged *something*
+                // But 'first victory' usually implies a positive action.
+                // If we stick to the original logic: progress > 0 is usually for 'Do' tasks.
+                
+                // If it's inverted (Don't), progress 0 IS success (didn't do it).
+                // So if they have an entry for an inverted task with low progress, that's a "task done".
+                return t.progress < 50; 
+            } else {
+                // Regular tasks
+                return t.progress > 0 || (t.checked && t.checked.length > 0);
+            }
+        });
+
         console.log(`[achievementChecker] Does user have any completed tasks? ${hasCompletedTask}`);
         const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
         console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);

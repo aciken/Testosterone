@@ -7,7 +7,8 @@ function calculateCurrentTScore(user) {
         return baseline;
     }
 
-    const allTasks = [...programData[1].dos, ...programData[1].donts];
+    const { dailyDos, dailyDonts } = programData;
+    const allTasks = [...dailyDos, ...dailyDonts];
     const taskMap = allTasks.reduce((map, task) => {
         map[task.id] = { ...task };
         return map;
@@ -17,12 +18,12 @@ function calculateCurrentTScore(user) {
     const today = new Date();
     dateCreated.setHours(0,0,0,0);
     today.setHours(0,0,0,0);
-    const programDuration = Math.ceil((today - dateCreated) / (1000 * 60 * 60 * 24)) + 1;
+    const programDuration = Math.max(1, Math.ceil((today - dateCreated) / (1000 * 60 * 60 * 24)) + 1);
     
-    const totalPossiblePositiveImpact = programData[1].dos.reduce((sum, task) => sum + (task.impact || 0), 0);
+    const totalPossiblePositiveImpact = dailyDos.reduce((sum, task) => sum + (task.impact || 0), 0);
     const totalPossibleNegativeImpact = 
-        programData[1].donts.reduce((sum, task) => sum + (task.impact || 0), 0) +
-        programData[1].dos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0);
+        dailyDonts.reduce((sum, task) => sum + (task.impact || 0), 0) +
+        dailyDos.filter(t => t.type === 'meals' || t.id === 'sleep').reduce((sum, task) => sum + (task.impact || 0), 0);
 
     const dailyPositiveContributions = Array(programDuration).fill(0);
     const dailyNegativeContributions = Array(programDuration).fill(0);
