@@ -1,10 +1,10 @@
 const programData = require('../data/programData');
 
-const BASELINE_TESTOSTERONE = 290;
-
 function calculateCurrentTScore(user) {
+    const baseline = user.baselineTestosterone || 290;
+
     if (!user || !user.tasks || user.tasks.length === 0) {
-        return BASELINE_TESTOSTERONE;
+        return baseline;
     }
 
     const allTasks = [...programData[1].dos, ...programData[1].donts];
@@ -92,7 +92,7 @@ function calculateCurrentTScore(user) {
         const netChange = scaledPositive + scaledNegative;
         
         if (i === 0) {
-            dailyContributions[i] = BASELINE_TESTOSTERONE + netChange;
+            dailyContributions[i] = baseline + netChange;
         } else {
             dailyContributions[i] = dailyContributions[i-1] + netChange;
         }
