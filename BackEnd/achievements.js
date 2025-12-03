@@ -73,10 +73,10 @@ const achievements = {
   '9': {
     id: '9',
     name: 'Exercise Bronze',
-    description: 'Complete 10 days of exercise.',
+    description: 'Complete 5 days of exercise.',
     criteria: {
       type: 'exercise',
-      days: 10,
+      days: 5,
     },
   },
   '10': {
@@ -85,7 +85,7 @@ const achievements = {
     description: 'Complete 30 days of exercise.',
     criteria: {
       type: 'exercise',
-      days: 30,
+      days: 10,
     },
   },
   '11': {
@@ -94,7 +94,7 @@ const achievements = {
     description: 'Complete 60 days of exercise.',
     criteria: {
       type: 'exercise',
-      days: 60,
+      days: 30,
     },
   },
   '12': {
@@ -130,7 +130,7 @@ const achievements = {
     description: 'Complete 10 days of sleep.',
     criteria: {
       type: 'sleep',
-      days: 10,
+      days: 5,
     },
   },
   '16': {
@@ -139,7 +139,7 @@ const achievements = {
     description: 'Complete 30 days of sleep.',
     criteria: {
       type: 'sleep',
-      days: 30,
+      days: 10,
     },
   },
   '17': {
@@ -148,7 +148,7 @@ const achievements = {
     description: 'Complete 60 days of sleep.',
     criteria: {
       type: 'sleep',
-      days: 60,
+      days: 30,
     },
   },
   '18': {
@@ -157,7 +157,7 @@ const achievements = {
     description: 'Complete 10 days of healthy diet',
     criteria: {
       type: 'diet',
-      days: 10,
+      days: 5,
     },
   },
   '19': {
@@ -166,7 +166,7 @@ const achievements = {
     description: 'Complete 30 days of healthy diet',
     criteria: {
       type: 'diet',
-      days: 30,
+      days: 10,
     },
   },
   '20': {
@@ -175,7 +175,7 @@ const achievements = {
     description: 'Complete 60 days of healthy diet',
     criteria: {
       type: 'diet',
-      days: 60,
+      days: 30,
     },
   },
   '21': {
@@ -184,7 +184,7 @@ const achievements = {
     description: 'Complete 10 days of taking supplements',
     criteria: {
       type: 'supplementation',
-      days: 10,
+      days: 5,
     },
   },
   '22': {
@@ -193,7 +193,7 @@ const achievements = {
     description: 'Complete 30 days of taking supplements',
     criteria: {
       type: 'supplementation',
-      days: 30,
+      days: 10,
     },
   },
   '23': {
@@ -202,7 +202,7 @@ const achievements = {
     description: 'Complete 60 days of taking supplements',
     criteria: {
       type: 'supplementation',
-      days: 60,
+      days: 30,
     },
   },
 };
