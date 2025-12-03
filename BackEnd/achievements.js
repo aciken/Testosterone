@@ -43,9 +43,27 @@ const achievements = {
       days: 3,
     },
   },
+  '6': {
+    id: '6',
+    name: 'Streak Advanced',
+    description: 'Reach a 5-day streak.',
+    criteria: {
+      type: 'streak',
+      days: 5,
+    },
+  },
+  '7': {
+    id: '7',
+    name: 'Streak Master',
+    description: 'Reach a 10-day streak.',
+    criteria: {
+      type: 'streak',
+      days: 10,
+    },
+  },
   '8': {
     id: '8',
-    name: 'Peak Performance',
+    name: 'Streak ',
     description: 'Reach +8 ng/dl in a single day.',
     criteria: {
       type: 'ngdl_score',
