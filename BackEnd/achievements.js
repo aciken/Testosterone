@@ -37,7 +37,7 @@ const achievements = {
   '5': {
     id: '5',
     name: 'Streak Master',
-    description: 'Reach a 10-day streak.',
+    description: 'Reach a 3-day streak.',
     criteria: {
       type: 'streak',
       days: 3,

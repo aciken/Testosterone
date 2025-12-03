@@ -529,13 +529,16 @@ export default function HomeScreen() {
 
   const sendTaskUpdate = async (taskData) => {
     try {
+      const now = new Date();
+      const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+      console.log(localDate);
       const userString = await AsyncStorage.getItem('user');
       if (userString) {
         const user = JSON.parse(userString);
         const dailyNgDl = calculateDailyNgDl(); // Calculate the value before sending
         const updatePayload = {
           userId: user._id,
-          date: new Date(),
+          date: localDate,
           task: taskData,
           dailyNgDl: dailyNgDl, // Add the score to the payload
         };

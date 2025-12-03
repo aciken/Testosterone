@@ -218,14 +218,31 @@ const checkAndAwardAchievements = async (userId, dailyNgDl = 0) => {
     console.log(`[achievementChecker] Calculated sleep days: ${sleepDays}`);
     console.log(`[achievementChecker] Calculated T-Score: ${currentTScore}`);
 
+    // Calculate max streak across all tasks
+    let maxStreak = 0;
+    const allTaskIds = Object.keys(taskMap);
+    for (const taskId of allTaskIds) {
+        const currentStreak = calculateStreakForTask(user.tasks, taskId);
+        if (currentStreak > maxStreak) {
+            maxStreak = currentStreak;
+        }
+    }
+    console.log(`[achievementChecker] Calculated max streak across all tasks: ${maxStreak}`);
+
     for (const key in achievements) {
       const achievement = achievements[key];
 
-      // Handle streak-based achievements - NOTE: This might need adjustment with per-task streaks
+      // Handle streak-based achievements
       if (achievement.criteria.type === 'streak') {
-        // This logic is now likely incorrect as streaks are per-task.
-        // For now, this part of the check is effectively disabled.
-        // A new mechanism will be needed if global streak achievements are desired.
+        console.log(`[achievementChecker] Checking 'streak' achievement: ${achievement.name}`);
+        const hasUnlocked = user.unlockedAchievements.includes(achievement.id);
+        console.log(`[achievementChecker] Has user already unlocked this? ${hasUnlocked}`);
+        
+        if (maxStreak >= achievement.criteria.days && !hasUnlocked) {
+          console.log(`[achievementChecker] !!! Awarding achievement: ${achievement.name}`);
+          user.unlockedAchievements.push(achievement.id);
+          newAchievements.push(achievement);
+        }
       }
 
       // Handle the "first task" achievement

@@ -153,6 +153,8 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         return '75%';
       case 'checklist':
         return '65%';
+      case 'slider':
+        return '45%';
       case 'sleep':
         return '55%';
       case 'simple_dont':
@@ -265,7 +267,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   const renderSimpleTask = () => (
     <View style={styles.contentContainer}>
       <View style={styles.taskImageContainer}>
-        <Image source={task.image} style={styles.taskImage} />
+        <Image source={task.modalImage || task.image} style={styles.taskImage} />
       </View>
       <Text style={styles.taskTitle}>
         {task.task}
@@ -277,7 +279,11 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   const renderSimpleDontTask = () => (
     <View style={styles.contentContainer}>
       <View style={[styles.taskImageContainer, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-        <Ionicons name="close" size={48} color="#ef4444"/>
+        {task.modalImage || task.image ? (
+             <Image source={task.modalImage || task.image} style={styles.taskImage} />
+        ) : (
+            <Ionicons name="close" size={48} color="#ef4444"/>
+        )}
       </View>
       <Text style={styles.taskTitle}>Avoid Masturbation</Text>
       <Text style={styles.taskSubtitle}>Did you stay disciplined today?</Text>
@@ -285,7 +291,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
   );
 
   const renderSliderTask = () => (
-    <View style={styles.contentContainer}>
+    <View style={[styles.contentContainer, { justifyContent: 'center', paddingTop: 0 }]}>
       <Text style={styles.taskTitle}>
         {task.inverted ? `Rate your ${task.task.toLowerCase()}` : `How much ${task.task.toLowerCase()}?`}
       </Text>
