@@ -103,7 +103,7 @@ const achievements = {
     description: 'Spend 5 hours in the sun.',
     criteria: {
       type: 'sun_exposure',
-      minutes: 300, // 5 hours
+      minutes: 150, // 5 hours
     },
   },
   '13': {
@@ -112,7 +112,7 @@ const achievements = {
     description: 'Spend 10 hours in the sun.',
     criteria: {
       type: 'sun_exposure',
-      minutes: 600, // 10 hours
+      minutes: 300, // 10 hours
     },
   },
   '14': {
@@ -121,7 +121,7 @@ const achievements = {
     description: 'Spend 20 hours in the sun.',
     criteria: {
       type: 'sun_exposure',
-      minutes: 1200, // 20 hours
+      minutes: 900, // 20 hours
     },
   },
   '15': {
