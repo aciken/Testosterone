@@ -26,7 +26,47 @@ function calculateTotalSunExposure(tasks) {
   // The task 'Time spent in the sun' has id: '1'
   const sunTaskLogs = tasks.filter(t => t.taskId === '1' && t.progress > 0);
   
-  const totalMinutes = sunTaskLogs.reduce((sum, task) => sum + task.progress, 0);
+  // We need to be careful not to double count. The frontend sends 'progress' as a percentage (0-100).
+  // The goal is 30 minutes. So progress=100 means 30 minutes.
+  // But wait, if the user updates the same day multiple times, we might have multiple logs?
+  // The user.tasks array in the model appends new tasks. 
+  // Wait, looking at updateTask.js (not visible here but inferred), it usually pushes new tasks.
+  // We should only count the latest update per day?
+  // Or does the frontend send the cumulative progress for the day?
+  // Assuming the frontend sends the TOTAL progress for the day in each update, we should only take the max progress per day.
+
+  const dailyProgress = {};
+
+  sunTaskLogs.forEach(task => {
+    const date = new Date(task.date).toDateString();
+    // Store the maximum progress for this day
+    if (!dailyProgress[date] || task.progress > dailyProgress[date]) {
+      dailyProgress[date] = task.progress;
+    }
+  });
+
+  // Now sum up the progress from unique days
+  // progress is percentage of 30 minutes goal.
+  // Actually, let's check programData.js. Goal is 30 minutes.
+  // Wait, in the modal it might send raw minutes?
+  // Let's look at how 'progress' is stored. 
+  // In home.jsx: sendTaskUpdate(saveData). 
+  // For sliders: saveData.progress = Math.round((currentValue / task.goal) * 100);
+  // So progress is indeed a percentage of the goal.
+  
+  const goalMinutes = 30; 
+  let totalMinutes = 0;
+  
+  for (const date in dailyProgress) {
+    const percentage = dailyProgress[date];
+    // Cap at 100%? Or allow over-achievement?
+    // If I spend 60 mins, percentage is 200%.
+    // The achievement says "Spend 5 hours in the sun".
+    // So we should allow > 100%.
+    
+    const minutes = (percentage / 100) * goalMinutes;
+    totalMinutes += minutes;
+  }
   
   return totalMinutes;
 }

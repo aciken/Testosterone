@@ -458,7 +458,7 @@ export default function StatisticsScreen() {
                                     </TouchableOpacity>
                                 </View>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScrollView}>
-                                    {unlockedBadges.slice(0, 4).map(badge => (
+                                    {unlockedBadges.map(badge => (
                                         <TouchableOpacity key={badge.id} onPress={() => router.push({ pathname: '/badgeDetails', params: { ...badge, image: badge.image ? Image.resolveAssetSource(badge.image).uri : null } })}>
                                             <View style={styles.badgeItem}>
                                                 <View style={styles.badgeImageContainer}>
