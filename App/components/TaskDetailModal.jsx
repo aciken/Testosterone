@@ -150,7 +150,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
     if (!task) return '55%';
     switch (task.type) {
       case 'meals':
-        return '75%';
+        return '70%';
       case 'checklist':
         return '65%';
       case 'slider':
@@ -375,7 +375,7 @@ const TaskDetailModal = ({ isVisible, task, onClose }) => {
         style={{ flex: 1, width: '100%' }}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.contentContainer}>
+          <View style={[styles.contentContainer, { justifyContent: 'center', paddingBottom: 40 }]}>
             <Text style={styles.taskTitle}>Nutrition Log</Text>
             
             {task.history && task.history.length > 0 && (

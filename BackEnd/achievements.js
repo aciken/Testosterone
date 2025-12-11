@@ -61,15 +61,15 @@ const achievements = {
       days: 10,
     },
   },
-  '8': {
-    id: '8',
-    name: 'Streak ',
-    description: 'Reach +8 ng/dl in a single day.',
-    criteria: {
-      type: 'ngdl_score',
-      score: 8,
-    },
-  },
+  // '8': {
+  //   id: '8',
+  //   name: 'Streak ',
+  //   description: 'Reach +8 ng/dl in a single day.',
+  //   criteria: {
+  //     type: 'ngdl_score',
+  //     score: 8,
+  //   },
+  // },
   '9': {
     id: '9',
     name: 'Exercise Bronze',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, StyleSheet, Alert, Linking } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../context/GlobalProvider';
@@ -77,10 +77,15 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <SettingOption icon="document-text-outline" text="Privacy Policy" onPress={() => openLink('https://www.yourapp.com/privacy')} />
+            <SettingOption 
+              icon="star-outline" 
+              text="Subscription" 
+              onPress={() => Linking.openURL('https://apps.apple.com/account/subscriptions')} 
+            />
+            <SettingOption icon="document-text-outline" text="Privacy Policy" onPress={() => openLink('https://www.boostestapp.com/privacy')} />
             <SettingOption icon="reader-outline" text="Terms of Conditions" onPress={() => openLink('https://www.yourapp.com/terms')} />
-            <SettingOption icon="globe-outline" text="Website" onPress={() => openLink('https://www.yourapp.com')} />
-            <SettingOption icon="mail-outline" text="Contact Us" onPress={() => openLink('mailto:support@yourapp.com')} />
+            <SettingOption icon="globe-outline" text="Website" onPress={() => openLink('https://www.boostestapp.com')} />
+            <SettingOption icon="mail-outline" text="Contact Us" onPress={() => openLink('mailto:team@boostestapp.com')} />
           </View>
 
           <View style={styles.section}>
