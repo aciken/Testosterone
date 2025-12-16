@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Purchases from 'react-native-purchases';
 import * as WebBrowser from 'expo-web-browser';
+import axios from 'axios';
 
 const SettingOption = ({ icon, text, onPress, isDestructive }) => (
   <TouchableOpacity 
@@ -54,6 +55,37 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (user && user._id) {
+                 await axios.post('https://testosterone.onrender.com/auth/delete', { userId: user._id });
+              }
+              
+              setIsAuthenticated(false);
+              setUser(null);
+              setIsPro(false);
+              await Purchases.logOut();
+              await AsyncStorage.removeItem('user');
+              router.replace('/'); 
+            } catch (error) {
+              console.error("Delete account error:", error);
+              Alert.alert("Error", "Failed to delete account. Please try again.");
+            }
+          } 
+        }
+      ]
+    );
+  };
+
   const openLink = (url) => {
     WebBrowser.openBrowserAsync(url);
   };
@@ -83,16 +115,24 @@ export default function SettingsScreen() {
               onPress={() => Linking.openURL('https://apps.apple.com/account/subscriptions')} 
             />
             <SettingOption icon="document-text-outline" text="Privacy Policy" onPress={() => openLink('https://www.boostestapp.com/privacy')} />
-            <SettingOption icon="reader-outline" text="Terms of Conditions" onPress={() => openLink('https://www.yourapp.com/terms')} />
+            <SettingOption icon="reader-outline" text="Terms of Use" onPress={() => openLink('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')} />
             <SettingOption icon="globe-outline" text="Website" onPress={() => openLink('https://www.boostestapp.com')} />
             <SettingOption icon="mail-outline" text="Contact Us" onPress={() => openLink('mailto:team@boostestapp.com')} />
           </View>
+
+          <View style={{ flex: 1 }} />
 
           <View style={styles.section}>
             <SettingOption 
               icon="log-out-outline" 
               text="Log Out" 
               onPress={handleLogout}
+              isDestructive 
+            />
+            <SettingOption 
+              icon="trash-outline" 
+              text="Delete Account" 
+              onPress={handleDeleteAccount}
               isDestructive 
             />
           </View>
@@ -132,6 +172,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     padding: 20,
+    flexGrow: 1,
   },
   greetingContainer: {
     alignItems: 'center',
