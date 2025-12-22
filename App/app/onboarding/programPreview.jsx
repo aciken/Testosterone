@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { Svg, Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import { useOnboardingContext } from '../context/OnboardingContext';
 
 const BenefitItem = ({ text }) => (
   <View style={styles.benefitItem}>
@@ -14,10 +15,23 @@ const BenefitItem = ({ text }) => (
   </View>
 );
 
-const ProgramGraph = () => (
+const ProgramGraph = ({ currentT, potentialT }) => (
   <View style={styles.graphContainer}>
-    <Text style={styles.graphTitle}>Your T-Levels Journey</Text>
-    <View style={{ height: 100, alignItems: 'center', justifyContent: 'center' }}>
+    <Text style={styles.graphTitle}>Your Testosterone Journey</Text>
+    
+    <View style={styles.statsContainer}>
+      <View style={styles.statBox}>
+        <Text style={styles.statLabel}>Current</Text>
+        <Text style={styles.statValue}>{currentT} ng/dL</Text>
+      </View>
+      <Ionicons name="arrow-forward" size={20} color="#666" style={{ marginTop: 20 }} />
+      <View style={styles.statBox}>
+        <Text style={styles.statLabel}>Potential</Text>
+        <Text style={[styles.statValue, { color: '#FFA500' }]}>{potentialT} ng/dL</Text>
+      </View>
+    </View>
+
+    <View style={{ height: 100, alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
       <Svg height="100%" width="100%" viewBox="0 0 100 50">
         <Defs>
           <SvgGradient id="grad" x1="0" y1="0" x2="1" y2="0">
@@ -41,6 +55,26 @@ const ProgramGraph = () => (
 
 export default function ProgramPreview() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const { score } = useOnboardingContext();
+  const hasTriggeredRef = useRef(false);
+  
+  useEffect(() => {
+    if (params?.triggerWheel === 'true' && !hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
+      const timer = setTimeout(() => {
+        router.push('/onboarding/rewardWheel');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [params]);
+
+  const currentT = score * 10;
+  // Calculate potential: cap at 1000 or 2.2x current, whichever is reasonable, 
+  // ensuring it's always higher than current. 
+  // Using similar logic to results page: Math.min(score * 2.2, 100) * 10 => max 1000
+  const potentialT = Math.round(Math.min(currentT * 2.2, 1000));
+
   const completionDate = new Date();
   completionDate.setDate(completionDate.getDate() + 90);
   const formattedDate = completionDate.toLocaleDateString('en-US', {
@@ -67,7 +101,7 @@ export default function ProgramPreview() {
           <BenefitItem text="You will feel more motivated and energized than ever" />
           <BenefitItem text="Your dopamine reward system will be refreshed" />
 
-          <ProgramGraph />
+          <ProgramGraph currentT={currentT} potentialT={potentialT} />
 
         </ScrollView>
         <View style={styles.footer}>
@@ -152,6 +186,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  statLabel: {
+    color: '#888',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  statValue: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   footer: {
     position: 'absolute',

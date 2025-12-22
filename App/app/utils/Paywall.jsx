@@ -34,13 +34,13 @@ export default function Paywall() {
   };
 
   const handleCloseButton = () => {
-    setIsNewUserOnboarding(false);
-    router.replace('/home');
+    // Navigate back to ProgramPreview, passing a param to trigger the timer
+    router.replace({ pathname: '/onboarding/programPreview', params: { triggerWheel: 'true' } });
   }
 
   const handleGoBack = () => {
-    setIsNewUserOnboarding(false);
-    router.replace('/home');
+    // Same behavior for back button
+    router.replace({ pathname: '/onboarding/programPreview', params: { triggerWheel: 'true' } });
   }
 
   return (
