@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.aciken.Testosterone",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "entitlements": {
         "com.apple.developer.applesignin": [
           "Default",

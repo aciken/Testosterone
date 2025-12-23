@@ -135,6 +135,12 @@ const Wheel = ({ onFinished, onTryAgain }) => {
     const randomOffset = (Math.random() * sectorWidth * 0.4) * (Math.random() > 0.5 ? 1 : -1);
     const finalValue = currentRot + totalSpin + randomOffset;
 
+    // Anticipation “ticks” near the end of the spin.
+    // Kept short/limited so it doesn’t feel spammy.
+    [3100, 3350, 3550, 3725, 3875, 3975].forEach((t) =>
+      setTimeout(() => Haptics.selectionAsync(), t)
+    );
+
     Animated.timing(spinValue, {
       toValue: finalValue,
       duration: 4000,
@@ -165,13 +171,18 @@ const Wheel = ({ onFinished, onTryAgain }) => {
         <Ionicons name="caret-down" size={50} color="#FFF" style={styles.stopper} />
       </View>
 
-      <View style={styles.wheelBorder}>
+      <LinearGradient
+        colors={['#F59E0B', '#B45309', '#78350F', '#F59E0B']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.wheelBorder}
+      >
         <Animated.View style={[styles.wheel, { transform: [{ rotate: spin }] }]}>
           <Svg height="300" width="300" viewBox="0 0 100 100">
             <Defs>
                 <SvgGradient id="winnerGrad" x1="0" y1="0" x2="1" y2="1">
                     <Stop offset="0" stopColor="#FFD700" />
-                    <Stop offset="1" stopColor="#FF9500" />
+                    <Stop offset="1" stopColor="#FFA500" />
                 </SvgGradient>
             </Defs>
             {SECTORS.map((sector, index) => {
@@ -222,15 +233,26 @@ const Wheel = ({ onFinished, onTryAgain }) => {
              <View style={styles.centerHubInner} />
           </View>
         </Animated.View>
-      </View>
+      </LinearGradient>
 
-      <TouchableOpacity 
-        style={[styles.spinButton, spinning && styles.spinButtonDisabled]} 
-        onPress={handleSpinPress} 
-        disabled={spinning}
-      >
-        <Text style={styles.spinButtonText}>{spinning ? 'SPINNING...' : 'SPIN TO WIN'}</Text>
-      </TouchableOpacity>
+      <View>
+        <TouchableOpacity
+          style={[styles.spinButton, spinning && styles.spinButtonDisabled]}
+          onPress={handleSpinPress}
+          disabled={spinning}
+          activeOpacity={1} // Keep size constant on press
+        >
+          <LinearGradient
+            colors={spinning ? ['#333', '#444'] : ['#F59E0B', '#D97706', '#B45309']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.spinButtonInner}
+          >
+            <Text style={styles.spinButtonText}>{spinning ? 'SPINNING...' : 'SPIN NOW'}</Text>
+            {!spinning && <Text style={styles.spinButtonSubText}>Try your luck</Text>}
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -261,37 +283,53 @@ const TryAgainModal = ({ visible, onRetry }) => (
     </Modal>
 );
 
-const WinnerModal = ({ visible, onClaim }) => (
+const WinnerModal = ({ visible, onClaim }) => {
+  return (
     <Modal visible={visible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-            <View style={[styles.cleanModalContent, { borderColor: '#FF9500', borderWidth: 2 }]}>
-                <View style={[styles.iconBadge, { backgroundColor: 'rgba(255, 149, 0, 0.15)' }]}>
-                    <Ionicons name="trophy" size={36} color="#FF9500" />
-                </View>
+      <View style={styles.modalOverlay}>
+        <LinearGradient
+          colors={['rgba(255, 43, 214, 0.15)', 'rgba(0, 229, 255, 0.08)', 'rgba(255, 179, 0, 0.12)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.cleanModalContent, styles.winnerModal]}
+        >
+          <View style={[styles.iconBadge, styles.winnerBadge]}>
+            <Ionicons name="trophy" size={36} color="#FFB300" />
+          </View>
 
-                <Text style={styles.cleanTitle}>Congratulations!</Text>
-                <Text style={styles.cleanSubtitle}>You've unlocked an exclusive offer.</Text>
-                
-                <View style={styles.cleanPriceContainer}>
-                    <Text style={[styles.cleanPriceMain, { color: '#FF9500' }]}>50%</Text>
-                    <Text style={[styles.cleanPriceSub, { color: '#FF9500' }]}>OFF</Text>
-                </View>
-                
-                <TouchableOpacity 
-                    style={[styles.cleanButton, { backgroundColor: '#FF9500' }]} 
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                        onClaim();
-                    }}
-                >
-                    <Text style={[styles.cleanButtonText, { color: '#000' }]}>Claim Offer</Text>
-                </TouchableOpacity>
-            </View>
-            <Confetti />
-        </View>
+          <Text style={styles.cleanTitle}>Exclusive Unlock!</Text>
+          <Text style={styles.cleanSubtitle}>You've secured the best possible offer.</Text>
+
+          <View style={styles.cleanPriceContainer}>
+            <Text style={[styles.cleanPriceMain, { color: '#FFB300' }]}>50%</Text>
+            <Text style={[styles.cleanPriceSub, { color: '#FFB300' }]}>OFF</Text>
+          </View>
+
+          <View style={{ width: '100%' }}>
+            <TouchableOpacity
+              style={styles.cleanButton}
+              activeOpacity={0.85}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                onClaim();
+              }}
+            >
+              <LinearGradient
+                colors={['#FFB300', '#F59E0B', '#D97706']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.claimButtonInner}
+              >
+                <Text style={[styles.cleanButtonText, { color: '#000000' }]}>Claim 50% OFF</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+        <Confetti />
+      </View>
     </Modal>
-);
+  );
+};
 
 export default function RewardWheel() {
   const router = useRouter();
@@ -326,10 +364,12 @@ export default function RewardWheel() {
   };
 
   return (
-    <LinearGradient colors={['#101010', '#000000']} style={styles.container}>
+    <LinearGradient colors={['#111111', '#000000']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-            <Text style={styles.limitedOfferLabel}>LIMITED OFFER</Text>
+            <View style={styles.limitedOfferWrap}>
+              <Text style={styles.limitedOfferLabel}>LIMITED OFFER</Text>
+            </View>
             <Text style={styles.timeLeftLabel}>TIME LEFT</Text>
             <View style={styles.timerContainer}>
               <View style={styles.timeBlock}>
@@ -371,10 +411,22 @@ export default function RewardWheel() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { marginBottom: 30, alignItems: 'center', width: '100%' },
-  limitedOfferLabel: { fontSize: 28, color: '#FF9500', marginBottom: 15, fontWeight: '900', letterSpacing: 2, textTransform: 'uppercase' },
-  timeLeftLabel: { fontSize: 10, color: '#666', marginBottom: 8, letterSpacing: 1.5, fontWeight: 'bold' },
-  subtitle: { fontSize: 16, color: '#AAA', marginTop: 20, letterSpacing: 0.5 },
+  header: { marginBottom: 26, alignItems: 'center', width: '100%' },
+  limitedOfferWrap: { alignItems: 'center', justifyContent: 'center' },
+  // removed limitedOfferGlow
+  limitedOfferLabel: {
+    fontSize: 28,
+    color: '#F59E0B',
+    marginBottom: 14,
+    fontWeight: '900',
+    letterSpacing: 2.0,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(245, 158, 11, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  timeLeftLabel: { fontSize: 10, color: '#6B7280', marginBottom: 8, letterSpacing: 1.5, fontWeight: 'bold' },
+  subtitle: { fontSize: 15, color: '#9CA3AF', marginTop: 18, letterSpacing: 0.5, opacity: 0.9 },
   
   timerContainer: {
     flexDirection: 'row',
@@ -384,18 +436,18 @@ const styles = StyleSheet.create({
   },
   timeBlock: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#1A1A1A',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: '#333',
     minWidth: 70,
   },
   timeValue: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: '#E5E5E5',
     fontVariant: ['tabular-nums'],
   },
   timeLabel: {
@@ -414,12 +466,12 @@ const styles = StyleSheet.create({
   },
   
   wheelContainer: { alignItems: 'center', justifyContent: 'center' },
+  // removed wheelGlow
   wheelBorder: {
-      padding: 5,
-      backgroundColor: '#333',
+      padding: 6,
       borderRadius: 160,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 10 },
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.5,
       shadowRadius: 10,
       elevation: 10,
@@ -445,39 +497,46 @@ const styles = StyleSheet.create({
       left: 130,
       width: 40,
       height: 40,
-      backgroundColor: '#FFF',
+      backgroundColor: '#E5E5E5',
       borderRadius: 20,
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
-      shadowRadius: 3,
+      shadowRadius: 4,
+      elevation: 5,
   },
   centerHubInner: {
       width: 30,
       height: 30,
-      backgroundColor: '#222',
+      backgroundColor: '#111',
       borderRadius: 15,
   },
 
   spinButton: {
     marginTop: 50,
-    backgroundColor: '#FFF',
-    paddingVertical: 15,
-    paddingHorizontal: 50,
     borderRadius: 30,
-    elevation: 5,
-    shadowColor: '#FFF',
-    shadowOffset: { width: 0, height: 0 },
+    overflow: 'hidden',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
+    elevation: 8,
+  },
+  spinButtonInner: {
+    paddingVertical: 16,
+    paddingHorizontal: 54,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   spinButtonDisabled: {
       opacity: 0.5,
       shadowOpacity: 0,
   },
-  spinButtonText: { fontWeight: '900', fontSize: 18, color: '#000', letterSpacing: 1 },
+  spinButtonText: { fontWeight: '900', fontSize: 18, color: '#0A0A0A', letterSpacing: 1.2 },
+  spinButtonSubText: { marginTop: 4, fontSize: 12, fontWeight: '700', color: 'rgba(10,10,10,0.75)' },
   
   sectorLabelContainer: {
     position: 'absolute',
@@ -512,7 +571,7 @@ const styles = StyleSheet.create({
   },
   cleanModalContent: {
       width: '85%',
-      backgroundColor: '#151515',
+      backgroundColor: '#101014',
       borderRadius: 20,
       padding: 32,
       alignItems: 'center',
@@ -522,6 +581,15 @@ const styles = StyleSheet.create({
       shadowRadius: 20,
       elevation: 10,
   },
+  winnerModal: {
+      borderWidth: 1,
+      borderColor: '#333',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.5,
+      shadowRadius: 20,
+      elevation: 20,
+  },
   iconBadge: {
       width: 64,
       height: 64,
@@ -529,6 +597,16 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: 24,
+  },
+  winnerBadge: {
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      borderWidth: 1,
+      borderColor: 'rgba(245, 158, 11, 0.2)',
+      shadowColor: '#F59E0B',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      elevation: 5,
   },
   cleanTitle: {
       fontSize: 26,
@@ -547,6 +625,13 @@ const styles = StyleSheet.create({
       paddingHorizontal: 10,
   },
   cleanButton: {
+      width: '100%',
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+  },
+  claimButtonInner: {
       width: '100%',
       paddingVertical: 18,
       borderRadius: 14,

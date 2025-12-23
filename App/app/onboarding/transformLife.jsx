@@ -121,7 +121,7 @@ export default function TransformLife() {
     if (name.trim()) {
       setUser({ ...user, name: name.trim() });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      router.push('/onboarding/journeyGraph');
+      router.push({ pathname: '/onboarding/rateUs', params: { next: '/onboarding/journeyGraph' } });
     }
   };
 

@@ -1,38 +1,59 @@
 import RevenueCatUI from 'react-native-purchases-ui';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useGlobalContext } from '../context/GlobalProvider';
 import Purchases from 'react-native-purchases';
 import { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 export default function PaywallDiscount() {
   const router = useRouter();
+  const { discount } = useLocalSearchParams();
   const { setIsPro, setIsNewUserOnboarding } = useGlobalContext();
 
-  // RevenueCat OFFERING ID (dashboard)
-  const OFFERING_ID = "ofrng53aaf648a6";
+  // RevenueCat offering identifiers (RevenueCat dashboard)
+  // rewardWheel passes `discount=50`, which maps to the "50% Off" offering identifier.
+  const OFFERING_ID = discount === '50' ? '50% Off' : 'Default';
 
   const [offering, setOffering] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const [availableOfferingIds, setAvailableOfferingIds] = useState([]);
 
   // 🔹 Load offering
   useEffect(() => {
     async function loadOffering() {
       try {
         const offerings = await Purchases.getOfferings();
-        const selectedOffering = offerings.all[OFFERING_ID];
+
+        const ids = Object.keys(offerings.all ?? {});
+        setAvailableOfferingIds(ids);
+
+        // 1) Exact match
+        let selectedOffering = offerings.all?.[OFFERING_ID];
+
+        // 2) Case-insensitive fallback (defensive)
+        if (!selectedOffering) {
+          const matchingKey = ids.find(
+            (key) => key.trim().toLowerCase() === OFFERING_ID.trim().toLowerCase()
+          );
+          if (matchingKey) selectedOffering = offerings.all?.[matchingKey];
+        }
 
         if (!selectedOffering) {
-          console.error("Offering not found:", OFFERING_ID);
+          setLoadError(
+            `Offering '${OFFERING_ID}' not found. Available: ${ids.length ? ids.join(', ') : '(none)'}`
+          );
           return;
         }
 
+        setLoadError(null);
         setOffering(selectedOffering);
       } catch (e) {
-        console.error("Failed to load offerings:", e);
+        setLoadError(`Failed to load offerings: ${String(e?.message ?? e)}`);
       }
     }
 
     loadOffering();
-  }, []);
+  }, [OFFERING_ID]);
 
   const handlePurchaseCompleted = async () => {
     try {
@@ -68,11 +89,35 @@ export default function PaywallDiscount() {
   };
 
   // ⛔ Prevent rendering before offering is loaded
-  if (!offering) return null;
+  if (!offering) {
+    return (
+      <View style={{ flex: 1, backgroundColor: 'black', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <ActivityIndicator />
+        {!!loadError && (
+          <Text style={{ color: 'white', marginTop: 16, textAlign: 'center' }}>
+            {loadError}
+          </Text>
+        )}
+        {!loadError && (
+          <Text style={{ color: 'white', marginTop: 16, textAlign: 'center' }}>
+            Loading paywall…
+          </Text>
+        )}
+        {!!availableOfferingIds.length && (
+          <Text style={{ color: '#9CA3AF', marginTop: 12, textAlign: 'center' }}>
+            Offerings: {availableOfferingIds.join(', ')}
+          </Text>
+        )}
+      </View>
+    );
+  }
 
+  // IMPORTANT:
+  // RevenueCatUI.Paywall does NOT accept an `offering` prop.
+  // It must be provided via `options={{ offering }}`.
   return (
     <RevenueCatUI.Paywall
-      offering={offering}
+      options={{ offering }}
       onPurchaseCompleted={handlePurchaseCompleted}
       onRestoreCompleted={handleRestoreCompleted}
       onDismiss={handleCloseButton}
