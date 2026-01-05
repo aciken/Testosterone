@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Modal, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,12 +8,13 @@ import * as Haptics from 'expo-haptics';
 import Svg, { Path, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 
 const SECTORS = [
-  { label: '10%', sub: 'OFF', color: '#2A2A2A', textColor: '#AAA', angle: 66 },
-  { label: 'TRY', sub: 'AGAIN', color: '#1A1A1A', textColor: '#666', angle: 66 },
-  { label: '50%', sub: 'OFF', color: '#FF9500', textColor: '#000', isWinner: true, angle: 30 }, // Smallest slice
-  { label: 'FREE', sub: 'TRIAL', color: '#2A2A2A', textColor: '#AAA', angle: 66 },
-  { label: '20%', sub: 'OFF', color: '#1A1A1A', textColor: '#AAA', angle: 66 },
-  { label: 'TRY', sub: 'AGAIN', color: '#2A2A2A', textColor: '#666', angle: 66 },
+  // Non-winner slices: clean charcoal/graphite palette (no colorful tints).
+  { label: '10%', sub: 'OFF', color: '#24262B', textColor: '#E5E7EB', angle: 66 },     // graphite
+  { label: 'TRY', sub: 'AGAIN', color: '#1C1E23', textColor: '#CBD5E1', angle: 66 },   // near-black
+  { label: '50%', sub: 'OFF', color: '#FF9500', textColor: '#000', isWinner: true, angle: 30 }, // Smallest slice (Gold)
+  { label: 'FREE', sub: 'TRIAL', color: '#2A2C31', textColor: '#E5E7EB', angle: 66 }, // charcoal
+  { label: '20%', sub: 'OFF', color: '#202228', textColor: '#E5E7EB', angle: 66 },    // graphite
+  { label: 'TRY', sub: 'AGAIN', color: '#272A30', textColor: '#CBD5E1', angle: 66 },  // charcoal
 ];
 
 const CONFETTI_COLORS = ['#FFD700', '#FFA500', '#FF4500', '#FFFFFF', '#4ECDC4'];
@@ -69,7 +70,7 @@ const ConfettiParticle = () => {
         width: config.size,
         height: config.size,
         backgroundColor: config.color,
-        borderRadius: config.size > 8 ? 2 : 4, // Mix of squares and circles
+        borderRadius: config.size > 8 ? 2 : 4,
         transform: [
           { translateX: config.x },
           { translateY },
@@ -91,7 +92,7 @@ const Confetti = () => (
   </View>
 );
 
-const Wheel = ({ onFinished, onTryAgain }) => {
+const Wheel = ({ onFinished }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
   const currentRotation = useRef(0);
   const [spinning, setSpinning] = useState(false);
@@ -108,16 +109,9 @@ const Wheel = ({ onFinished, onTryAgain }) => {
     setSpinning(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // 50/50 Chance
-    const isWinner = Math.random() >= 0.5;
-    let targetIndex;
-    
-    if (isWinner) {
-      targetIndex = 2; // 50% OFF
-    } else {
-      // Pick randomly between the two "TRY AGAIN" slices (Index 1 or 5)
-      targetIndex = Math.random() > 0.5 ? 1 : 5;
-    }
+    // Always land on the 50% OFF slice (Index 2)
+    const isWinner = true;
+    const targetIndex = 2;
 
     const { centerAngle, angle: sectorWidth } = getSectorData(targetIndex);
     
@@ -135,8 +129,7 @@ const Wheel = ({ onFinished, onTryAgain }) => {
     const randomOffset = (Math.random() * sectorWidth * 0.4) * (Math.random() > 0.5 ? 1 : -1);
     const finalValue = currentRot + totalSpin + randomOffset;
 
-    // Anticipation “ticks” near the end of the spin.
-    // Kept short/limited so it doesn’t feel spammy.
+    // Anticipation “ticks”
     [3100, 3350, 3550, 3725, 3875, 3975].forEach((t) =>
       setTimeout(() => Haptics.selectionAsync(), t)
     );
@@ -149,14 +142,8 @@ const Wheel = ({ onFinished, onTryAgain }) => {
     }).start(() => {
         currentRotation.current = finalValue;
         setSpinning(false);
-        
-        if (isWinner) {
-             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-             setTimeout(onFinished, 500);
-        } else {
-             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-             setTimeout(onTryAgain, 500);
-        }
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setTimeout(onFinished, 500);
     });
   };
 
@@ -168,11 +155,11 @@ const Wheel = ({ onFinished, onTryAgain }) => {
   return (
     <View style={styles.wheelContainer}>
       <View style={styles.stopperContainer}>
-        <Ionicons name="caret-down" size={50} color="#FFF" style={styles.stopper} />
+        <Ionicons name="caret-down" size={50} color="#FDE68A" style={styles.stopper} />
       </View>
 
       <LinearGradient
-        colors={['#F59E0B', '#B45309', '#78350F', '#F59E0B']}
+        colors={['#FDE68A', '#F59E0B', '#B45309', '#FDE68A']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.wheelBorder}
@@ -206,8 +193,8 @@ const Wheel = ({ onFinished, onTryAgain }) => {
                   <Path 
                     d={d} 
                     fill={sector.isWinner ? "url(#winnerGrad)" : sector.color} 
-                    stroke="#111" 
-                    strokeWidth="0.5" 
+                    stroke="rgba(0,0,0,0.35)" 
+                    strokeWidth="0.7" 
                   />
                 </G>
               );
@@ -235,12 +222,12 @@ const Wheel = ({ onFinished, onTryAgain }) => {
         </Animated.View>
       </LinearGradient>
 
-      <View>
+      <View style={styles.ctaWrap}>
         <TouchableOpacity
           style={[styles.spinButton, spinning && styles.spinButtonDisabled]}
           onPress={handleSpinPress}
           disabled={spinning}
-          activeOpacity={1} // Keep size constant on press
+          activeOpacity={1}
         >
           <LinearGradient
             colors={spinning ? ['#333', '#444'] : ['#F59E0B', '#D97706', '#B45309']}
@@ -248,40 +235,19 @@ const Wheel = ({ onFinished, onTryAgain }) => {
             end={{ x: 1, y: 1 }}
             style={styles.spinButtonInner}
           >
-            <Text style={styles.spinButtonText}>{spinning ? 'SPINNING...' : 'SPIN NOW'}</Text>
-            {!spinning && <Text style={styles.spinButtonSubText}>Try your luck</Text>}
+            <View style={styles.spinButtonRow}>
+              <Text style={styles.spinButtonText}>{spinning ? 'SPINNING...' : 'SPIN NOW'}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#0A0A0A" />
+            </View>
+            <Text style={styles.spinButtonSubText}>
+              {spinning ? 'Landing on your offer…' : 'Try your luck'}
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const TryAgainModal = ({ visible, onRetry }) => (
-    <Modal visible={visible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-            <View style={styles.cleanModalContent}>
-                <View style={[styles.iconBadge, { backgroundColor: '#333' }]}>
-                    <Ionicons name="refresh" size={32} color="#FFF" />
-                </View>
-                
-                <Text style={styles.cleanTitle}>So Close!</Text>
-                <Text style={styles.cleanSubtitle}>You didn't win this time, but we'll give you one more shot.</Text>
-                
-                <TouchableOpacity 
-                    style={[styles.cleanButton, { backgroundColor: '#333' }]}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        onRetry();
-                    }}
-                >
-                    <Text style={[styles.cleanButtonText, { color: '#FFF' }]}>Spin Again</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    </Modal>
-);
 
 const WinnerModal = ({ visible, onClaim }) => {
   return (
@@ -334,8 +300,6 @@ const WinnerModal = ({ visible, onClaim }) => {
 export default function RewardWheel() {
   const router = useRouter();
   const [showWinner, setShowWinner] = useState(false);
-  const [showTryAgain, setShowTryAgain] = useState(false);
-  // Random time between 1h 15m (4500s) and 1h 45m (6300s)
   const [timeLeft, setTimeLeft] = useState(() => Math.floor(4500 + Math.random() * 1800)); 
 
   useEffect(() => {
@@ -392,16 +356,10 @@ export default function RewardWheel() {
         </View>
 
         <Wheel 
-            onFinished={() => setShowWinner(true)} 
-            onTryAgain={() => setShowTryAgain(true)}
+            onFinished={() => setShowWinner(true)}
         />
 
         <WinnerModal visible={showWinner} onClaim={handleClaim} />
-        
-        <TryAgainModal 
-            visible={showTryAgain} 
-            onRetry={() => setShowTryAgain(false)} 
-        />
 
       </SafeAreaView>
     </LinearGradient>
@@ -410,70 +368,68 @@ export default function RewardWheel() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  safeArea: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   header: { marginBottom: 26, alignItems: 'center', width: '100%' },
-  limitedOfferWrap: { alignItems: 'center', justifyContent: 'center' },
-  // removed limitedOfferGlow
+  limitedOfferWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   limitedOfferLabel: {
     fontSize: 28,
     color: '#F59E0B',
-    marginBottom: 14,
+    marginBottom: 2,
     fontWeight: '900',
     letterSpacing: 2.0,
     textTransform: 'uppercase',
-    textShadowColor: 'rgba(245, 158, 11, 0.4)',
+    textShadowColor: 'rgba(245, 158, 11, 0.35)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
-  timeLeftLabel: { fontSize: 10, color: '#6B7280', marginBottom: 8, letterSpacing: 1.5, fontWeight: 'bold' },
-  subtitle: { fontSize: 15, color: '#9CA3AF', marginTop: 18, letterSpacing: 0.5, opacity: 0.9 },
+  timeLeftLabel: { fontSize: 10, color: '#9CA3AF', marginBottom: 10, letterSpacing: 1.6, fontWeight: '800' },
+  subtitle: { fontSize: 14, color: '#9CA3AF', marginTop: 14, letterSpacing: 0.2 },
   
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   timeBlock: {
     alignItems: 'center',
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333',
-    minWidth: 70,
+    borderColor: 'rgba(255,255,255,0.08)',
+    minWidth: 66,
   },
   timeValue: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: '900',
-    color: '#E5E5E5',
+    color: '#F9FAFB',
     fontVariant: ['tabular-nums'],
   },
   timeLabel: {
     fontSize: 10,
-    color: '#CCCCCC',
+    color: '#D1D5DB',
     fontWeight: '700',
     marginTop: 2,
     opacity: 0.8,
   },
   timeSeparator: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: '900',
-    color: '#FFFFFF',
-    marginHorizontal: 5,
-    marginTop: -15, // Align with numbers
+    color: '#F9FAFB',
+    marginHorizontal: 8,
+    marginTop: -10, // Align with numbers
   },
   
   wheelContainer: { alignItems: 'center', justifyContent: 'center' },
-  // removed wheelGlow
   wheelBorder: {
-      padding: 6,
+      padding: 7,
       borderRadius: 160,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
+      shadowOffset: { width: 0, height: 10 },
       shadowOpacity: 0.5,
-      shadowRadius: 10,
+      shadowRadius: 16,
       elevation: 10,
   },
   wheel: { width: 300, height: 300, position: 'relative', borderRadius: 150, overflow: 'hidden' },
@@ -497,7 +453,7 @@ const styles = StyleSheet.create({
       left: 130,
       width: 40,
       height: 40,
-      backgroundColor: '#E5E5E5',
+      backgroundColor: '#F9FAFB',
       borderRadius: 20,
       justifyContent: 'center',
       alignItems: 'center',
@@ -510,12 +466,13 @@ const styles = StyleSheet.create({
   centerHubInner: {
       width: 30,
       height: 30,
-      backgroundColor: '#111',
+      backgroundColor: '#0B0D10',
       borderRadius: 15,
   },
 
+  ctaWrap: { marginTop: 22, width: '100%' },
   spinButton: {
-    marginTop: 50,
+    width: '100%',
     borderRadius: 30,
     overflow: 'hidden',
     shadowColor: '#F59E0B',
@@ -530,13 +487,15 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 66, // keep button height stable when text changes
   },
+  spinButtonRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   spinButtonDisabled: {
       opacity: 0.5,
       shadowOpacity: 0,
   },
   spinButtonText: { fontWeight: '900', fontSize: 18, color: '#0A0A0A', letterSpacing: 1.2 },
-  spinButtonSubText: { marginTop: 4, fontSize: 12, fontWeight: '700', color: 'rgba(10,10,10,0.75)' },
+  spinButtonSubText: { marginTop: 4, fontSize: 12, fontWeight: '800', color: 'rgba(10,10,10,0.75)' },
   
   sectorLabelContainer: {
     position: 'absolute',
@@ -565,7 +524,7 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.8)',
+      backgroundColor: 'rgba(0,0,0,0.82)',
       justifyContent: 'center',
       alignItems: 'center',
   },
@@ -583,7 +542,7 @@ const styles = StyleSheet.create({
   },
   winnerModal: {
       borderWidth: 1,
-      borderColor: '#333',
+      borderColor: 'rgba(255,255,255,0.10)',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 10 },
       shadowOpacity: 0.5,

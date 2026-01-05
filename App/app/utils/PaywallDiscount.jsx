@@ -1,9 +1,9 @@
 import RevenueCatUI from 'react-native-purchases-ui';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useGlobalContext } from '../context/GlobalProvider';
 import Purchases from 'react-native-purchases';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { View, ActivityIndicator, Text } from 'react-native';
 
 export default function PaywallDiscount() {
   const router = useRouter();
@@ -58,8 +58,7 @@ export default function PaywallDiscount() {
   const handlePurchaseCompleted = async () => {
     try {
       const customerInfo = await Purchases.getCustomerInfo();
-      const isPro =
-        customerInfo?.entitlements?.all?.pro?.isActive ?? false;
+      const isPro = customerInfo?.entitlements?.all?.pro?.isActive ?? false;
 
       setIsPro(isPro);
       setIsNewUserOnboarding(false);
@@ -71,8 +70,7 @@ export default function PaywallDiscount() {
 
   const handleRestoreCompleted = async (info) => {
     try {
-      const isPro =
-        info?.customerInfo?.entitlements?.all?.pro?.isActive ?? false;
+      const isPro = info?.customerInfo?.entitlements?.all?.pro?.isActive ?? false;
 
       if (isPro) setIsPro(true);
 
@@ -92,7 +90,7 @@ export default function PaywallDiscount() {
   if (!offering) {
     return (
       <View style={{ flex: 1, backgroundColor: 'black', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <ActivityIndicator />
+        <ActivityIndicator color="#FF9500" />
         {!!loadError && (
           <Text style={{ color: 'white', marginTop: 16, textAlign: 'center' }}>
             {loadError}
@@ -100,12 +98,7 @@ export default function PaywallDiscount() {
         )}
         {!loadError && (
           <Text style={{ color: 'white', marginTop: 16, textAlign: 'center' }}>
-            Loading paywall…
-          </Text>
-        )}
-        {!!availableOfferingIds.length && (
-          <Text style={{ color: '#9CA3AF', marginTop: 12, textAlign: 'center' }}>
-            Offerings: {availableOfferingIds.join(', ')}
+            Loading specialized offer...
           </Text>
         )}
       </View>
@@ -113,7 +106,7 @@ export default function PaywallDiscount() {
   }
 
   // IMPORTANT:
-  // RevenueCatUI.Paywall does NOT accept an `offering` prop.
+  // RevenueCatUI.Paywall does NOT accept an `offering` prop directly.
   // It must be provided via `options={{ offering }}`.
   return (
     <RevenueCatUI.Paywall

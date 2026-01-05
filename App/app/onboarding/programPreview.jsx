@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { Svg, Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { useOnboardingContext } from '../context/OnboardingContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BenefitItem = ({ text }) => (
   <View style={styles.benefitItem}>
@@ -56,8 +57,33 @@ const ProgramGraph = ({ currentT, potentialT }) => (
 export default function ProgramPreview() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { score } = useOnboardingContext();
+  const { score, setScore } = useOnboardingContext();
+  const [currentScore, setCurrentScore] = useState(score);
   const hasTriggeredRef = useRef(false);
+  
+  // Load persisted score if context is lost (e.g. app restart)
+  useEffect(() => {
+    const loadScore = async () => {
+      if (score > 0) {
+        setCurrentScore(score);
+        return;
+      }
+
+      try {
+        const savedScore = await AsyncStorage.getItem('onboarding_score');
+        if (savedScore) {
+          const parsed = parseFloat(savedScore);
+          if (!isNaN(parsed) && parsed > 0) {
+            setCurrentScore(parsed);
+            if (setScore) setScore(parsed);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load score", e);
+      }
+    };
+    loadScore();
+  }, [score]);
   
   useEffect(() => {
     if (params?.triggerWheel === 'true' && !hasTriggeredRef.current) {
@@ -69,7 +95,7 @@ export default function ProgramPreview() {
     }
   }, [params]);
 
-  const currentT = score * 10;
+  const currentT = Math.round(currentScore * 10);
   // Calculate potential: cap at 1000 or 2.2x current, whichever is reasonable, 
   // ensuring it's always higher than current. 
   // Using similar logic to results page: Math.min(score * 2.2, 100) * 10 => max 1000

@@ -32,7 +32,6 @@ export default function OnboardingLayout() {
         <Stack.Screen name="benefitsGraph" options={{ headerShown: false }} />
         <Stack.Screen name="journeyGraph" options={{ headerShown: false }} />
         <Stack.Screen name="transformLife" options={{ headerShown: false }} />
-        <Stack.Screen name="rateUs" options={{ headerShown: false }} />
         <Stack.Screen name="createAccount" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="dosAndDonts" options={{ headerShown: false }} />

@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useOnboardingContext } from '../context/OnboardingContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -164,6 +165,7 @@ export default function Results() {
     const score = calculateScore(answers);
     setUserScore(score);
     if (setScore) setScore(score); // Save to context
+    AsyncStorage.setItem('onboarding_score', score.toString()); // Save to persistence
 
     // Initial animation for step 1
     Animated.parallel([

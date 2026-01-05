@@ -40,7 +40,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.aciken.Testosterone"
     },
     "web": {
       "favicon": "./assets/favicon.png"
